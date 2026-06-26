@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function TopBar({ onNotificationClick }) {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const role = user?.role || 'student'
 
@@ -25,12 +25,26 @@ export default function TopBar({ onNotificationClick }) {
         </div>
         <h1 className="text-headline-lg-mobile font-bold text-primary tracking-tight">EduCore</h1>
       </div>
-      <button
-        onClick={() => onNotificationClick ? onNotificationClick() : navigate(`/${role}/notifications`)}
-        className="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95"
-      >
-        notifications
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onNotificationClick ? onNotificationClick() : navigate(`/${role}/notifications`)}
+          className="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95"
+        >
+          notifications
+        </button>
+        <button
+          onClick={() => {
+            if (window.confirm('Are you sure you want to sign out?')) {
+              logout()
+              navigate('/login')
+            }
+          }}
+          className="material-symbols-outlined text-error hover:bg-red-50 transition-colors p-2 rounded-full active:scale-95"
+          title="Sign Out"
+        >
+          logout
+        </button>
+      </div>
     </header>
   )
 }

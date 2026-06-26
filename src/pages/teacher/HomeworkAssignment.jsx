@@ -17,6 +17,7 @@ export default function HomeworkAssignment() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
+  const [homeworkLink, setHomeworkLink] = useState('')
   
   const [homeworkList, setHomeworkList] = useState([])
   const [activeTab, setActiveTab] = useState('active') // active | past
@@ -63,7 +64,8 @@ export default function HomeworkAssignment() {
         grade,
         section: section || '',
         due_date: dueDate,
-        attachments: []
+        attachments: [],
+        homework_link: homeworkLink
       })
 
       setMessage('Homework assigned successfully!')
@@ -71,6 +73,7 @@ export default function HomeworkAssignment() {
       setTitle('')
       setDescription('')
       setDueDate('')
+      setHomeworkLink('')
 
       // Reload list
       loadHomework()
@@ -103,6 +106,7 @@ export default function HomeworkAssignment() {
     setDescription(hw.description)
     setSubject(hw.subject)
     setSelectedClass(`${hw.grade}-${hw.section}`)
+    setHomeworkLink(hw.homework_link || '')
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setMessage('Loaded assignment parameters to form.')
     setTimeout(() => setMessage(''), 3000)
@@ -211,13 +215,28 @@ export default function HomeworkAssignment() {
                   />
                 </div>
 
-                {/* Due Date */}
+                 {/* Due Date */}
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-on-surface-variant">Due Date</label>
                   <input 
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
+                  />
+                </div>
+
+                {/* Homework Link */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">link</span>
+                    <span>Homework Link / Reference URL</span>
+                  </label>
+                  <input 
+                    type="url"
+                    value={homeworkLink}
+                    onChange={(e) => setHomeworkLink(e.target.value)}
+                    placeholder="e.g. https://docs.google.com/document/d/..."
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   />
                 </div>
@@ -286,6 +305,19 @@ export default function HomeworkAssignment() {
                             </span>
                             <h4 className="font-title-lg text-sm text-on-surface font-bold mt-1.5">{hw.title}</h4>
                             <p className="text-xs text-on-surface-variant font-medium mt-1 pr-4">{hw.description}</p>
+                            {hw.homework_link && (
+                              <div className="mt-2.5">
+                                <a 
+                                  href={hw.homework_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-primary/15 text-primary text-[11px] font-bold rounded-xl hover:bg-primary/25 transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-xs">link</span>
+                                  <span>Reference Link</span>
+                                </a>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-3 gap-4 pt-1">
@@ -333,6 +365,19 @@ export default function HomeworkAssignment() {
                           </span>
                           <h4 className="font-title-lg text-sm text-on-surface font-bold mt-1.5">{hw.title}</h4>
                           <p className="text-xs text-on-surface-variant font-medium mt-1 pr-4">{hw.description}</p>
+                          {hw.homework_link && (
+                            <div className="mt-2.5">
+                              <a 
+                                href={hw.homework_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-3 py-1 bg-outline-variant text-on-surface-variant text-[11px] font-bold rounded-xl hover:bg-outline-variant/65 transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-xs">link</span>
+                                <span>Reference Link</span>
+                              </a>
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-3 gap-4">
                           <div className="flex items-center gap-1 text-error">

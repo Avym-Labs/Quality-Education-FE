@@ -23,6 +23,11 @@ export default function LeaveRequest() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Student Leaves Approval states
+  const [viewTab, setViewTab] = useState('my-leaves') // my-leaves | student-leaves
+  const [studentLeaves, setStudentLeaves] = useState([])
+  const [studentLoading, setStudentLoading] = useState(false)
+
   const availableSubjects = user?.subjects || ['Mathematics', 'Science', 'English']
 
   // Load history
@@ -45,8 +50,39 @@ export default function LeaveRequest() {
     }
   }
 
+  async function loadStudentLeaves() {
+    setStudentLoading(true)
+    setMessage('')
+    try {
+      const res = await api.get('/leave')
+      if (res.data) {
+        const filtered = res.data.filter(item => item.user?.role === 'student')
+        setStudentLeaves(filtered)
+      }
+    } catch (err) {
+      console.error('Failed to load student leaves:', err)
+      setMessage('Error loading student leave requests.')
+    } finally {
+      setStudentLoading(false)
+    }
+  }
+
+  const handleLeaveAction = async (leaveId, actionStatus) => {
+    setMessage('')
+    try {
+      await api.patch(`/leave/${leaveId}`, { status: actionStatus })
+      setMessage(`Leave request ${actionStatus} successfully!`)
+      loadStudentLeaves()
+      setTimeout(() => setMessage(''), 4000)
+    } catch (err) {
+      console.error('Failed to update student leave status:', err)
+      setMessage('Failed to update leave status.')
+    }
+  }
+
   useEffect(() => {
     loadHistory()
+    loadStudentLeaves()
   }, [user])
 
   // Submit Leave Request
@@ -155,7 +191,139 @@ export default function LeaveRequest() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
+        {/* Portal Tabs Selector */}
+        <div className="bg-surface-container-low rounded-2xl p-1 flex gap-1 border border-outline-variant/25 mb-4">
+          <button 
+            onClick={() => setViewTab('my-leaves')}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+              viewTab === 'my-leaves' 
+                ? 'bg-primary text-on-primary shadow-sm' 
+                : 'text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">assignment_ind</span>
+            <span>My Leave Requests</span>
+          </button>
+          <button 
+            onClick={() => {
+              setViewTab('student-leaves')
+              loadStudentLeaves()
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+              viewTab === 'student-leaves' 
+                ? 'bg-primary text-on-primary shadow-sm' 
+                : 'text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">groups</span>
+            <span>Student Leaves Approval {studentLeaves.filter(l => l.status === 'pending').length > 0 && `(${studentLeaves.filter(l => l.status === 'pending').length})`}</span>
+          </button>
+        </div>
+
+        {viewTab === 'student-leaves' ? (
+          /* STUDENT LEAVES APPROVAL VIEW */
+          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-6 animate-fadeIn">
+            <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+              <div>
+                <h3 className="font-title-lg text-base text-on-surface font-bold">Student Leave Applications</h3>
+                <p className="text-xs text-on-surface-variant">Review and approve/reject student leave requests</p>
+              </div>
+              <button 
+                onClick={loadStudentLeaves}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low text-primary rounded-xl font-bold text-xs hover:bg-surface-container-high transition-colors active:scale-95 duration-200"
+              >
+                <span className="material-symbols-outlined text-sm">refresh</span>
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            {studentLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+              </div>
+            ) : studentLeaves.length === 0 ? (
+              <div className="text-center py-16 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant p-6">
+                No student leave requests found.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {studentLeaves.map(item => {
+                  const isPending = item.status === 'pending'
+                  const isApproved = item.status === 'approved'
+
+                  return (
+                    <div 
+                      key={item.id}
+                      className="bg-surface-container-low border border-outline-variant/20 rounded-[24px] p-5 shadow-sm flex flex-col justify-between min-h-[200px] hover:shadow-md transition-all duration-300"
+                    >
+                      <div>
+                        {/* Student Details Header */}
+                        <div className="flex items-center gap-3 border-b border-outline-variant/10 pb-3 mb-3">
+                          {item.user?.avatar ? (
+                            <img src={item.user.avatar} alt="Profile" className="w-10 h-10 rounded-xl object-cover border border-outline-variant" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-primary-container text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                              {item.user?.first_name?.[0]}{item.user?.last_name?.[0]}
+                            </div>
+                          )}
+                          <div>
+                            <h4 className="font-bold text-xs text-on-surface">{item.user?.full_name || `${item.user?.first_name} ${item.user?.last_name}`}</h4>
+                            <p className="text-[10px] text-on-surface-variant font-semibold">Student role • {item.leave_type}</p>
+                          </div>
+                        </div>
+
+                        {/* Dates and Reason */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center gap-1.5 text-[10px] text-primary font-bold uppercase tracking-wider">
+                            <span className="material-symbols-outlined text-xs">calendar_today</span>
+                            <span>{item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}</span>
+                          </div>
+                          <p className="text-xs text-on-surface-variant font-medium leading-relaxed bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/10">{item.reason}</p>
+                        </div>
+                      </div>
+
+                      {/* Status / Action Footer */}
+                      <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 mt-auto">
+                        <div className="flex items-center">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
+                            isPending ? 'bg-primary-container/20 text-primary' :
+                            isApproved ? 'bg-emerald-100 text-emerald-800' :
+                            'bg-error-container text-on-error-container'
+                          }`}>
+                            <span className="material-symbols-outlined text-[10px]">
+                              {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
+                            </span>
+                            <span>{item.status}</span>
+                          </span>
+                        </div>
+
+                        {isPending ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleLeaveAction(item.id, 'rejected')}
+                              className="px-3.5 py-1.5 bg-red-50 text-error rounded-xl font-bold text-[11px] hover:bg-red-100 active:scale-95 transition-all"
+                            >
+                              Reject
+                            </button>
+                            <button
+                              onClick={() => handleLeaveAction(item.id, 'approved')}
+                              className="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-[11px] hover:bg-emerald-100 active:scale-95 transition-all"
+                            >
+                              Approve
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-outline font-semibold italic">Processed</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
           
           {/* Form Card (Col Span 6) */}
           <div className="lg:col-span-6 space-y-4">
@@ -366,8 +534,8 @@ export default function LeaveRequest() {
             )}
 
           </div>
-
         </div>
+      )}
 
       </div>
     </DashboardLayout>

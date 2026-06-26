@@ -9,160 +9,178 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
-  // Real stats state
-  const [students, setStudents] = useState([])
-  const [teachers, setTeachers] = useState([])
-  const [attendance, setAttendance] = useState([])
-  const [results, setResults] = useState([])
+  // Analytics Filter States
+  const [analyticsType, setAnalyticsType] = useState('overall')
+  const [classId, setClassId] = useState('10-A')
+  const [teacherId, setTeacherId] = useState('')
+  const [teacherOptions, setTeacherOptions] = useState([])
+  const [analyticsData, setAnalyticsData] = useState(null)
 
+  // Fetch teachers on mount for the teacher selector dropdown
   useEffect(() => {
-    async function fetchAdminData() {
+    async function loadTeachers() {
+      try {
+        const res = await api.get('/teachers')
+        const teachersList = res.data || []
+        setTeacherOptions(teachersList)
+        if (teachersList.length > 0) {
+          setTeacherId(teachersList[0].id)
+        }
+      } catch (err) {
+        console.error('Failed to load teachers for dropdown:', err)
+      }
+    }
+    loadTeachers()
+  }, [])
+
+  // Fetch analytics data based on selected filters
+  useEffect(() => {
+    async function fetchAnalytics() {
+      if (analyticsType === 'class' && !classId) return
+      if (analyticsType === 'teacher' && !teacherId) return
+
       try {
         setLoading(true)
-        const [studentsRes, teachersRes, attendanceRes, resultsRes] = await Promise.all([
-          api.get('/students'),
-          api.get('/teachers'),
-          api.get('/attendance'),
-          api.get('/results'),
-        ])
-        
-        setStudents(studentsRes.data || [])
-        setTeachers(teachersRes.data || [])
-        setAttendance(attendanceRes.data || [])
-        setResults(resultsRes.data || [])
+        setError(null)
+        const params = { type: analyticsType }
+        if (analyticsType === 'class') params.class_id = classId
+        if (analyticsType === 'teacher') params.teacher_id = teacherId
+
+        const res = await api.get('/admin/analytics', { params })
+        setAnalyticsData(res.data)
       } catch (err) {
-        console.error('Failed to load admin dashboard data:', err)
-        setError('Failed to fetch dashboard data. Please try again.')
+        console.error('Failed to load admin analytics:', err)
+        setError('Failed to fetch analytics data.')
       } finally {
         setLoading(false)
       }
     }
-    fetchAdminData()
-  }, [])
+    fetchAnalytics()
+  }, [analyticsType, classId, teacherId])
 
-  // KPI Calculations
-  const totalStudents = students.length || 1240 // Fallback to design mockup if database is empty
-  const totalTeachers = teachers.length || 86   // Fallback to design mockup if database is empty
-
-  // Calculate Attendance Rate
-  const attendanceRate = (() => {
-    if (!attendance.length) return '94.2'
-    const presentCount = attendance.filter(r => r.status === 'present').length
-    const lateCount = attendance.filter(r => r.status === 'late').length
-    // Count 'late' as 0.8 present or count as present for overall rate
-    const presentRate = ((presentCount + lateCount) / attendance.length) * 100
-    return presentRate.toFixed(1)
-  })()
-
-  // Calculate Average Results
-  const avgResults = (() => {
-    if (!results.length) return '78'
-    const totalPercentage = results.reduce((sum, r) => sum + (r.percentage || 0), 0)
-    return (totalPercentage / results.length).toFixed(1)
-  })()
-
-  // Subject Performance Calculations
-  const subjectPerformance = (() => {
-    const subjects = ['Mathematics', 'Science', 'History', 'Literature']
-    const defaultScores = { Mathematics: 82, Science: 76, History: 68, Literature: 89 }
-    
-    return subjects.map(subj => {
-      const subjResults = results.filter(r => r.subject?.toLowerCase() === subj.toLowerCase())
-      const score = subjResults.length 
-        ? Math.round(subjResults.reduce((sum, r) => sum + r.percentage, 0) / subjResults.length)
-        : defaultScores[subj]
-      return { name: subj, score }
-    })
-  })()
-
-  // Dynamic Faculty Spotlight
-  const facultySpotlight = (() => {
-    const defaultFaculty = [
-      {
-        name: 'Dr. Julian Scott',
-        department: 'Mathematics',
-        rating: '4.9',
-        success: '92%',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAAZlPTMAy2a8AxS6zYKIPQ_zDC6-ViPa3H6fKzXWKnzGsIOhDmF3UrmpNh3M7-6JKoANp6ZSmp5gHg4Ny-V3etrqutkjbWxj-F7iwGQH0i4S8_rCeoFAo6hLNd-sUrXQ3x8RPMpdUW8hCLRXcy1yb3h1lOPB07sYGMQuD7UGpXZh_nJyInkkEleBiFdZzZsYs5eEEGzxrVQcR3k4BwCUojOZBeitBxOR4Mk6DtE5uEi6GD_kDt75Zqh3hpzk4vxE6PDZQfgSpndc'
-      },
-      {
-        name: 'Prof. Alice Murray',
-        department: 'Literature',
-        rating: '4.8',
-        success: '88%',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbJkEuQKA0Va3ZMLFRegDGBUEMP-Pj-ApY1K1NS4-nbKlvEOSThn1jyauz_eJTEJeQEkRg7maylTqekDH4vWCDZ10NQV2-vWuAskkzf8qDSZup2jSHinDjdjkui-lbo0PurZkYNZ1fpgUDxPmVDBsjclKh9lXlREox1jSK5y2NtjKI3VqJwvngKxp4FBN1Uzo3j-_64kWJhKsbUI4ElfxsGw8sdcdBJ78r5cp-MwdQxrs7BdQ9zsQp9WXEnY1GhsAN9qyC6YXd3u8'
-      }
-    ]
-
-    if (teachers.length === 0) return defaultFaculty
-
-    // Map real teachers and combine with defaults if we have fewer than 2
-    const realFaculty = teachers.map(t => {
-      // Calculate a pseudo rating and success rate based on classes or results
-      const successRate = results.length > 0 
-        ? Math.round(results.reduce((sum, r) => sum + r.percentage, 0) / results.length) + '%'
-        : '90%'
-      return {
-        name: t.full_name || `${t.first_name} ${t.last_name}`,
-        department: t.department || 'Academic',
-        rating: '4.9',
-        success: successRate,
-        avatar: t.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200'
-      }
-    })
-
-    return [...realFaculty, ...defaultFaculty].slice(0, 2)
-  })()
-
-  // Dynamic High Performers (GPAs)
-  const highPerformers = [
+  // Map analytics values from backend response (with design mockups as defaults)
+  const totalStudents = analyticsData?.total_students ?? 1240
+  const totalTeachers = analyticsData?.total_teachers ?? 86
+  const attendanceRate = analyticsData?.attendance_rate ?? '94.2'
+  const avgResults = analyticsData?.avg_results ?? '78.4'
+  const subjectPerformance = analyticsData?.subject_performance ?? [
+    { name: 'Mathematics', score: 82 },
+    { name: 'Science', score: 76 },
+    { name: 'History', score: 68 },
+    { name: 'Literature', score: 89 }
+  ]
+  const attendanceTrend = analyticsData?.attendance_trend ?? [
+    { month: 'Jan', rate: 85.0 },
+    { month: 'Feb', rate: 92.0 },
+    { month: 'Mar', rate: 78.0 },
+    { month: 'Apr', rate: 94.0 },
+    { month: 'May', rate: 88.0 },
+    { month: 'Jun', rate: 94.2 }
+  ]
+  const gradeTrend = analyticsData?.grade_trend ?? [
+    { label: 'Midterm 1', score: 74 },
+    { label: 'Semester 1', score: 77 },
+    { label: 'Midterm 2', score: 78.4 }
+  ]
+  const sectionComparison = analyticsData?.section_comparison ?? [
+    { section: 'Sec A', grade10: 80, grade11: 75 },
+    { section: 'Sec B', grade10: 70, grade11: 78 },
+    { section: 'Sec C', grade10: 85, grade11: 65 }
+  ]
+  const facultySpotlight = analyticsData?.faculty_spotlight ?? [
+    {
+      name: 'Dr. Julian Scott',
+      department: 'Mathematics',
+      rating: '4.9',
+      success: '92%',
+      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAAZlPTMAy2a8AxS6zYKIPQ_zDC6-ViPa3H6fKzXWKnzGsIOhDmF3UrmpNh3M7-6JKoANp6ZSmp5gHg4Ny-V3etrqutkjbWxj-F7iwGQH0i4S8_rCeoFAo6hLNd-sUrXQ3x8RPMpdUW8hCLRXcy1yb3h1lOPB07sYGMQuD7UGpXZh_nJyInkkEleBiFdZzZsYs5eEEGzxrVQcR3k4BwCUojOZBeitBxOR4Mk6DtE5uEi6GD_kDt75Zqh3hpzk4vxE6PDZQfgSpndc'
+    },
+    {
+      name: 'Prof. Alice Murray',
+      department: 'Literature',
+      rating: '4.8',
+      success: '88%',
+      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbJkEuQKA0Va3ZMLFRegDGBUEMP-Pj-ApY1K1NS4-nbKlvEOSThn1jyauz_eJTEJeQEkRg7maylTqekDH4vWCDZ10NQV2-vWuAskkzf8qDSZup2jSHinDjdjkui-lbo0PurZkYNZ1fpgUDxPmVDBsjclKh9lXlREox1jSK5y2NtjKI3VqJwvngKxp4FBN1Uzo3j-_64kWJhKsbUI4ElfxsGw8sdcdBJ78r5cp-MwdQxrs7BdQ9zsQp9WXEnY1GhsAN9qyC6YXd3u8'
+    }
+  ]
+  const highPerformers = analyticsData?.high_performers ?? [
     { name: 'Liam Wilson', grade: '12th Grade', section: 'Sec A', gpa: '3.98 GPA', initials: 'LW', bg: 'bg-green-100 text-green-700' },
     { name: 'Emma Smith', grade: '11th Grade', section: 'Sec B', gpa: '3.95 GPA', initials: 'ES', bg: 'bg-blue-100 text-blue-700' }
   ]
-
-  // Attendance Warnings (Students < 75% attendance)
-  const attendanceWarnings = (() => {
-    const defaultWarnings = [
-      { name: 'Ryan Baker', grade: '10th Grade', section: 'Sec C', rate: '62%', initials: 'RB' },
-      { name: 'Mia Park', grade: '12th Grade', section: 'Sec A', rate: '71%', initials: 'MP' }
-    ]
-
-    if (!students.length || !attendance.length) return defaultWarnings
-
-    const warnings = []
-    students.forEach(s => {
-      const studentAtt = attendance.filter(r => r.student_id === s.user_id)
-      if (studentAtt.length > 0) {
-        const present = studentAtt.filter(r => r.status === 'present').length
-        const late = studentAtt.filter(r => r.status === 'late').length
-        const rate = ((present + late) / studentAtt.length) * 100
-        if (rate < 75) {
-          warnings.push({
-            name: s.full_name,
-            grade: `${s.grade}th Grade`,
-            section: `Sec ${s.section}`,
-            rate: `${Math.round(rate)}%`,
-            initials: `${s.first_name?.[0] || ''}${s.last_name?.[0] || ''}`.toUpperCase() || 'ST'
-          })
-        }
-      }
-    })
-
-    return warnings.length > 0 ? warnings.slice(0, 3) : defaultWarnings
-  })()
+  const attendanceWarnings = analyticsData?.attendance_warnings ?? [
+    { name: 'Ryan Baker', grade: '10th Grade', section: 'Sec C', rate: '62%', initials: 'RB' },
+    { name: 'Mia Park', grade: '12th Grade', section: 'Sec A', rate: '71%', initials: 'MP' }
+  ]
 
   return (
     <DashboardLayout hideTopBar={false}>
       <div className="space-y-stack-lg mt-stack-md pb-24">
         
         {/* Dashboard Welcome Header */}
-        <section className="flex flex-col gap-base">
-          <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">
-            Administrative Dashboard
-          </h2>
-          <p className="text-on-surface-variant text-sm">
-            Real-time institutional performance analytics
-          </p>
+        <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
+          <div>
+            <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">
+              Administrative Dashboard
+            </h2>
+            <p className="text-on-surface-variant text-sm mt-0.5">
+              Real-time institutional performance analytics
+            </p>
+          </div>
+
+          {/* Scope Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
+              <span className="text-[10px] uppercase font-bold text-on-surface-variant">Scope:</span>
+              <select
+                value={analyticsType}
+                onChange={(e) => {
+                  setAnalyticsType(e.target.value)
+                  if (e.target.value === 'class') setClassId('10-A')
+                  if (e.target.value === 'teacher' && teacherOptions.length > 0) setTeacherId(teacherOptions[0].id)
+                }}
+                className="bg-transparent border-none p-0 text-xs font-bold text-primary focus:ring-0 outline-none"
+              >
+                <option value="overall">Overall</option>
+                <option value="class">Class Wise</option>
+                <option value="teacher">Teacher Wise</option>
+              </select>
+            </div>
+
+            {analyticsType === 'class' && (
+              <div className="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30 animate-fadeIn">
+                <span className="text-[10px] uppercase font-bold text-on-surface-variant">Class:</span>
+                <select
+                  value={classId}
+                  onChange={(e) => setClassId(e.target.value)}
+                  className="bg-transparent border-none p-0 text-xs font-bold text-primary focus:ring-0 outline-none"
+                >
+                  <option value="9-A">9-A</option>
+                  <option value="9-B">9-B</option>
+                  <option value="10-A">10-A</option>
+                  <option value="10-B">10-B</option>
+                  <option value="11-A">11-A</option>
+                  <option value="11-B">11-B</option>
+                  <option value="12-A">12-A</option>
+                  <option value="12-B">12-B</option>
+                </select>
+              </div>
+            )}
+
+            {analyticsType === 'teacher' && (
+              <div className="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30 animate-fadeIn">
+                <span className="text-[10px] uppercase font-bold text-on-surface-variant">Teacher:</span>
+                <select
+                  value={teacherId}
+                  onChange={(e) => setTeacherId(e.target.value)}
+                  className="bg-transparent border-none p-0 text-xs font-bold text-primary focus:ring-0 outline-none max-w-[150px]"
+                >
+                  {teacherOptions.map(t => (
+                    <option key={t.id} value={t.id}>{t.full_name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </section>
 
         {loading ? (
@@ -262,20 +280,20 @@ export default function AdminDashboard() {
                       Attendance Trend
                     </h3>
                     <div className="flex-1 flex items-end gap-3 pb-2 px-2 pt-6">
-                      {[85, 92, 78, 94, 88, parseFloat(attendanceRate)].map((val, idx) => (
+                      {attendanceTrend.map((item, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
                           <div 
                             className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${
-                              idx === 5 ? 'bg-primary' : 'bg-primary-fixed-dim'
+                              idx === attendanceTrend.length - 1 ? 'bg-primary' : 'bg-primary-fixed-dim'
                             }`}
-                            style={{ height: `${val}%` }}
+                            style={{ height: `${item.rate}%` }}
                           ></div>
                         </div>
                       ))}
                     </div>
                     <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, idx) => (
-                        <span key={idx} className="w-8 text-center">{month}</span>
+                      {attendanceTrend.map((item, idx) => (
+                        <span key={idx} className="w-8 text-center">{item.month}</span>
                       ))}
                     </div>
                   </div>
@@ -300,9 +318,9 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                      <span>Midterm 1</span>
-                      <span>Semester 1</span>
-                      <span>Midterm 2</span>
+                      {gradeTrend.map((item, idx) => (
+                        <span key={idx}>{item.label}</span>
+                      ))}
                     </div>
                   </div>
 

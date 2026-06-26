@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import loginIllustration from '../../assets/login_illustration.png'
 
 export default function LoginPage() {
   const [role, setRole] = useState('student')
@@ -39,8 +40,12 @@ export default function LoginPage() {
             <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
           </div>
           <div className="relative z-10 w-full max-w-sm">
-            <div className="w-full h-64 bg-surface-container rounded-3xl flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary/20" style={{ fontSize: '120px', fontVariationSettings: "'FILL' 1" }}>school</span>
+            <div className="w-full h-64 bg-transparent rounded-3xl flex items-center justify-center overflow-hidden">
+              <img 
+                src={loginIllustration} 
+                alt="EduCore Illustration" 
+                className="w-full h-full object-contain animate-float"
+              />
             </div>
             <div className="mt-stack-lg text-center">
               <h2 className="text-headline-lg font-semibold text-on-surface">Modern learning for the next generation.</h2>

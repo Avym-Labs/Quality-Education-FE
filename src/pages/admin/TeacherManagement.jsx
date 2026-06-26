@@ -35,6 +35,28 @@ export default function TeacherManagement() {
   const [formError, setFormError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Credentials Modal States
+  const [credsModalOpen, setCredsModalOpen] = useState(false)
+  const [credsTargetUser, setCredsTargetUser] = useState(null)
+  const [credsFormData, setCredsFormData] = useState({ email: '', phone: '', password: '' })
+  const [credsSubmitting, setCredsSubmitting] = useState(false)
+  const [credsMessage, setCredsMessage] = useState('')
+
+  const handleOpenCredsModal = (teacher) => {
+    setCredsTargetUser({
+      user_id: teacher.user_id || teacher.id,
+      name: teacher.full_name || `${teacher.first_name} ${teacher.last_name}`,
+      role: 'teacher'
+    })
+    setCredsFormData({
+      email: teacher.email || '',
+      phone: teacher.phone || '',
+      password: ''
+    })
+    setCredsMessage('')
+    setCredsModalOpen(true)
+  }
+
   const fetchTeachers = async () => {
     try {
       setLoading(true)
@@ -329,15 +351,26 @@ export default function TeacherManagement() {
                             View Details
                           </button>
                           {!teacher.id.startsWith('mock') && (
-                            <button 
-                              onClick={() => {
-                                handleDelete(teacher.id)
-                                setMenuOpenId(null)
-                              }}
-                              className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-bold text-error"
-                            >
-                              Delete
-                            </button>
+                            <>
+                              <button 
+                                onClick={() => {
+                                  handleOpenCredsModal(teacher)
+                                  setMenuOpenId(null)
+                                }}
+                                className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-semibold text-primary"
+                              >
+                                Credentials
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  handleDelete(teacher.id)
+                                  setMenuOpenId(null)
+                                }}
+                                className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-bold text-error"
+                              >
+                                Delete
+                              </button>
+                            </>
                           )}
                         </div>
                       )}
@@ -690,6 +723,110 @@ export default function TeacherManagement() {
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Credentials Modal */}
+      {credsModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-surface-container-lowest rounded-3xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3 mb-4">
+                <h3 className="font-title-lg text-lg text-primary font-bold">
+                  Change Credentials
+                </h3>
+                <button 
+                  onClick={() => setCredsModalOpen(false)}
+                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
+                >
+                  close
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-xs text-outline font-semibold">User</p>
+                <p className="font-bold text-on-surface text-base">{credsTargetUser?.name}</p>
+                <p className="text-xs text-on-surface-variant capitalize">{credsTargetUser?.role}</p>
+              </div>
+
+              {credsMessage && (
+                <div className={`p-3 rounded-xl text-xs mb-4 ${
+                  credsMessage.includes('success') 
+                    ? 'bg-green-50 text-green-700 border border-green-200' 
+                    : 'bg-error-container text-on-error-container'
+                }`}>
+                  {credsMessage}
+                </div>
+              )}
+
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                setCredsSubmitting(true)
+                setCredsMessage('')
+                try {
+                  await api.put(`/admin/users/${credsTargetUser.user_id}/credentials`, credsFormData)
+                  setCredsMessage('Credentials updated successfully!')
+                  setTimeout(() => {
+                    setCredsModalOpen(false)
+                    fetchTeachers()
+                  }, 1500)
+                } catch (err) {
+                  console.error('Failed to update credentials:', err)
+                  setCredsMessage(err.response?.data?.detail || 'An error occurred.')
+                } finally {
+                  setCredsSubmitting(false)
+                }
+              }} className="space-y-4 text-sm">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-xs text-on-surface-variant">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={credsFormData.email}
+                    onChange={(e) => setCredsFormData({...credsFormData, email: e.target.value})}
+                    className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
+                    placeholder="email@school.com"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-xs text-on-surface-variant">Phone Number</label>
+                  <input 
+                    type="text" 
+                    value={credsFormData.phone}
+                    onChange={(e) => setCredsFormData({...credsFormData, phone: e.target.value})}
+                    className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
+                    placeholder="Phone number"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-xs text-on-surface-variant">New Password</label>
+                  <input 
+                    type="password" 
+                    value={credsFormData.password}
+                    onChange={(e) => setCredsFormData({...credsFormData, password: e.target.value})}
+                    className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
+                    placeholder="Leave blank to keep unchanged"
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3 border-t border-outline-variant/15 mt-6 justify-end">
+                  <button 
+                    type="button"
+                    onClick={() => setCredsModalOpen(false)}
+                    className="px-5 py-2.5 border border-outline text-on-surface-variant rounded-xl font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={credsSubmitting}
+                    className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold hover:bg-opacity-95 disabled:bg-opacity-50"
+                  >
+                    {credsSubmitting ? 'Updating...' : 'Update Credentials'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

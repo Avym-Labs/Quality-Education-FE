@@ -6,6 +6,7 @@ const DEFAULT_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Litera
 
 export default function StudentManagement() {
   const [students, setStudents] = useState([])
+  const [teachers, setTeachers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
@@ -21,6 +22,13 @@ export default function StudentManagement() {
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [menuOpenId, setMenuOpenId] = useState(null)
 
+  // Credentials Modal States
+  const [credsModalOpen, setCredsModalOpen] = useState(false)
+  const [credsTargetUser, setCredsTargetUser] = useState(null)
+  const [credsFormData, setCredsFormData] = useState({ email: '', phone: '', password: '' })
+  const [credsSubmitting, setCredsSubmitting] = useState(false)
+  const [credsMessage, setCredsMessage] = useState('')
+
   // Form State
   const [formData, setFormData] = useState({
     first_name: '',
@@ -33,10 +41,24 @@ export default function StudentManagement() {
     roll_number: '',
     father_name: '',
     mother_name: '',
-    subjects: []
+    subjects: [],
+    subject_teachers: {}
   })
   const [formError, setFormError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Load teachers for mapping
+  useEffect(() => {
+    async function loadTeachers() {
+      try {
+        const res = await api.get('/teachers')
+        setTeachers(res.data || [])
+      } catch (err) {
+        console.error('Failed to load teachers for onboarding map:', err)
+      }
+    }
+    loadTeachers()
+  }, [])
 
   const fetchStudents = async () => {
     try {
@@ -80,7 +102,8 @@ export default function StudentManagement() {
       roll_number: '',
       father_name: '',
       mother_name: '',
-      subjects: []
+      subjects: [],
+      subject_teachers: {}
     })
     setFormError(null)
     setModalOpen(true)
@@ -100,7 +123,8 @@ export default function StudentManagement() {
       roll_number: student.roll_number || '',
       father_name: student.father_name || '',
       mother_name: student.mother_name || '',
-      subjects: student.subjects || []
+      subjects: student.subjects || [],
+      subject_teachers: student.subject_teachers || {}
     })
     setFormError(null)
     setModalOpen(true)
@@ -112,16 +136,55 @@ export default function StudentManagement() {
     setModalOpen(true)
   }
 
+  const handleOpenCredsModal = (student) => {
+    setCredsTargetUser({
+      user_id: student.user_id,
+      name: student.full_name || `${student.first_name} ${student.last_name}`,
+      role: 'student'
+    })
+    setCredsFormData({
+      email: student.email || '',
+      phone: student.phone || '',
+      password: ''
+    })
+    setCredsMessage('')
+    setCredsModalOpen(true)
+  }
+
   const handleToggleSubject = (subject) => {
     setFormData(prev => {
       const active = prev.subjects.includes(subject)
+      const newSubjects = active 
+        ? prev.subjects.filter(s => s !== subject) 
+        : [...prev.subjects, subject]
+      
+      const newSubjectTeachers = { ...prev.subject_teachers }
+      if (active) {
+        delete newSubjectTeachers[subject]
+      } else {
+        const matchingTeachers = teachers.filter(t => t.subjects?.some(s => s.toLowerCase() === subject.toLowerCase()))
+        if (matchingTeachers.length > 0) {
+          newSubjectTeachers[subject] = matchingTeachers[0].user_id
+        } else if (teachers.length > 0) {
+          newSubjectTeachers[subject] = teachers[0].user_id
+        }
+      }
       return {
         ...prev,
-        subjects: active 
-          ? prev.subjects.filter(s => s !== subject) 
-          : [...prev.subjects, subject]
+        subjects: newSubjects,
+        subject_teachers: newSubjectTeachers
       }
     })
+  }
+
+  const handleTeacherChange = (subject, teacherUserId) => {
+    setFormData(prev => ({
+      ...prev,
+      subject_teachers: {
+        ...prev.subject_teachers,
+        [subject]: teacherUserId
+      }
+    }))
   }
 
   const handleSubmit = async (e) => {
@@ -425,15 +488,26 @@ export default function StudentManagement() {
                               Edit Profile
                             </button>
                             {!student.id.startsWith('mock') && (
-                              <button 
-                                onClick={() => {
-                                  handleDelete(student.id)
-                                  setMenuOpenId(null)
-                                }}
-                                className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-bold text-error"
-                              >
-                                Delete
-                              </button>
+                              <>
+                                <button 
+                                  onClick={() => {
+                                    handleOpenCredsModal(student)
+                                    setMenuOpenId(null)
+                                  }}
+                                  className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-semibold text-primary"
+                                >
+                                  Credentials
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    handleDelete(student.id)
+                                    setMenuOpenId(null)
+                                  }}
+                                  className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-bold text-error"
+                                >
+                                  Delete
+                                </button>
+                              </>
                             )}
                           </div>
                         )}
@@ -553,14 +627,27 @@ export default function StudentManagement() {
                   </div>
 
                   <div>
-                    <p className="text-xs text-outline font-semibold mb-1.5">Enrolled Subjects</p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <p className="text-xs text-outline font-semibold mb-1.5">Enrolled Subjects & Teachers</p>
+                    <div className="flex flex-col gap-2">
                       {selectedStudent?.subjects?.length > 0 ? (
-                        selectedStudent.subjects.map((subj, idx) => (
-                          <span key={idx} className="bg-surface-container px-2.5 py-1 rounded-full text-xs font-semibold text-primary">
-                            {subj}
-                          </span>
-                        ))
+                        selectedStudent.subjects.map((subj, idx) => {
+                          const teacherUserId = selectedStudent?.subject_teachers?.[subj]
+                          const teacher = teachers.find(t => t.user_id === teacherUserId || t.id === teacherUserId)
+                          const teacherName = teacher ? teacher.full_name : null
+
+                          return (
+                            <div key={idx} className="flex items-center justify-between bg-surface-container px-3 py-2 rounded-xl text-xs font-semibold text-primary">
+                              <span>{subj}</span>
+                              {teacherName ? (
+                                <span className="text-on-surface-variant text-[11px] font-normal">
+                                  Taught by: <span className="font-semibold text-on-surface">{teacherName}</span>
+                                </span>
+                              ) : (
+                                <span className="text-outline text-[11px] font-normal italic">No teacher assigned</span>
+                              )}
+                            </div>
+                          )
+                        })
                       ) : (
                         <span className="text-on-surface-variant italic text-xs">No subjects assigned</span>
                       )}
@@ -695,23 +782,48 @@ export default function StudentManagement() {
                   </div>
 
                   <div>
-                    <label className="font-semibold text-xs text-on-surface-variant mb-1 block">Subjects Assigned</label>
-                    <div className="flex flex-wrap gap-1.5">
+                    <label className="font-semibold text-xs text-on-surface-variant mb-1.5 block">Subjects & Teachers Assigned</label>
+                    <div className="space-y-3">
                       {DEFAULT_SUBJECTS.map((subj) => {
                         const active = formData.subjects.includes(subj)
+                        const matchingTeachers = teachers.filter(t => t.subjects?.some(s => s.toLowerCase() === subj.toLowerCase()))
+                        const dropdownTeachers = matchingTeachers.length > 0 ? matchingTeachers : teachers
+
                         return (
-                          <button
-                            type="button"
-                            key={subj}
-                            onClick={() => handleToggleSubject(subj)}
-                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all active:scale-95 ${
-                              active 
-                                ? 'bg-primary text-on-primary border-primary' 
-                                : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
-                            }`}
-                          >
-                            {subj}
-                          </button>
+                          <div key={subj} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 border border-outline-variant/30 rounded-2xl bg-surface-container-low">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSubject(subj)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all active:scale-95 flex items-center gap-2 ${
+                                active 
+                                  ? 'bg-primary text-on-primary border-primary' 
+                                  : 'bg-surface-container-lowest border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">
+                                {active ? 'check_box' : 'check_box_outline_blank'}
+                              </span>
+                              <span>{subj}</span>
+                            </button>
+
+                            {active && (
+                              <div className="flex items-center gap-2 flex-1 sm:justify-end">
+                                <span className="text-[10px] text-outline font-semibold uppercase whitespace-nowrap">Teacher:</span>
+                                <select
+                                  value={formData.subject_teachers[subj] || ''}
+                                  onChange={(e) => handleTeacherChange(subj, e.target.value)}
+                                  className="px-2 py-1 text-xs rounded-lg border border-outline-variant bg-surface-container-lowest outline-none focus:border-primary max-w-[180px] truncate"
+                                >
+                                  <option value="">Select Teacher</option>
+                                  {dropdownTeachers.map(t => (
+                                    <option key={t.id} value={t.user_id}>
+                                      {t.full_name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
                         )
                       })}
                     </div>
@@ -735,6 +847,110 @@ export default function StudentManagement() {
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Credentials Modal */}
+      {credsModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-surface-container-lowest rounded-3xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3 mb-4">
+                <h3 className="font-title-lg text-lg text-primary font-bold">
+                  Change Credentials
+                </h3>
+                <button 
+                  onClick={() => setCredsModalOpen(false)}
+                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
+                >
+                  close
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-xs text-outline font-semibold">User</p>
+                <p className="font-bold text-on-surface text-base">{credsTargetUser?.name}</p>
+                <p className="text-xs text-on-surface-variant capitalize">{credsTargetUser?.role}</p>
+              </div>
+
+              {credsMessage && (
+                <div className={`p-3 rounded-xl text-xs mb-4 ${
+                  credsMessage.includes('success') 
+                    ? 'bg-green-50 text-green-700 border border-green-200' 
+                    : 'bg-error-container text-on-error-container'
+                }`}>
+                  {credsMessage}
+                </div>
+              )}
+
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                setCredsSubmitting(true)
+                setCredsMessage('')
+                try {
+                  await api.put(`/admin/users/${credsTargetUser.user_id}/credentials`, credsFormData)
+                  setCredsMessage('Credentials updated successfully!')
+                  setTimeout(() => {
+                    setCredsModalOpen(false)
+                    fetchStudents()
+                  }, 1500)
+                } catch (err) {
+                  console.error('Failed to update credentials:', err)
+                  setCredsMessage(err.response?.data?.detail || 'An error occurred.')
+                } finally {
+                  setCredsSubmitting(false)
+                }
+              }} className="space-y-4 text-sm">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-xs text-on-surface-variant">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={credsFormData.email}
+                    onChange={(e) => setCredsFormData({...credsFormData, email: e.target.value})}
+                    className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
+                    placeholder="email@school.com"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-xs text-on-surface-variant">Phone Number</label>
+                  <input 
+                    type="text" 
+                    value={credsFormData.phone}
+                    onChange={(e) => setCredsFormData({...credsFormData, phone: e.target.value})}
+                    className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
+                    placeholder="Phone number"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-xs text-on-surface-variant">New Password</label>
+                  <input 
+                    type="password" 
+                    value={credsFormData.password}
+                    onChange={(e) => setCredsFormData({...credsFormData, password: e.target.value})}
+                    className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
+                    placeholder="Leave blank to keep unchanged"
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3 border-t border-outline-variant/15 mt-6 justify-end">
+                  <button 
+                    type="button"
+                    onClick={() => setCredsModalOpen(false)}
+                    className="px-5 py-2.5 border border-outline text-on-surface-variant rounded-xl font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={credsSubmitting}
+                    className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold hover:bg-opacity-95 disabled:bg-opacity-50"
+                  >
+                    {credsSubmitting ? 'Updating...' : 'Update Credentials'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
