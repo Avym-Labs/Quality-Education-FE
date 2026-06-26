@@ -20,7 +20,7 @@ api.interceptors.response.use(
       if (refresh) {
         try {
           const { data } = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/auth/token/refresh/`,
+            `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/auth/token/refresh`,
             { refresh }
           )
           localStorage.setItem('access_token', data.access)
