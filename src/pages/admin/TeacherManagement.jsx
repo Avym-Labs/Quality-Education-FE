@@ -104,6 +104,25 @@ export default function TeacherManagement() {
     setModalOpen(true)
   }
 
+  const handleOpenEditModal = (teacher) => {
+    setModalMode('edit')
+    setSelectedTeacher(teacher)
+    setFormData({
+      email: teacher.email || '',
+      phone: teacher.phone || '',
+      password: '',
+      first_name: teacher.first_name || '',
+      last_name: teacher.last_name || '',
+      department: teacher.department || '',
+      subjects: teacher.subjects || [],
+      assigned_classes: teacher.assigned_classes || [],
+      qualifications: teacher.qualifications || []
+    })
+    setQualificationInput('')
+    setFormError(null)
+    setModalOpen(true)
+  }
+
   const handleToggleSubject = (subject) => {
     setFormData(prev => {
       const active = prev.subjects.includes(subject)
@@ -149,19 +168,31 @@ export default function TeacherManagement() {
     setFormError(null)
     setIsSubmitting(true)
 
-    if (!formData.first_name || !formData.last_name || !formData.email || !formData.password) {
+    if (!formData.first_name || !formData.last_name || !formData.email || (modalMode === 'create' && !formData.password)) {
       setFormError('Please fill in all required fields.')
       setIsSubmitting(false)
       return
     }
 
     try {
-      await api.post('/teachers', formData)
+      if (modalMode === 'create') {
+        await api.post('/teachers', formData)
+      } else {
+        const updatePayload = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          department: formData.department,
+          subjects: formData.subjects,
+          assigned_classes: formData.assigned_classes,
+          qualifications: formData.qualifications
+        }
+        await api.put(`/teachers/${selectedTeacher.id}`, updatePayload)
+      }
       setModalOpen(false)
       fetchTeachers()
     } catch (err) {
-      console.error('Failed to onboard teacher:', err)
-      setFormError(err.response?.data?.detail || 'An error occurred during onboarding.')
+      console.error('Failed to save teacher:', err)
+      setFormError(err.response?.data?.detail || 'An error occurred during saving.')
     } finally {
       setIsSubmitting(false)
     }
@@ -415,14 +446,14 @@ export default function TeacherManagement() {
                       <span className="text-[8px] font-bold uppercase tracking-wider">View</span>
                     </button>
                     <button 
-                      onClick={() => handleOpenViewModal(teacher)}
+                      onClick={() => handleOpenEditModal(teacher)}
                       className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all text-on-surface-variant"
                     >
                       <span className="material-symbols-outlined text-base">edit</span>
                       <span className="text-[8px] font-bold uppercase tracking-wider">Edit</span>
                     </button>
                     <button 
-                      onClick={() => handleOpenViewModal(teacher)}
+                      onClick={() => handleOpenEditModal(teacher)}
                       className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all text-on-surface-variant"
                     >
                       <span className="material-symbols-outlined text-base">assignment_ind</span>
@@ -461,7 +492,7 @@ export default function TeacherManagement() {
             <div>
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3 mb-4">
                 <h3 className="font-title-lg text-lg text-primary font-bold">
-                  {modalMode === 'create' ? 'Onboard New Faculty' : 'Faculty Records Profile'}
+                  {modalMode === 'create' ? 'Onboard New Faculty' : modalMode === 'edit' ? 'Edit Faculty Record' : 'Faculty Records Profile'}
                 </h3>
                 <button 
                   onClick={() => setModalOpen(false)}
@@ -603,18 +634,20 @@ export default function TeacherManagement() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="font-semibold text-xs text-on-surface-variant">Password *</label>
-                      <input 
-                        type="password" 
-                        value={formData.password}
-                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
-                        placeholder="Minimum 6 characters"
-                        required
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
+                    {modalMode === 'create' ? (
+                      <div className="flex flex-col gap-1">
+                        <label className="font-semibold text-xs text-on-surface-variant">Password *</label>
+                        <input 
+                          type="password" 
+                          value={formData.password}
+                          onChange={(e) => setFormData({...formData, password: e.target.value})}
+                          className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary"
+                          placeholder="Minimum 6 characters"
+                          required
+                        />
+                      </div>
+                    ) : null}
+                    <div className={`flex flex-col gap-1 ${modalMode === 'edit' ? 'col-span-2' : ''}`}>
                       <label className="font-semibold text-xs text-on-surface-variant">Department</label>
                       <input 
                         type="text" 
@@ -718,7 +751,7 @@ export default function TeacherManagement() {
                       disabled={isSubmitting}
                       className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold hover:bg-opacity-95 disabled:bg-opacity-50"
                     >
-                      {isSubmitting ? 'Onboarding...' : 'Onboard Faculty'}
+                      {isSubmitting ? 'Saving...' : modalMode === 'edit' ? 'Save Changes' : 'Onboard Faculty'}
                     </button>
                   </div>
                 </form>

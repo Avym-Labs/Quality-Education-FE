@@ -19,21 +19,30 @@ export default function TeacherProfileDashboard() {
       <div className="space-y-stack-lg mt-stack-sm pb-24">
         
         {/* Header Back Button */}
-        <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
-          <button 
-            onClick={() => navigate('/teacher/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
-          >
-            arrow_back
-          </button>
-          <div>
-            <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              Academic Profile
-            </h2>
-            <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-              Faculty credentials & achievements
-            </p>
+        <section className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate('/teacher/dashboard')}
+              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            >
+              arrow_back
+            </button>
+            <div>
+              <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
+                Academic Profile
+              </h2>
+              <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
+                Faculty credentials & achievements
+              </p>
+            </div>
           </div>
+          <button 
+            onClick={() => navigate('/teacher/settings')}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-full text-xs font-bold active:scale-95 transition-all border border-outline-variant/35 shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[16px]">settings</span>
+            <span>Settings</span>
+          </button>
         </section>
 
         {/* Profile Card Section */}

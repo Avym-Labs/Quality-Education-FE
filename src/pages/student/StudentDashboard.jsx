@@ -141,7 +141,7 @@ export default function StudentDashboard() {
         {/* Quick Actions Grid */}
         <section className="space-y-stack-sm">
           <h3 className="font-title-lg text-title-lg text-on-surface px-1 font-bold">Action Items</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {/* Homework Action */}
             <div 
               onClick={() => navigate('/student/homework')}
@@ -195,6 +195,20 @@ export default function StudentDashboard() {
               <div>
                 <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">Inbox</p>
                 <p className="text-xs font-medium text-on-surface-variant">Class Messages</p>
+              </div>
+            </div>
+
+            {/* Reports Card Action */}
+            <div 
+              onClick={() => navigate('/student/reports')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+            >
+              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
+                analytics
+              </span>
+              <div>
+                <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">Report</p>
+                <p className="text-xs font-medium text-on-surface-variant">Card & Analytics</p>
               </div>
             </div>
           </div>

@@ -18,9 +18,38 @@ export default function HomeworkAssignment() {
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [homeworkLink, setHomeworkLink] = useState('')
+  const [attachments, setAttachments] = useState([])
+  const [uploadingFile, setUploadingFile] = useState(false)
   
   const [homeworkList, setHomeworkList] = useState([])
   const [activeTab, setActiveTab] = useState('active') // active | past
+  
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadingFile(true)
+    setMessage('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const { data } = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      setAttachments(prev => [...prev, { name: file.name, url: data.url }])
+      setMessage('File uploaded successfully!')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      console.error('File upload failed:', err)
+      setMessage(err.response?.data?.detail || 'File upload failed. Unsupported format or size.')
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+
+  const handleRemoveAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, idx) => idx !== index))
+  }
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -64,7 +93,7 @@ export default function HomeworkAssignment() {
         grade,
         section: section || '',
         due_date: dueDate,
-        attachments: [],
+        attachments: attachments.map(a => `${a.name}|${a.url}`),
         homework_link: homeworkLink
       })
 
@@ -74,6 +103,7 @@ export default function HomeworkAssignment() {
       setDescription('')
       setDueDate('')
       setHomeworkLink('')
+      setAttachments([])
 
       // Reload list
       loadHomework()
@@ -107,6 +137,10 @@ export default function HomeworkAssignment() {
     setSubject(hw.subject)
     setSelectedClass(`${hw.grade}-${hw.section}`)
     setHomeworkLink(hw.homework_link || '')
+    setAttachments(hw.attachments ? hw.attachments.map(attStr => {
+      const [name, url] = attStr.includes('|') ? attStr.split('|') : ['Attachment', attStr]
+      return { name, url }
+    }) : [])
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setMessage('Loaded assignment parameters to form.')
     setTimeout(() => setMessage(''), 3000)
@@ -241,6 +275,47 @@ export default function HomeworkAssignment() {
                   />
                 </div>
 
+                {/* File Attachments */}
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">upload_file</span>
+                    <span>Upload Documents / Worksheets / Images</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-outline-variant/60 rounded-xl bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+                      <span className="material-symbols-outlined text-base text-primary">cloud_upload</span>
+                      <span className="text-[11px] font-semibold text-on-surface-variant">
+                        {uploadingFile ? 'Uploading...' : 'Choose file...'}
+                      </span>
+                      <input 
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        disabled={uploadingFile}
+                      />
+                    </label>
+                  </div>
+                  {attachments.length > 0 && (
+                    <div className="space-y-1.5 mt-2">
+                      {attachments.map((file, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-surface-container-low border border-outline-variant/35">
+                          <span className="text-[11px] font-semibold truncate max-w-[180px] text-on-surface flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px] text-primary">description</span>
+                            {file.name}
+                          </span>
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemoveAttachment(idx)}
+                            className="material-symbols-outlined text-xs text-error hover:bg-error-container p-1 rounded-full cursor-pointer"
+                          >
+                            close
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Submit button */}
                 <button 
                   type="submit"
@@ -318,6 +393,27 @@ export default function HomeworkAssignment() {
                                 </a>
                               </div>
                             )}
+                            {hw.attachments && hw.attachments.length > 0 && (
+                              <div className="mt-2.5 flex flex-wrap gap-2">
+                                {hw.attachments.map((attStr, aIdx) => {
+                                  const [name, url] = attStr.includes('|') ? attStr.split('|') : ['Attachment', attStr]
+                                  const downloadUrl = url.startsWith('/') ? `${api.defaults.baseURL.replace('/api', '')}${url}` : url
+                                  return (
+                                    <a 
+                                      key={aIdx}
+                                      href={downloadUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      download
+                                      className="inline-flex items-center gap-1 px-3 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-bold rounded-xl hover:bg-opacity-90 transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-xs">download</span>
+                                      <span>{name}</span>
+                                    </a>
+                                  )
+                                })}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-3 gap-4 pt-1">
@@ -376,6 +472,27 @@ export default function HomeworkAssignment() {
                                 <span className="material-symbols-outlined text-xs">link</span>
                                 <span>Reference Link</span>
                               </a>
+                            </div>
+                          )}
+                          {hw.attachments && hw.attachments.length > 0 && (
+                            <div className="mt-2.5 flex flex-wrap gap-2">
+                              {hw.attachments.map((attStr, aIdx) => {
+                                const [name, url] = attStr.includes('|') ? attStr.split('|') : ['Attachment', attStr]
+                                const downloadUrl = url.startsWith('/') ? `${api.defaults.baseURL.replace('/api', '')}${url}` : url
+                                return (
+                                  <a 
+                                    key={aIdx}
+                                    href={downloadUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                    className="inline-flex items-center gap-1 px-3 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-bold rounded-xl hover:bg-opacity-90 transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-xs">download</span>
+                                    <span>{name}</span>
+                                  </a>
+                                )
+                              })}
                             </div>
                           )}
                         </div>

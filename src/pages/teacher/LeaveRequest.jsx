@@ -191,171 +191,145 @@ export default function LeaveRequest() {
           </div>
         )}
 
-        {/* Portal Tabs Selector */}
-        <div className="bg-surface-container-low rounded-2xl p-1 flex gap-1 border border-outline-variant/25 mb-4">
-          <button 
-            onClick={() => setViewTab('my-leaves')}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-              viewTab === 'my-leaves' 
-                ? 'bg-primary text-on-primary shadow-sm' 
-                : 'text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">assignment_ind</span>
-            <span>My Leave Requests</span>
-          </button>
-          <button 
-            onClick={() => {
-              setViewTab('student-leaves')
-              loadStudentLeaves()
-            }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-              viewTab === 'student-leaves' 
-                ? 'bg-primary text-on-primary shadow-sm' 
-                : 'text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">groups</span>
-            <span>Student Leaves Approval {studentLeaves.filter(l => l.status === 'pending').length > 0 && `(${studentLeaves.filter(l => l.status === 'pending').length})`}</span>
-          </button>
-        </div>
-
-        {viewTab === 'student-leaves' ? (
-          /* STUDENT LEAVES APPROVAL VIEW */
-          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-6 animate-fadeIn">
-            <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
-              <div>
-                <h3 className="font-title-lg text-base text-on-surface font-bold">Student Leave Applications</h3>
-                <p className="text-xs text-on-surface-variant">Review and approve/reject student leave requests</p>
-              </div>
-              <button 
-                onClick={loadStudentLeaves}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low text-primary rounded-xl font-bold text-xs hover:bg-surface-container-high transition-colors active:scale-95 duration-200"
-              >
-                <span className="material-symbols-outlined text-sm">refresh</span>
-                <span>Refresh</span>
-              </button>
-            </div>
-
-            {studentLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
-              </div>
-            ) : studentLeaves.length === 0 ? (
-              <div className="text-center py-16 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant p-6">
-                No student leave requests found.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {studentLeaves.map(item => {
-                  const isPending = item.status === 'pending'
-                  const isApproved = item.status === 'approved'
-
-                  return (
-                    <div 
-                      key={item.id}
-                      className="bg-surface-container-low border border-outline-variant/20 rounded-[24px] p-5 shadow-sm flex flex-col justify-between min-h-[200px] hover:shadow-md transition-all duration-300"
-                    >
-                      <div>
-                        {/* Student Details Header */}
-                        <div className="flex items-center gap-3 border-b border-outline-variant/10 pb-3 mb-3">
-                          {item.user?.avatar ? (
-                            <img src={item.user.avatar} alt="Profile" className="w-10 h-10 rounded-xl object-cover border border-outline-variant" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-xl bg-primary-container text-primary flex items-center justify-center font-bold text-sm shrink-0">
-                              {item.user?.first_name?.[0]}{item.user?.last_name?.[0]}
-                            </div>
-                          )}
-                          <div>
-                            <h4 className="font-bold text-xs text-on-surface">{item.user?.full_name || `${item.user?.first_name} ${item.user?.last_name}`}</h4>
-                            <p className="text-[10px] text-on-surface-variant font-semibold">Student role • {item.leave_type}</p>
-                          </div>
-                        </div>
-
-                        {/* Dates and Reason */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-1.5 text-[10px] text-primary font-bold uppercase tracking-wider">
-                            <span className="material-symbols-outlined text-xs">calendar_today</span>
-                            <span>{item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}</span>
-                          </div>
-                          <p className="text-xs text-on-surface-variant font-medium leading-relaxed bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/10">{item.reason}</p>
-                        </div>
-                      </div>
-
-                      {/* Status / Action Footer */}
-                      <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 mt-auto">
-                        <div className="flex items-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
-                            isPending ? 'bg-primary-container/20 text-primary' :
-                            isApproved ? 'bg-emerald-100 text-emerald-800' :
-                            'bg-error-container text-on-error-container'
-                          }`}>
-                            <span className="material-symbols-outlined text-[10px]">
-                              {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
-                            </span>
-                            <span>{item.status}</span>
-                          </span>
-                        </div>
-
-                        {isPending ? (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleLeaveAction(item.id, 'rejected')}
-                              className="px-3.5 py-1.5 bg-red-50 text-error rounded-xl font-bold text-[11px] hover:bg-red-100 active:scale-95 transition-all"
-                            >
-                              Reject
-                            </button>
-                            <button
-                              onClick={() => handleLeaveAction(item.id, 'approved')}
-                              className="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-[11px] hover:bg-emerald-100 active:scale-95 transition-all"
-                            >
-                              Approve
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-outline font-semibold italic">Processed</span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
           
-          {/* Form Card (Col Span 6) */}
+          {/* Left Column: Student Leaves Approval (lg:col-span-6) */}
           <div className="lg:col-span-6 space-y-4">
-            
-            {/* Mode Toggle */}
-            <div className="bg-surface-container-low rounded-2xl p-1 flex gap-1 border border-outline-variant/25">
-              <button 
-                onClick={() => setLeaveMode('full')}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                  leaveMode === 'full' 
-                    ? 'bg-primary text-on-primary shadow-sm' 
-                    : 'text-on-surface-variant hover:bg-surface-container-high'
-                }`}
-              >
-                Full Day
-              </button>
-              <button 
-                onClick={() => setLeaveMode('partial')}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                  leaveMode === 'partial' 
-                    ? 'bg-primary text-on-primary shadow-sm' 
-                    : 'text-on-surface-variant hover:bg-surface-container-high'
-                }`}
-              >
-                Partial Leave
-              </button>
-            </div>
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-6">
+              <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                <div>
+                  <h3 className="font-title-lg text-base text-on-surface font-bold">Student Leave Applications</h3>
+                  <p className="text-xs text-on-surface-variant">Review and approve/reject student leave requests</p>
+                </div>
+                <button 
+                  onClick={loadStudentLeaves}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low text-primary rounded-xl font-bold text-xs hover:bg-surface-container-high transition-colors active:scale-95 duration-200"
+                >
+                  <span className="material-symbols-outlined text-sm">refresh</span>
+                  <span>Refresh</span>
+                </button>
+              </div>
 
-            {/* Form */}
-            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-stack-md shadow-sm">
+              {studentLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+                </div>
+              ) : studentLeaves.length === 0 ? (
+                <div className="text-center py-16 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant p-6">
+                  No student leave requests found.
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[560px] overflow-y-auto pr-1.5 custom-scrollbar">
+                  {studentLeaves.map(item => {
+                    const isPending = item.status === 'pending'
+                    const isApproved = item.status === 'approved'
+
+                    return (
+                      <div 
+                        key={item.id}
+                        className="bg-surface-container-low border border-outline-variant/20 rounded-[24px] p-4 shadow-sm flex flex-col justify-between min-h-[180px] hover:shadow-md transition-all duration-300"
+                      >
+                        <div>
+                          {/* Student Details Header */}
+                          <div className="flex items-center gap-3 border-b border-outline-variant/10 pb-3 mb-3">
+                            {item.user?.avatar ? (
+                              <img src={item.user.avatar} alt="Profile" className="w-8 h-8 rounded-xl object-cover border border-outline-variant" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-xl bg-primary-fixed text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                                {item.user?.first_name?.[0]}{item.user?.last_name?.[0]}
+                              </div>
+                            )}
+                            <div>
+                              <h4 className="font-bold text-xs text-on-surface">{item.user?.full_name || `${item.user?.first_name} ${item.user?.last_name}`}</h4>
+                              <p className="text-[9px] text-on-surface-variant font-semibold">Student • {item.leave_type}</p>
+                            </div>
+                          </div>
+
+                          {/* Dates and Reason */}
+                          <div className="space-y-2 mb-4">
+                            <div className="flex items-center gap-1.5 text-[9px] text-primary font-bold uppercase tracking-wider">
+                              <span className="material-symbols-outlined text-xs">calendar_today</span>
+                              <span>{item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}</span>
+                            </div>
+                            <p className="text-xs text-on-surface-variant font-medium leading-relaxed bg-surface-container-lowest p-2.5 rounded-xl border border-outline-variant/10">{item.reason}</p>
+                          </div>
+                        </div>
+
+                        {/* Status / Action Footer */}
+                        <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 mt-auto">
+                          <div className="flex items-center">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 ${
+                              isPending ? 'bg-primary-container/20 text-primary' :
+                              isApproved ? 'bg-emerald-100 text-emerald-800' :
+                              'bg-error-container text-on-error-container'
+                            }`}>
+                              <span className="material-symbols-outlined text-[9px]">
+                                {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
+                              </span>
+                              <span>{item.status}</span>
+                            </span>
+                          </div>
+
+                          {isPending ? (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleLeaveAction(item.id, 'rejected')}
+                                className="px-2.5 py-1 bg-red-50 text-error rounded-xl font-bold text-[10px] hover:bg-red-100 active:scale-95 transition-all"
+                              >
+                                Reject
+                              </button>
+                              <button
+                                onClick={() => handleLeaveAction(item.id, 'approved')}
+                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-[10px] hover:bg-emerald-100 active:scale-95 transition-all"
+                              >
+                                Approve
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-outline font-semibold italic">Processed</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: Teacher's Own Leaves (lg:col-span-6) */}
+          <div className="lg:col-span-6 space-y-6">
+            
+            {/* Request Leave Form */}
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-4">
+              <h3 className="font-title-lg text-base text-on-surface font-bold">Request Leave</h3>
+              
+              {/* Mode Toggle */}
+              <div className="bg-surface-container-low rounded-2xl p-1 flex gap-1 border border-outline-variant/25">
+                <button 
+                  onClick={() => setLeaveMode('full')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                    leaveMode === 'full' 
+                      ? 'bg-primary text-on-primary shadow-sm' 
+                      : 'text-on-surface-variant hover:bg-surface-container-high'
+                  }`}
+                >
+                  Full Day
+                </button>
+                <button 
+                  onClick={() => setLeaveMode('partial')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                    leaveMode === 'partial' 
+                      ? 'bg-primary text-on-primary shadow-sm' 
+                      : 'text-on-surface-variant hover:bg-surface-container-high'
+                  }`}
+                >
+                  Partial Leave
+                </button>
+              </div>
+
+              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                
                 {/* Full Day fields */}
                 {leaveMode === 'full' ? (
                   <div className="grid grid-cols-2 gap-4">
@@ -445,97 +419,92 @@ export default function LeaveRequest() {
                   <span>Submit Leave Request</span>
                   <span className="material-symbols-outlined text-sm">send</span>
                 </button>
-
               </form>
             </div>
 
-          </div>
-
-          {/* History Card (Col Span 6) */}
-          <div className="lg:col-span-6 space-y-4">
-            
-            <div className="flex items-center justify-between">
-              <h3 className="font-title-lg text-sm text-on-surface font-bold">Leave History</h3>
-              <div className="flex gap-1.5 bg-surface-container p-1 rounded-xl border border-outline-variant/20">
-                <button 
-                  onClick={() => setFilterStatus('all')}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                    filterStatus === 'all' 
-                      ? 'bg-white text-primary shadow-sm' 
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  All
-                </button>
-                <button 
-                  onClick={() => setFilterStatus('pending')}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                    filterStatus === 'pending' 
-                      ? 'bg-white text-primary shadow-sm' 
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  Pending
-                </button>
+            {/* Leave History */}
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-title-lg text-base text-on-surface font-bold">Leave History</h3>
+                <div className="flex gap-1.5 bg-surface-container p-1 rounded-xl border border-outline-variant/20">
+                  <button 
+                    onClick={() => setFilterStatus('all')}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      filterStatus === 'all' 
+                        ? 'bg-white text-primary shadow-sm' 
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button 
+                    onClick={() => setFilterStatus('pending')}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      filterStatus === 'pending' 
+                        ? 'bg-white text-primary shadow-sm' 
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    Pending
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* List */}
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></span>
-              </div>
-            ) : filteredHistory.length === 0 ? (
-              <div className="text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20">
-                No leave requests found.
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1.5 custom-scrollbar">
-                {filteredHistory.map(item => {
-                  const isPending = item.status === 'pending'
-                  const isApproved = item.status === 'approved'
-                  const isRejected = item.status === 'rejected'
+              {/* List */}
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></span>
+                </div>
+              ) : filteredHistory.length === 0 ? (
+                <div className="text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 p-6 rounded-2xl border border-outline-variant/20">
+                  No leave requests found.
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1.5 custom-scrollbar">
+                  {filteredHistory.map(item => {
+                    const isPending = item.status === 'pending'
+                    const isApproved = item.status === 'approved'
 
-                  return (
-                    <div 
-                      key={item.id}
-                      className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/25 p-stack-md flex flex-col gap-3 shadow-sm"
-                    >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex flex-wrap gap-1.5">
-                          <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">
-                            {item.leave_type}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5 ${
-                            isPending ? 'bg-primary-container/20 text-primary' :
-                            isApproved ? 'bg-emerald-100 text-emerald-800' :
-                            'bg-error-container text-on-error-container'
-                          }`}>
-                            <span className="material-symbols-outlined text-[10px]">
-                              {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
+                    return (
+                      <div 
+                        key={item.id}
+                        className="bg-surface-container-low rounded-[24px] border border-outline-variant/25 p-4 flex flex-col gap-3 shadow-sm"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">
+                              {item.leave_type}
                             </span>
-                            <span>{item.status}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5 ${
+                              isPending ? 'bg-primary-container/20 text-primary' :
+                              isApproved ? 'bg-emerald-100 text-emerald-800' :
+                              'bg-error-container text-on-error-container'
+                            }`}>
+                              <span className="material-symbols-outlined text-[9px]">
+                                {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
+                              </span>
+                              <span>{item.status}</span>
+                            </span>
+                          </div>
+                          <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                            {item.start_date === item.end_date 
+                              ? item.start_date 
+                              : `${item.start_date} - ${item.end_date}`
+                            }
                           </span>
                         </div>
-                        <span className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider text-right">
-                          {item.start_date === item.end_date 
-                            ? item.start_date 
-                            : `${item.start_date} - ${item.end_date}`
-                          }
-                        </span>
+                        <div>
+                          <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                    )
+                  })}
+                </div>
+              )}
+            </div>
 
           </div>
         </div>
-      )}
 
       </div>
     </DashboardLayout>

@@ -11,7 +11,15 @@ export default function TopBar({ onNotificationClick }) {
       <div className="flex items-center gap-stack-sm">
         <div
           className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed shadow-sm cursor-pointer"
-          onClick={() => navigate(`/${role}/profile`)}
+          onClick={() => {
+            if (role === 'superadmin') {
+              navigate('/superadmin/dashboard')
+            } else if (role === 'teacher') {
+              navigate('/teacher/settings')
+            } else {
+              navigate(`/${role}/profile`)
+            }
+          }}
         >
           {user?.avatar ? (
             <img src={user.avatar} alt={user.first_name} className="w-full h-full object-cover" />
@@ -35,8 +43,12 @@ export default function TopBar({ onNotificationClick }) {
         <button
           onClick={() => {
             if (window.confirm('Are you sure you want to sign out?')) {
-              logout()
-              navigate('/login')
+              const nextUser = logout()
+              if (nextUser) {
+                navigate(`/${nextUser.role}/dashboard`, { replace: true })
+              } else {
+                navigate('/login')
+              }
             }
           }}
           className="material-symbols-outlined text-error hover:bg-red-50 transition-colors p-2 rounded-full active:scale-95"

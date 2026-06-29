@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext'
 import loginIllustration from '../../assets/login_illustration.png'
 
 export default function LoginPage() {
-  const [role, setRole] = useState('student')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -20,7 +19,7 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      const user = await login({ identifier, password, role })
+      const user = await login({ identifier, password }, rememberMe)
       navigate(`/${user.role}/dashboard`, { replace: true })
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid credentials. Please try again.')
@@ -70,26 +69,7 @@ export default function LoginPage() {
           </div>
 
           <form className="space-y-stack-md" onSubmit={handleSubmit}>
-            {/* Role selector */}
-            <div className="space-y-base">
-              <span className="text-label-md text-on-surface-variant ml-1">Log in as:</span>
-              <div className="flex gap-2 p-1 bg-surface-container-low rounded-xl">
-                {['student', 'teacher', 'admin'].map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={`flex-1 py-2 text-center text-label-md rounded-lg cursor-pointer transition-all capitalize ${
-                      role === r
-                        ? 'bg-secondary-container text-on-secondary-container font-semibold'
-                        : 'text-on-surface-variant hover:bg-surface-variant/50'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             {/* Email / Mobile */}
             <div className="space-y-base">

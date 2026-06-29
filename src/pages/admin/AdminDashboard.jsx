@@ -230,7 +230,10 @@ export default function AdminDashboard() {
               </div>
 
               {/* Attendance Rate */}
-              <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base">
+              <div 
+                onClick={() => navigate('/admin/reports')}
+                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base cursor-pointer hover:shadow-md transition-all duration-200"
+              >
                 <div className="flex justify-between items-start">
                   <span className="p-2 bg-tertiary-container/10 text-tertiary rounded-xl material-symbols-outlined">
                     how_to_reg
@@ -247,7 +250,10 @@ export default function AdminDashboard() {
               </div>
 
               {/* Avg. Results */}
-              <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base">
+              <div 
+                onClick={() => navigate('/admin/reports')}
+                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base cursor-pointer hover:shadow-md transition-all duration-200"
+              >
                 <div className="flex justify-between items-start">
                   <span className="p-2 bg-primary-container/20 text-primary rounded-xl material-symbols-outlined">
                     insights

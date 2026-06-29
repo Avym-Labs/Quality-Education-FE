@@ -12,15 +12,23 @@ const NAV_ITEMS = {
     { icon: 'home', label: 'Home', path: '/teacher/dashboard' },
     { icon: 'calendar_today', label: 'Attendance', path: '/teacher/attendance' },
     { icon: 'assignment', label: 'Homework', path: '/teacher/homework' },
+    { icon: 'analytics', label: 'Reports', path: '/teacher/reports' },
     { icon: 'chat', label: 'Chat', path: '/teacher/chat' },
-    { icon: 'person', label: 'Profile', path: '/teacher/profile' },
+    { icon: 'settings', label: 'Profile Settings', path: '/teacher/settings' },
   ],
   admin: [
     { icon: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
     { icon: 'group', label: 'Students', path: '/admin/students' },
     { icon: 'school', label: 'Teachers', path: '/admin/teachers' },
+    { icon: 'analytics', label: 'Reports', path: '/admin/reports' },
     { icon: 'campaign', label: 'Announce', path: '/admin/announcements' },
     { icon: 'settings', label: 'Settings', path: '/admin/settings' },
+  ],
+  superadmin: [
+    { icon: 'dashboard', label: 'Dashboard', path: '/superadmin/dashboard' },
+    { icon: 'shield', label: 'Admins', path: '/superadmin/admins' },
+    { icon: 'payments', label: 'Payments', path: '/superadmin/payments' },
+    { icon: 'settings', label: 'Settings', path: '/superadmin/settings' },
   ],
 }
 

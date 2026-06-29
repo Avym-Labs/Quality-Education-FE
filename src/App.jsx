@@ -10,6 +10,8 @@ import StudentProfileGamified from './pages/student/StudentProfileGamified'
 import StudentAttendanceDetails from './pages/student/StudentAttendanceDetails'
 import StudentAttendanceReport from './pages/student/StudentAttendanceReport'
 import StudentResultReport from './pages/student/StudentResultReport'
+import StudentHomework from './pages/student/StudentHomework'
+import StudentReports from './pages/student/StudentReports'
 
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import TeacherProfileDashboard from './pages/teacher/TeacherProfileDashboard'
@@ -19,12 +21,21 @@ import AttendanceMarking from './pages/teacher/AttendanceMarking'
 import HomeworkAssignment from './pages/teacher/HomeworkAssignment'
 import TestPerformanceAnalytics from './pages/teacher/TestPerformanceAnalytics'
 import LeaveRequest from './pages/teacher/LeaveRequest'
+import TeacherResults from './pages/teacher/TeacherResults'
+import TeacherReports from './pages/teacher/TeacherReports'
 
 import AdminDashboard from './pages/admin/AdminDashboard'
 import StudentManagement from './pages/admin/StudentManagement'
 import TeacherManagement from './pages/admin/TeacherManagement'
 import NewAnnouncement from './pages/admin/NewAnnouncement'
 import LeaveApproval from './pages/admin/LeaveApproval'
+import AdminSettings from './pages/admin/AdminSettings'
+import AdminReports from './pages/admin/AdminReports'
+
+import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
+import AdminManagement from './pages/superadmin/AdminManagement'
+import PaymentsHistory from './pages/superadmin/PaymentsHistory'
+import SuperAdminSettings from './pages/superadmin/SuperAdminSettings'
 
 import ChatList from './pages/shared/ChatList'
 import ChatConversation from './pages/shared/ChatConversation'
@@ -47,6 +58,8 @@ function App() {
             <Route path="attendance" element={<StudentAttendanceDetails />} />
             <Route path="attendance/report" element={<StudentAttendanceReport />} />
             <Route path="results" element={<StudentResultReport />} />
+            <Route path="homework" element={<StudentHomework />} />
+            <Route path="reports" element={<StudentReports />} />
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
             <Route path="notifications" element={<NotificationCenter />} />
@@ -63,6 +76,8 @@ function App() {
             <Route path="attendance/mark" element={<AttendanceMarking />} />
             <Route path="homework" element={<HomeworkAssignment />} />
             <Route path="tests/analytics" element={<TestPerformanceAnalytics />} />
+            <Route path="results" element={<TeacherResults />} />
+            <Route path="reports" element={<TeacherReports />} />
             <Route path="leave" element={<LeaveRequest />} />
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
@@ -78,8 +93,19 @@ function App() {
             <Route path="teachers" element={<TeacherManagement />} />
             <Route path="announcements" element={<NewAnnouncement />} />
             <Route path="leave" element={<LeaveApproval />} />
+            <Route path="reports" element={<AdminReports />} />
             <Route path="notifications" element={<NotificationCenter />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+
+          {/* Super Admin routes */}
+          <Route path="/superadmin" element={<ProtectedRoute role="superadmin" />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<SuperAdminDashboard />} />
+            <Route path="admins" element={<AdminManagement />} />
+            <Route path="payments" element={<PaymentsHistory />} />
+            <Route path="settings" element={<SuperAdminSettings />} />
+            <Route path="notifications" element={<NotificationCenter />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />

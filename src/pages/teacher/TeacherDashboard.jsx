@@ -10,6 +10,60 @@ export default function TeacherDashboard() {
   const [homeworkCount, setHomeworkCount] = useState(5)
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
 
+  const [showSwitchModal, setShowSwitchModal] = useState(false)
+  const [switchingTo, setSwitchingTo] = useState(null)
+  const [switchError, setSwitchError] = useState('')
+  const { user: currentUser, switchAccount, addAccount } = useAuth()
+  const [savedAccounts, setSavedAccounts] = useState([])
+
+  useEffect(() => {
+    if (showSwitchModal) {
+      const savedRaw = localStorage.getItem('educore_saved_accounts')
+      let savedList = savedRaw ? JSON.parse(savedRaw) : []
+      const exists = savedList.some(acc => acc.user_id === currentUser.id)
+      
+      if (!exists && currentUser) {
+        savedList.push({
+          user_id: currentUser.id,
+          email: currentUser.email,
+          full_name: currentUser.full_name,
+          role: currentUser.role,
+          avatar: currentUser.avatar,
+          access_token: localStorage.getItem('access_token'),
+          refresh_token: localStorage.getItem('refresh_token'),
+          user_data: currentUser
+        })
+        localStorage.setItem('educore_saved_accounts', JSON.stringify(savedList))
+      }
+      
+      setSavedAccounts(savedList.filter(acc => acc.user_id !== currentUser.id))
+    }
+  }, [showSwitchModal, currentUser])
+
+  const handleSwitchProfile = (targetUserId) => {
+    setSwitchError('')
+    setSwitchingTo(targetUserId)
+    try {
+      const switched = switchAccount(targetUserId)
+      if (switched) {
+        setShowSwitchModal(false)
+        navigate(`/${switched.role}/dashboard`, { replace: true })
+      } else {
+        setSwitchError('Failed to switch account profile.')
+      }
+    } catch (err) {
+      console.error(err)
+      setSwitchError('An error occurred during account switch.')
+    } finally {
+      setSwitchingTo(null)
+    }
+  }
+
+  const handleAddNewAccount = () => {
+    addAccount()
+    navigate('/login')
+  }
+
   useEffect(() => {
     async function fetchDashboardStats() {
       try {
@@ -61,13 +115,7 @@ export default function TeacherDashboard() {
               {user?.department || 'Mathematics Department'} • {todayDate}
             </p>
           </div>
-          <button 
-            onClick={() => navigate('/teacher/profile')}
-            className="flex items-center gap-2 self-start bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-xs font-bold hover:bg-opacity-95 active:scale-95 transition-all shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[16px]">account_box</span>
-            <span>Academic Profile</span>
-          </button>
+          {/* Actions removed as requested */}
         </section>
 
         {/* Stats Bento Grid */}
@@ -95,7 +143,7 @@ export default function TeacherDashboard() {
 
           {/* Results Pending */}
           <div 
-            onClick={() => navigate('/teacher/tests/analytics')}
+            onClick={() => navigate('/teacher/results')}
             className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-tertiary text-3xl">pending_actions</span>
@@ -130,7 +178,7 @@ export default function TeacherDashboard() {
               <span>Take Attendance</span>
             </button>
             <button 
-              onClick={() => navigate('/teacher/tests/analytics')}
+              onClick={() => navigate('/teacher/results')}
               className="flex items-center justify-center gap-2.5 bg-secondary-container text-on-secondary-container py-3.5 rounded-2xl font-bold text-sm shadow-sm border border-outline-variant hover:bg-opacity-95 active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined text-base">upload_file</span>
@@ -283,6 +331,75 @@ export default function TeacherDashboard() {
         </div>
 
       </div>
+      {/* Switch Account Modal */}
+      {showSwitchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-surface-container-lowest rounded-3xl w-full max-w-md p-6 shadow-2xl border border-outline-variant/40 animate-scaleIn">
+            <div className="flex justify-between items-center pb-3 border-b border-outline-variant/15 mb-4">
+              <h3 className="font-title-lg text-base text-on-surface font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">swap_horiz</span>
+                <span>Switch Profile</span>
+              </h3>
+              <button 
+                onClick={() => setShowSwitchModal(false)}
+                className="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container"
+              >
+                close
+              </button>
+            </div>
+
+            {switchError && (
+              <div className="p-3 bg-error-container rounded-xl text-error text-xs font-semibold mb-3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-xs">error</span>
+                <span>{switchError}</span>
+              </div>
+            )}
+
+            <div className="space-y-2.5">
+              {savedAccounts.length === 0 ? (
+                <div className="text-center py-4 bg-surface-container-low/40 rounded-2xl border border-outline-variant/15 text-xs text-on-surface-variant font-semibold">
+                  No other profiles found. You can add an existing account to switch between profiles.
+                </div>
+              ) : (
+                savedAccounts.map(acc => (
+                  <div 
+                    key={acc.user_id}
+                    onClick={() => handleSwitchProfile(acc.user_id)}
+                    className="flex items-center gap-4 p-3 rounded-2xl border border-outline-variant/30 hover:bg-surface-container-low transition-colors cursor-pointer group"
+                  >
+                    {acc.avatar ? (
+                      <img src={acc.avatar} alt={acc.full_name} className="w-10 h-10 rounded-full object-cover border border-outline-variant" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-primary-fixed text-primary flex items-center justify-center font-extrabold uppercase">
+                        {acc.full_name?.[0] || 'U'}
+                      </div>
+                    )}
+                    <div className="text-left">
+                      <h4 className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{acc.full_name}</h4>
+                      <span className="text-[9px] uppercase font-bold text-primary-fixed-dim bg-primary-fixed px-1.5 py-0.5 rounded inline-block mt-0.5">{acc.role}</span>
+                      <p className="text-[10px] text-outline font-semibold mt-1">{acc.email}</p>
+                    </div>
+                    {switchingTo === acc.user_id ? (
+                      <span className="material-symbols-outlined animate-spin text-primary ml-auto text-base">progress_activity</span>
+                    ) : (
+                      <span className="material-symbols-outlined text-outline ml-auto text-base group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                    )}
+                  </div>
+                ))
+              )}
+
+              {/* Add Account Button */}
+              <button 
+                onClick={handleAddNewAccount}
+                className="w-full flex items-center justify-center gap-2 mt-4 py-3 border-2 border-dashed border-outline-variant hover:bg-surface-container-low rounded-2xl transition-colors text-xs font-bold text-primary"
+              >
+                <span className="material-symbols-outlined text-sm">person_add</span>
+                <span>Add Existing Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 }
