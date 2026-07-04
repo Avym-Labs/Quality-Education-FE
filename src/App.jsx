@@ -41,6 +41,7 @@ import ChatList from './pages/shared/ChatList'
 import ChatConversation from './pages/shared/ChatConversation'
 import NotificationCenter from './pages/shared/NotificationCenter'
 import SettingsPage from './pages/shared/SettingsPage'
+import AcademicsHub from './pages/shared/AcademicsHub'
 
 function App() {
   return (
@@ -57,9 +58,10 @@ function App() {
             <Route path="profile/achievements" element={<StudentProfileGamified />} />
             <Route path="attendance" element={<StudentAttendanceDetails />} />
             <Route path="attendance/report" element={<StudentAttendanceReport />} />
-            <Route path="results" element={<StudentResultReport />} />
+            <Route path="academics" element={<AcademicsHub />} />
+            <Route path="results" element={<AcademicsHub />} />
             <Route path="homework" element={<StudentHomework />} />
-            <Route path="reports" element={<StudentReports />} />
+            <Route path="reports" element={<AcademicsHub />} />
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
             <Route path="notifications" element={<NotificationCenter />} />
@@ -76,8 +78,9 @@ function App() {
             <Route path="attendance/mark" element={<AttendanceMarking />} />
             <Route path="homework" element={<HomeworkAssignment />} />
             <Route path="tests/analytics" element={<TestPerformanceAnalytics />} />
-            <Route path="results" element={<TeacherResults />} />
-            <Route path="reports" element={<TeacherReports />} />
+            <Route path="academics" element={<AcademicsHub />} />
+            <Route path="results" element={<AcademicsHub />} />
+            <Route path="reports" element={<AcademicsHub />} />
             <Route path="leave" element={<LeaveRequest />} />
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
@@ -93,7 +96,8 @@ function App() {
             <Route path="teachers" element={<TeacherManagement />} />
             <Route path="announcements" element={<NewAnnouncement />} />
             <Route path="leave" element={<LeaveApproval />} />
-            <Route path="reports" element={<AdminReports />} />
+            <Route path="academics" element={<AcademicsHub />} />
+            <Route path="reports" element={<AcademicsHub />} />
             <Route path="notifications" element={<NotificationCenter />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

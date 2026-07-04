@@ -8,8 +8,20 @@ export default function AdminSettings() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
 
-  // activeView: 'menu' | 'my-profile' | 'teachers' | 'students'
+  // activeView: 'menu' | 'my-profile' | 'teachers' | 'students' | 'switch-profile'
   const [activeView, setActiveView] = useState('menu')
+
+  const [savedAccounts, setSavedAccounts] = useState([])
+  useEffect(() => {
+    if (!user) return
+    try {
+      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const others = roster.filter(r => r.user_id !== user.id)
+      setSavedAccounts(others)
+    } catch (err) {
+      console.error('Failed to load accounts in AdminSettings:', err)
+    }
+  }, [user])
   const [message, setMessage] = useState('')
 
   // Own Profile state
@@ -181,6 +193,77 @@ export default function AdminSettings() {
     }
   }
 
+  const handleSwitchProfile = async (targetUserId) => {
+    try {
+      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const match = roster.find(r => r.user_id === targetUserId)
+      if (!match) return
+
+      const currentRoster = roster.filter(r => r.user_id !== user.id)
+      const currentSavedUser = {
+        user_id: user.id,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        full_name: user.full_name,
+        avatar: user.avatar,
+        access_token: localStorage.getItem('access_token'),
+        refresh_token: localStorage.getItem('refresh_token'),
+      }
+      currentRoster.push(currentSavedUser)
+      localStorage.setItem('educore_saved_accounts', JSON.stringify(currentRoster))
+
+      localStorage.setItem('access_token', match.access_token)
+      localStorage.setItem('refresh_token', match.refresh_token)
+      localStorage.setItem('user', JSON.stringify(match.user_data || {
+        id: match.user_id,
+        email: match.email,
+        phone: match.phone,
+        role: match.role,
+        first_name: match.first_name,
+        last_name: match.last_name,
+        full_name: match.full_name,
+        avatar: match.avatar,
+      }))
+
+      navigate(`/${match.role}/dashboard`, { replace: true })
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to switch profile:', err)
+    }
+  }
+
+  const handleAddNewAccount = () => {
+    try {
+      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const currentRoster = roster.filter(r => r.user_id !== user.id)
+      currentRoster.push({
+        user_id: user.id,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        full_name: user.full_name,
+        avatar: user.avatar,
+        access_token: localStorage.getItem('access_token'),
+        refresh_token: localStorage.getItem('refresh_token'),
+      })
+      localStorage.setItem('educore_saved_accounts', JSON.stringify(currentRoster))
+
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
+
+      navigate('/login')
+      window.location.reload()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-stack-lg mt-stack-md pb-24 max-w-xl mx-auto">
@@ -202,10 +285,14 @@ export default function AdminSettings() {
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-                Settings Options
+                {activeView === 'menu' && 'Account'}
+                {activeView === 'my-profile' && 'Account Credentials'}
+                {activeView === 'teachers' && 'Faculty Access Control'}
+                {activeView === 'students' && 'Student Access Control'}
+                {activeView === 'switch-profile' && 'Switch Account'}
               </h2>
               <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-                {activeView === 'menu' && 'Select a settings option to manage your account or user credentials.'}
+                {activeView === 'menu' && 'Select an account option to manage credentials or switcher profiles.'}
                 {activeView === 'my-profile' && 'Edit your administrative login profile.'}
                 {activeView === 'teachers' && 'Manage faculty email and password credentials.'}
                 {activeView === 'students' && 'Manage student email and password credentials.'}
@@ -265,6 +352,21 @@ export default function AdminSettings() {
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Student Access Control</h4>
                   <p className="text-[10px] text-outline font-semibold">Modify student emails, phone numbers, and passwords</p>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+            </div>
+
+            {/* Switch Account */}
+            <div 
+              onClick={() => setActiveView('switch-profile')}
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-xl">switch_account</span>
+                <div className="text-left">
+                  <h4 className="text-xs font-bold text-on-surface">Switch Account</h4>
+                  <p className="text-[10px] text-outline font-semibold">Switch to another saved credentials profile</p>
                 </div>
               </div>
               <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
@@ -521,6 +623,55 @@ export default function AdminSettings() {
                 </div>
               )}
             </form>
+          </section>
+        )}
+
+        {/* View 5: Switch Profile */}
+        {activeView === 'switch-profile' && (
+          <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn text-xs">
+            <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
+              <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Saved Roster Swaps</h3>
+              <button 
+                onClick={() => setActiveView('menu')}
+                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
+              >
+                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <span>Back</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {savedAccounts.length === 0 ? (
+                <p className="text-xs text-on-surface-variant font-medium">No other saved accounts found.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {savedAccounts.map(acc => (
+                    <div 
+                      key={acc.user_id}
+                      onClick={() => handleSwitchProfile(acc.user_id)}
+                      className="flex items-center gap-3 p-2.5 rounded-xl border border-outline-variant/30 hover:bg-surface-container-low transition-colors cursor-pointer group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary-fixed text-primary flex items-center justify-center font-extrabold text-xs uppercase">
+                        {acc.full_name?.[0] || 'U'}
+                      </div>
+                      <div className="text-left flex-1 min-w-0">
+                        <h4 className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors truncate">{acc.full_name}</h4>
+                        <p className="text-[9px] text-outline font-semibold uppercase">{acc.role}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-outline text-base group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <button 
+                onClick={handleAddNewAccount}
+                className="w-full flex items-center justify-center gap-1.5 mt-2 py-2.5 border border-dashed border-primary/40 hover:bg-primary/5 rounded-xl transition-colors text-xs font-bold text-primary cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">person_add</span>
+                <span>Add Existing Account</span>
+              </button>
+            </div>
           </section>
         )}
 

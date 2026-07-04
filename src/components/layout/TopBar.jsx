@@ -1,10 +1,34 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import api from '../../api/axios'
 
 export default function TopBar({ onNotificationClick }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const role = user?.role || 'student'
+  
+  // System notifications unread count State
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  const fetchUnreadCount = async () => {
+    if (!user) return
+    try {
+      const { data } = await api.get('/notifications/unread-count')
+      setUnreadCount(data.count || 0)
+    } catch (err) {
+      console.error('Failed to fetch unread notification count in TopBar:', err)
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount()
+      // Poll every 15 seconds to sync notification badges in real-time
+      const interval = setInterval(fetchUnreadCount, 15000)
+      return () => clearInterval(interval)
+    }
+  }, [user])
 
   return (
     <header className="w-full top-0 sticky z-40 bg-surface flex justify-between items-center px-container-padding-mobile py-stack-sm shadow-sm">
@@ -17,7 +41,7 @@ export default function TopBar({ onNotificationClick }) {
             } else if (role === 'teacher') {
               navigate('/teacher/settings')
             } else {
-              navigate(`/${role}/profile`)
+              navigate(`/${role}/settings`) // Redirect to the renamed Account page
             }
           }}
         >
@@ -33,13 +57,25 @@ export default function TopBar({ onNotificationClick }) {
         </div>
         <h1 className="text-headline-lg-mobile font-bold text-primary tracking-tight">EduCore</h1>
       </div>
+      
       <div className="flex items-center gap-1">
-        <button
-          onClick={() => onNotificationClick ? onNotificationClick() : navigate(`/${role}/notifications`)}
-          className="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95"
-        >
-          notifications
-        </button>
+        
+        {/* Notifications Icon with Unread Badge count */}
+        <div className="relative">
+          <button
+            onClick={() => onNotificationClick ? onNotificationClick() : navigate(`/${role}/notifications`)}
+            className="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 cursor-pointer"
+          >
+            notifications
+          </button>
+          
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 bg-error text-on-error font-extrabold text-[8px] min-w-[15px] h-[15px] px-1 rounded-full flex items-center justify-center border border-surface shadow-sm animate-pulse pointer-events-none">
+              {unreadCount}
+            </span>
+          )}
+        </div>
+
         <button
           onClick={() => {
             if (window.confirm('Are you sure you want to sign out?')) {
@@ -51,8 +87,7 @@ export default function TopBar({ onNotificationClick }) {
               }
             }
           }}
-          className="material-symbols-outlined text-error hover:bg-red-50 transition-colors p-2 rounded-full active:scale-95"
-          title="Sign Out"
+          className="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 cursor-pointer"
         >
           logout
         </button>

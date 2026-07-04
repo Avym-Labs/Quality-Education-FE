@@ -193,7 +193,7 @@ export default function SettingsPage() {
           </button>
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">
-              {activeView === 'menu' && 'Profile Settings'}
+              {activeView === 'menu' && 'Account'}
               {activeView === 'my-academic-profile' && 'Academic Profile'}
               {activeView === 'profile-details' && 'Account Credentials'}
               {activeView === 'preferences' && 'User Preferences'}
@@ -321,7 +321,7 @@ export default function SettingsPage() {
               className="flex items-center gap-1.5 text-primary font-bold hover:underline mb-2"
             >
               <span className="material-symbols-outlined text-sm">arrow_back</span>
-              <span>Back to Profile Settings</span>
+              <span>Back to Account</span>
             </button>
 
             {/* Profile Card Section */}
