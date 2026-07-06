@@ -380,7 +380,7 @@ export default function AdminSettings() {
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-error text-xl">logout</span>
                 <div className="text-left">
-                  <h4 className="text-xs font-bold text-error">Sign Out Session</h4>
+                  <h4 className="text-xs font-bold text-error">Sign Out</h4>
                   <p className="text-[10px] text-red-400 font-semibold mt-0.5">Logout from current administrative account</p>
                 </div>
               </div>

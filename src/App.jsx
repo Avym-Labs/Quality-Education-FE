@@ -31,6 +31,7 @@ import NewAnnouncement from './pages/admin/NewAnnouncement'
 import LeaveApproval from './pages/admin/LeaveApproval'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminReports from './pages/admin/AdminReports'
+import AdminChatLogs from './pages/admin/AdminChatLogs'
 
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import AdminManagement from './pages/superadmin/AdminManagement'
@@ -42,6 +43,7 @@ import ChatConversation from './pages/shared/ChatConversation'
 import NotificationCenter from './pages/shared/NotificationCenter'
 import SettingsPage from './pages/shared/SettingsPage'
 import AcademicsHub from './pages/shared/AcademicsHub'
+import SchedulePage from './pages/shared/SchedulePage'
 
 function App() {
   return (
@@ -65,6 +67,7 @@ function App() {
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
             <Route path="notifications" element={<NotificationCenter />} />
+            <Route path="schedule" element={<SchedulePage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 
@@ -75,7 +78,7 @@ function App() {
             <Route path="profile" element={<TeacherProfileDashboard />} />
             <Route path="analytics" element={<TeacherPerformanceAnalytics />} />
             <Route path="attendance" element={<TeacherAttendance />} />
-            <Route path="attendance/mark" element={<AttendanceMarking />} />
+            <Route path="attendance/mark" element={<TeacherAttendance />} />
             <Route path="homework" element={<HomeworkAssignment />} />
             <Route path="tests/analytics" element={<TestPerformanceAnalytics />} />
             <Route path="academics" element={<AcademicsHub />} />
@@ -85,6 +88,7 @@ function App() {
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
             <Route path="notifications" element={<NotificationCenter />} />
+            <Route path="schedule" element={<SchedulePage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 
@@ -98,7 +102,9 @@ function App() {
             <Route path="leave" element={<LeaveApproval />} />
             <Route path="academics" element={<AcademicsHub />} />
             <Route path="reports" element={<AcademicsHub />} />
+            <Route path="chat-logs" element={<AdminChatLogs />} />
             <Route path="notifications" element={<NotificationCenter />} />
+            <Route path="schedule" element={<SchedulePage />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 

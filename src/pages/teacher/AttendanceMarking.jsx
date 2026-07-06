@@ -199,37 +199,59 @@ export default function AttendanceMarking() {
               onChange={(e) => setSelectedDate(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             />
-            <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-            >
-              {assignedClasses.map(cls => (
-                <option key={cls} value={cls}>Class {cls}</option>
-              ))}
-            </select>
           </div>
         </section>
 
-        {/* Subjects horizontal selector */}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
-          {subjects.map(subj => {
-            const isSelected = selectedSubject === subj
-            return (
-              <button
-                key={subj}
-                onClick={() => setSelectedSubject(subj)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full font-label-md text-xs font-semibold transition-all shadow-sm ${
-                  isSelected 
-                    ? 'bg-primary text-on-primary' 
-                    : 'bg-surface-container-highest text-on-surface-variant hover:bg-surface-container-high'
-                }`}
-              >
-                {subj}
-              </button>
-            )
-          })}
-        </div>
+        {/* Dynamic Class & Subject Button Filters */}
+        <section className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/35 shadow-xs space-y-3.5 text-left">
+          {/* Classes Row */}
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase font-bold text-outline">Target Class:</span>
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
+              {assignedClasses.map(cls => {
+                const isSelected = selectedClass === cls
+                return (
+                  <button
+                    key={cls}
+                    type="button"
+                    onClick={() => setSelectedClass(cls)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-2xl font-label-md text-xs font-bold transition-all border shadow-xs cursor-pointer select-none active:scale-95 duration-100 ${
+                      isSelected 
+                        ? 'bg-primary text-on-primary border-primary' 
+                        : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
+                    }`}
+                  >
+                    Class {cls}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Subjects Row */}
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase font-bold text-outline">Subject:</span>
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
+              {subjects.map(subj => {
+                const isSelected = selectedSubject === subj
+                return (
+                  <button
+                    key={subj}
+                    type="button"
+                    onClick={() => setSelectedSubject(subj)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-2xl font-label-md text-xs font-bold transition-all border shadow-xs cursor-pointer select-none active:scale-95 duration-100 ${
+                      isSelected 
+                        ? 'bg-primary text-on-primary border-primary' 
+                        : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
+                    }`}
+                  >
+                    {subj}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </section>
 
         {/* Status Messages */}
         {message && (

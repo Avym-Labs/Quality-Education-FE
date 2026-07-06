@@ -196,78 +196,94 @@ export default function AdminDashboard() {
             )}
 
             {/* KPI Bento Grid */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-stack-md">
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
               {/* Total Students */}
               <div 
                 onClick={() => navigate('/admin/students')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base cursor-pointer hover:shadow-md transition-all duration-200"
+                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
               >
-                <div className="flex justify-between items-start">
-                  <span className="p-2 bg-primary-container/20 text-primary rounded-xl material-symbols-outlined">
-                    groups
-                  </span>
-                </div>
+                <span className="material-symbols-outlined text-primary text-3xl">groups</span>
                 <div>
-                  <p className="text-on-surface-variant font-label-md text-[11px] uppercase tracking-wider font-semibold">Total Students</p>
-                  <p className="font-headline-lg text-headline-lg text-primary font-bold">{totalStudents.toLocaleString()}</p>
+                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{totalStudents.toLocaleString()}</div>
+                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Students</div>
                 </div>
               </div>
 
               {/* Total Teachers */}
               <div 
                 onClick={() => navigate('/admin/teachers')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base cursor-pointer hover:shadow-md transition-all duration-200"
+                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
               >
-                <div className="flex justify-between items-start">
-                  <span className="p-2 bg-secondary-container/20 text-secondary rounded-xl material-symbols-outlined">
-                    person_celebrate
-                  </span>
-                </div>
+                <span className="material-symbols-outlined text-secondary text-3xl">person_celebrate</span>
                 <div>
-                  <p className="text-on-surface-variant font-label-md text-[11px] uppercase tracking-wider font-semibold">Total Teachers</p>
-                  <p className="font-headline-lg text-headline-lg text-secondary font-bold">{totalTeachers}</p>
+                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{totalTeachers}</div>
+                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Teachers</div>
                 </div>
               </div>
 
               {/* Attendance Rate */}
               <div 
                 onClick={() => navigate('/admin/reports')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base cursor-pointer hover:shadow-md transition-all duration-200"
+                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
               >
                 <div className="flex justify-between items-start">
-                  <span className="p-2 bg-tertiary-container/10 text-tertiary rounded-xl material-symbols-outlined">
-                    how_to_reg
-                  </span>
-                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold gap-0.5">
+                  <span className="material-symbols-outlined text-error text-3xl">how_to_reg</span>
+                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold gap-0.5 print:hidden">
                     <span className="material-symbols-outlined text-[12px]">trending_up</span>
                     2.1%
                   </div>
                 </div>
                 <div>
-                  <p className="text-on-surface-variant font-label-md text-[11px] uppercase tracking-wider font-semibold">Attendance Rate</p>
-                  <p className="font-headline-lg text-headline-lg text-on-surface font-bold">{attendanceRate}%</p>
+                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{attendanceRate}%</div>
+                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Attendance Rate</div>
                 </div>
               </div>
 
               {/* Avg. Results */}
               <div 
                 onClick={() => navigate('/admin/reports')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col gap-base cursor-pointer hover:shadow-md transition-all duration-200"
+                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
               >
                 <div className="flex justify-between items-start">
-                  <span className="p-2 bg-primary-container/20 text-primary rounded-xl material-symbols-outlined">
-                    insights
-                  </span>
-                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold gap-0.5">
+                  <span className="material-symbols-outlined text-tertiary text-3xl">insights</span>
+                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold gap-0.5 print:hidden">
                     <span className="material-symbols-outlined text-[12px]">trending_up</span>
                     1.5%
                   </div>
                 </div>
                 <div>
-                  <p className="text-on-surface-variant font-label-md text-[11px] uppercase tracking-wider font-semibold">Avg. Results</p>
-                  <p className="font-headline-lg text-headline-lg text-on-surface font-bold">{avgResults}%</p>
+                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{avgResults}%</div>
+                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Avg. Results</div>
                 </div>
               </div>
+            </section>
+
+            {/* Quick Audit Action Panel */}
+            <section className="flex flex-wrap gap-3 mt-1 justify-start">
+              <button 
+                type="button"
+                onClick={() => navigate('/admin/chat-logs')}
+                className="flex items-center gap-2 px-4.5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">visibility</span>
+                <span>Audit Chat Logs</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => navigate('/admin/announcements')}
+                className="flex items-center gap-2 px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-all active:scale-95 duration-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">campaign</span>
+                <span>Send Notice Announcement</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => navigate('/admin/schedule')}
+                className="flex items-center gap-2 px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-all active:scale-95 duration-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">calendar_today</span>
+                <span>Manage Class Schedules</span>
+              </button>
             </section>
 
             {/* Main Analytics Area */}

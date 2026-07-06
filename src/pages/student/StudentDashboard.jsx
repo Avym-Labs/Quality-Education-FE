@@ -83,10 +83,10 @@ export default function StudentDashboard() {
           {/* Attendance Card */}
           <div 
             onClick={() => navigate('/student/attendance')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-md transition-shadow h-28"
           >
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary-fixed opacity-10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-1">
               <div className="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary">calendar_today</span>
               </div>
@@ -101,9 +101,9 @@ export default function StudentDashboard() {
           </div>
 
           {/* Attendance Score Card */}
-          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group">
+          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group h-28">
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-tertiary-fixed opacity-10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-1">
               <div className="w-10 h-10 rounded-xl bg-tertiary-fixed flex items-center justify-center">
                 <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
               </div>
@@ -122,10 +122,10 @@ export default function StudentDashboard() {
           {/* Current Rank Card */}
           <div 
             onClick={() => navigate('/student/results')}
-            className="bg-primary-container p-stack-md rounded-[24px] shadow-lg flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow"
+            className="bg-primary-container p-stack-md rounded-[24px] shadow-lg flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow h-28"
           >
             <div className="absolute -right-2 -top-2 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-1">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                 <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>trophy</span>
               </div>
@@ -209,6 +209,20 @@ export default function StudentDashboard() {
               <div>
                 <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">Report</p>
                 <p className="text-xs font-medium text-on-surface-variant">Card & Analytics</p>
+              </div>
+            </div>
+
+            {/* Calendar Schedule Action */}
+            <div 
+              onClick={() => navigate('/student/schedule')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+            >
+              <span className="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">
+                calendar_today
+              </span>
+              <div>
+                <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">Schedule</p>
+                <p className="text-xs font-medium text-on-surface-variant">Lectures & Dates</p>
               </div>
             </div>
           </div>

@@ -121,7 +121,7 @@ export default function TeacherDashboard() {
         {/* Stats Bento Grid */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
           {/* Total Students handled */}
-          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-default hover:bg-surface-container-low transition-colors duration-200">
+          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default hover:bg-surface-container-low transition-colors duration-200">
             <span className="material-symbols-outlined text-primary text-3xl">groups</span>
             <div>
               <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">42</div>
@@ -132,7 +132,7 @@ export default function TeacherDashboard() {
           {/* Attendance Status */}
           <div 
             onClick={() => navigate('/teacher/attendance/mark')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-error text-3xl">event_busy</span>
             <div>
@@ -144,7 +144,7 @@ export default function TeacherDashboard() {
           {/* Results Pending */}
           <div 
             onClick={() => navigate('/teacher/results')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-tertiary text-3xl">pending_actions</span>
             <div>
@@ -156,7 +156,7 @@ export default function TeacherDashboard() {
           {/* Homeworks */}
           <div 
             onClick={() => navigate('/teacher/homework')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-secondary text-3xl">assignment</span>
             <div>
@@ -169,9 +169,9 @@ export default function TeacherDashboard() {
         {/* Quick Actions Shortcuts */}
         <section className="space-y-stack-sm">
           <h3 className="font-title-lg text-base text-on-surface font-bold">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-gutter">
             <button 
-              onClick={() => navigate('/teacher/attendance/mark')}
+              onClick={() => navigate('/teacher/attendance')}
               className="flex items-center justify-center gap-2.5 bg-primary text-on-primary py-3.5 rounded-2xl font-bold text-sm shadow-md hover:opacity-95 active:scale-95 transition-all hover:shadow-lg"
             >
               <span className="material-symbols-outlined text-base">rule</span>
@@ -197,6 +197,13 @@ export default function TeacherDashboard() {
             >
               <span className="material-symbols-outlined text-base">time_to_leave</span>
               <span>Request Leave {pendingLeaveCount > 0 && `(${pendingLeaveCount})`}</span>
+            </button>
+            <button 
+              onClick={() => navigate('/teacher/schedule')}
+              className="flex items-center justify-center gap-2.5 bg-surface-container-lowest text-on-surface py-3.5 rounded-2xl font-bold text-sm shadow-sm border border-outline-variant hover:bg-surface-container-low active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-base">calendar_today</span>
+              <span>Lecture Calendar</span>
             </button>
           </div>
         </section>

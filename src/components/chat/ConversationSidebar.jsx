@@ -374,6 +374,29 @@ export default function ConversationSidebar({ activeConversationId }) {
                     </div>
                   )}
 
+                  {/* Select Prebuilt Template */}
+                  <div className="flex flex-col gap-1 text-left">
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Prebuilt Message Template</label>
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val) {
+                          setBroadcastContent(val)
+                        }
+                      }}
+                      className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
+                    >
+                      <option value="">-- Choose designed template (Optional) --</option>
+                      <option value="Hello {name},&#10;&#10;Your results for the recent exam have been uploaded. Please log in to your Academics Hub to review your marks.&#10;&#10;Regards, Admin.">📚 Exam Results Uploaded</option>
+                      <option value="Dear {name},&#10;&#10;This is a reminder that your tuition fee installment is currently pending. Please proceed with payment via the payments section.&#10;&#10;Thank you.">💰 Outstanding Fee Reminder</option>
+                      <option value="Hi {name},&#10;&#10;Please check your homework panel. You have outstanding assignments due for submission. Ensure completion by the deadline.&#10;&#10;Regards, {sender_name}.">📝 Pending Homework Alert</option>
+                      <option value="Hi {name},&#10;&#10;Your attendance rate is currently below the 75% minimum requirement. Please meet with your homeroom teacher to address this standing.">⚠️ Attendance Shortage Warning</option>
+                    </select>
+                    <p className="text-[9px] text-outline font-semibold uppercase tracking-wider mt-0.5">
+                      Tip: Use <span className="text-primary font-bold">{"{name}"}</span> or <span className="text-primary font-bold">{"{first_name}"}</span> for auto student personalization.
+                    </p>
+                  </div>
+
                   {/* Message Content */}
                   <div className="flex flex-col gap-1 text-left">
                     <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Content</label>

@@ -124,6 +124,27 @@ export default function NewAnnouncement() {
                 />
               </div>
               
+              {/* Select Prebuilt Notice Template */}
+              <div className="flex flex-col gap-unit mt-2">
+                <label className="font-semibold text-xs text-on-surface-variant">Notice Template (Optional)</label>
+                <select
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val) {
+                      const [tplTitle, tplContent] = val.split('|||')
+                      setTitle(tplTitle)
+                      setContent(tplContent)
+                    }
+                  }}
+                  className="w-full px-stack-md py-2.5 rounded-xl border border-outline-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-xs font-semibold"
+                >
+                  <option value="">-- Select prebuilt designed layout --</option>
+                  <option value="School Holiday Announcement|||Dear Students and Faculty,&#10;&#10;Please note that the school will remain closed on [Date] on account of [Occasion]. Normal classes will resume on [Resume Date].&#10;&#10;Regards,&#10;School Administration">🏫 Holiday Notice Layout</option>
+                  <option value="Upcoming Examination Schedule|||Dear Students,&#10;&#10;The schedule for the upcoming term examinations has been published. Please check the academics portal for timetables, guidelines, and syllabus details. Prep well!&#10;&#10;Best wishes,&#10;Academic Coordinator">📅 Exam Schedule Notice Layout</option>
+                  <option value="Scheduled Campus Maintenance|||Dear Students and Staff,&#10;&#10;Please be informed that campus [facilities/servers] will undergo maintenance on [Date] from [Start Time] to [End Time]. Some services may be temporarily unavailable. We apologize for any inconvenience.&#10;&#10;Sincerely,&#10;IT Support Services">🔧 Maintenance Alert Layout</option>
+                </select>
+              </div>
+
               <div className="flex flex-col gap-unit mt-2">
                 <label className="font-semibold text-xs text-on-surface-variant" htmlFor="message">Message Body *</label>
                 <textarea 

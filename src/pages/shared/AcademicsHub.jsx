@@ -19,6 +19,7 @@ export default function AcademicsHub() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [viewingMaterial, setViewingMaterial] = useState(null)
 
   // Upload Form States (Teachers & Admins)
   const [materialTitle, setMaterialTitle] = useState('')
@@ -454,6 +455,112 @@ export default function AcademicsHub() {
     }
   }
 
+  const handleDownloadCSVTemplate = () => {
+    if (studentsList.length === 0) {
+      alert('No students available in the roster list.');
+      return;
+    }
+    const headers = ['Roll Number', 'Student Name', 'Student User ID', 'Marks Obtained', 'Remarks'];
+    const rows = studentsList.map((s, idx) => [
+      s.roll_number || String(idx + 1),
+      s.full_name,
+      s.user_id,
+      '',
+      ''
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(val => `"${val}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Roster_Template_Class_${filterClass}_${recordSubject}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  const handleUploadCSV = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        const lines = text.split('\n');
+        const parsedStates = { ...marksData };
+        let matchCount = 0;
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          
+          const parts = [];
+          let insideQuote = false;
+          let currentPart = '';
+          for (let charIdx = 0; charIdx < line.length; charIdx++) {
+            const char = line[charIdx];
+            if (char === '"') {
+              insideQuote = !insideQuote;
+            } else if (char === ',' && !insideQuote) {
+              parts.push(currentPart.trim());
+              currentPart = '';
+            } else {
+              currentPart += char;
+            }
+          }
+          parts.push(currentPart.trim());
+          
+          if (parts.length >= 3) {
+            const userId = parts[2];
+            const marks = parts[3];
+            const remarks = parts[4] || '';
+            if (userId) {
+              parsedStates[userId] = {
+                marks: marks !== '' ? parseFloat(marks) : '',
+                remarks: remarks
+              };
+              matchCount++;
+            }
+          }
+        }
+        setMarksData(parsedStates);
+        alert(`Successfully imported scores for ${matchCount} students from CSV! Please review the roster below and click "Submit Score Roster" to save.`);
+      } catch (err) {
+        console.error('Failed to parse CSV:', err);
+        alert('Failed to parse CSV. Please make sure the structure matches the downloaded template.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  const handleExportHistoryCSV = () => {
+    if (filteredResults.length === 0) return;
+    const headers = ['Student Name', 'Test Title', 'Subject', 'Date', 'Marks Obtained', 'Total Marks', 'Percentage', 'Grade', 'Remarks'];
+    const rows = filteredResults.map(r => [
+      r.student_name || studentsList.find(s => s.user_id === r.student_id)?.full_name || 'Student',
+      r.test_title,
+      r.subject,
+      new Date(r.test_date || r.created_at).toLocaleDateString(),
+      r.marks_obtained,
+      r.total_marks,
+      `${r.percentage}%`,
+      r.grade_letter,
+      r.remarks || ''
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(val => `"${val}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Test_History_Class_${filterClass}_${filterSubject}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   const getAttachmentUrl = (url) => {
     if (!url) return ''
     if (url.startsWith('http://') || url.startsWith('https://')) return url
@@ -662,23 +769,37 @@ export default function AcademicsHub() {
                           Uploaded: {formatDate(mat.created_at)}
                         </div>
                         <div className="flex gap-2">
-                          <a 
-                            href={getAttachmentUrl(mat.file_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center hover:bg-primary-fixed hover:text-primary transition-colors text-on-surface"
-                            title="Download Material"
-                          >
-                            <span className="material-symbols-outlined text-sm">download</span>
-                          </a>
-                          {(role === 'teacher' || role === 'admin') && (
-                            <button
-                              onClick={() => handleDeleteMaterial(mat.id)}
-                              className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
-                              title="Delete Material"
+                          {role === 'student' ? (
+                            <button 
+                              type="button"
+                              onClick={() => setViewingMaterial(mat)}
+                              className="px-3.5 py-2 rounded-2xl bg-primary-fixed hover:bg-primary hover:text-on-primary text-primary font-bold text-[10px] shadow-xs active:scale-95 duration-100 flex items-center gap-1 border-none cursor-pointer animate-fadeIn"
+                              title="View Resource"
                             >
-                              <span className="material-symbols-outlined text-sm">delete</span>
+                              <span className="material-symbols-outlined text-xs">visibility</span>
+                              <span>View Resource</span>
                             </button>
+                          ) : (
+                            <>
+                              <a 
+                                href={getAttachmentUrl(mat.file_url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center hover:bg-primary-fixed hover:text-primary transition-colors text-on-surface"
+                                title="Download Material"
+                              >
+                                <span className="material-symbols-outlined text-sm">download</span>
+                              </a>
+                              {(role === 'teacher' || role === 'admin') && (
+                                <button
+                                  onClick={() => handleDeleteMaterial(mat.id)}
+                                  className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
+                                  title="Delete Material"
+                                >
+                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -1022,6 +1143,38 @@ export default function AcademicsHub() {
                       </div>
                     </div>
 
+                    {/* CSV Batch Operations */}
+                    <div className="flex flex-wrap items-center gap-3.5 bg-surface-container-low/30 p-3.5 rounded-2xl border border-outline-variant/30 text-[10px]">
+                      <div className="flex-1 text-left">
+                        <span className="font-bold text-on-surface uppercase block">Excel / CSV Batch Operations</span>
+                        <span className="text-outline font-medium">Download the student roster list, fill details offline, and upload.</span>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        {/* Download Template button */}
+                        <button
+                          type="button"
+                          onClick={handleDownloadCSVTemplate}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/50 rounded-xl font-bold cursor-pointer transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-xs">download</span>
+                          <span>Download Template</span>
+                        </button>
+                        
+                        {/* Upload CSV button */}
+                        <label className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:bg-opacity-95 transition-all active:scale-95 duration-100 shadow-xs">
+                          <span className="material-symbols-outlined text-xs">upload</span>
+                          <span>Upload Scores (CSV)</span>
+                          <input 
+                            type="file" 
+                            accept=".csv"
+                            onChange={handleUploadCSV}
+                            className="hidden" 
+                          />
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Student scores rows */}
                     <div className="border-t border-outline-variant/10 pt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
                       <label className="font-bold text-[10px] uppercase text-outline mb-1 block">Student Marks Roster</label>
@@ -1072,9 +1225,22 @@ export default function AcademicsHub() {
 
             {/* Results Logs Table list */}
             <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/35 p-5 shadow-sm space-y-4">
-              <h3 className="text-xs font-black uppercase text-on-surface tracking-wider border-b border-outline-variant/15 pb-2 text-left">
-                Test Score History Records
-              </h3>
+              <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2 flex-wrap gap-2">
+                <h3 className="text-xs font-black uppercase text-on-surface tracking-wider text-left">
+                  Test Score History Records
+                </h3>
+                
+                {filteredResults.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleExportHistoryCSV}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high border border-outline-variant/50 text-[10px] font-bold rounded-xl cursor-pointer hover:bg-surface-container-highest transition-colors active:scale-95 duration-100"
+                  >
+                    <span className="material-symbols-outlined text-xs">download_for_offline</span>
+                    <span>Export History (CSV)</span>
+                  </button>
+                )}
+              </div>
 
               {loadingResults ? (
                 <div className="py-12 text-center text-outline font-semibold">Querying scores...</div>
@@ -1144,11 +1310,46 @@ export default function AcademicsHub() {
             
             {/* Filter controls matching results tab */}
             <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-4 text-xs text-left">
-              <div className="flex items-center gap-1.5 border-b border-outline-variant/15 pb-2">
-                <span className="material-symbols-outlined text-primary text-base">analytics</span>
-                <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
-                  Academic Performance Analytics Filters
-                </h3>
+              <style dangerouslySetInnerHTML={{__html: `
+                @media print {
+                  body * {
+                    visibility: hidden;
+                  }
+                  #printable-report-area, #printable-report-area * {
+                    visibility: visible;
+                  }
+                  #printable-report-area {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    background: white !important;
+                  }
+                  .print\\:hidden {
+                    display: none !important;
+                  }
+                }
+              `}} />
+              
+              <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2 flex-wrap gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-primary text-base">analytics</span>
+                  <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
+                    Academic Performance Analytics Filters
+                  </h3>
+                </div>
+                
+                {/* Print/Download Action (Only for Teacher & Admin roles) */}
+                {(role === 'teacher' || role === 'admin') && (
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-xl text-[10px] font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer print:hidden"
+                  >
+                    <span className="material-symbols-outlined text-xs">picture_as_pdf</span>
+                    <span>Download Report (PDF)</span>
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -1236,7 +1437,23 @@ export default function AcademicsHub() {
               )}
             </div>
 
-            {/* Performance Indicators Metrics panel */}
+            {/* Printable Wrapper */}
+            <div id="printable-report-area" className="space-y-6">
+              {/* Branded print header */}
+              <div className="hidden print:block text-left border-b-2 border-primary pb-4 mb-6">
+                <h1 className="text-lg font-black text-primary uppercase tracking-wider">
+                  Educore Performance Report Card
+                </h1>
+                <p className="text-[10px] text-outline font-bold mt-1">
+                  Class: {filterClass} &bull; Subject: {filterSubject} &bull; Student: {filterStudentId === 'All' ? 'All Students' : studentsList.find(s => s.user_id === filterStudentId)?.full_name || filterStudentId}
+                </p>
+                <p className="text-[9px] text-outline font-semibold uppercase">
+                  Timeframe: {dateRange === 'all' ? 'All Time' : dateRange === '30days' ? 'Last 30 Days' : dateRange === 'semester' ? 'Current Semester Term' : `${customStartDate} to ${customEndDate}`}
+                </p>
+                <p className="text-[8px] text-outline mt-1 font-medium">Generated on: {new Date().toLocaleString()}</p>
+              </div>
+
+              {/* Performance Indicators Metrics panel */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
               {/* Attendance Card */}
               <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/35 shadow-sm">
@@ -1412,7 +1629,105 @@ export default function AcademicsHub() {
 
             </div>
 
-          </section>
+          </div>
+        </section>
+      )}
+
+        {/* Secure In-App Viewer Modal (Student view restriction) */}
+        {viewingMaterial && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] animate-fadeIn p-4">
+            <div className="bg-surface-container-lowest rounded-[28px] border border-outline-variant/30 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
+              
+              {/* Header */}
+              <div className="p-4 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low text-left">
+                <div>
+                  <span className="px-2 py-0.5 bg-primary-fixed text-primary text-[8px] font-black uppercase rounded-md">
+                    {viewingMaterial.subject}
+                  </span>
+                  <h3 className="font-bold text-xs text-on-surface mt-1 truncate max-w-[250px] sm:max-w-md">
+                    {viewingMaterial.title}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingMaterial(null)}
+                  className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors border-none cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+
+              {/* Secure View Pane */}
+              <div 
+                className="flex-1 overflow-auto bg-surface-container-lowest p-6 flex items-center justify-center relative select-none"
+                onContextMenu={e => e.preventDefault()}
+                onDragStart={e => e.preventDefault()}
+              >
+                {/* Watermark overlay */}
+                <div className="absolute inset-0 pointer-events-none flex flex-wrap items-center justify-center gap-16 overflow-hidden opacity-[0.03] select-none">
+                  {Array.from({ length: 24 }).map((_, i) => (
+                    <span key={i} className="text-xs font-black rotate-[-25deg] tracking-widest uppercase">
+                      Educore Secure Preview Only
+                    </span>
+                  ))}
+                </div>
+
+                {/* Content Renderer */}
+                {(() => {
+                  const ext = viewingMaterial.file_url.split('.').pop().toLowerCase()
+                  const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
+                  const isPdf = ext === 'pdf'
+                  
+                  if (isImg) {
+                    return (
+                      <img 
+                        src={getAttachmentUrl(viewingMaterial.file_url)} 
+                        alt="Study Resource" 
+                        className="max-h-[65vh] object-contain rounded-2xl shadow-sm border border-outline-variant/20"
+                      />
+                    )
+                  }
+
+                  if (isPdf) {
+                    return (
+                      <iframe 
+                        src={getAttachmentUrl(viewingMaterial.file_url) + '#toolbar=0&navpanes=0'} 
+                        className="w-full h-[65vh] border border-outline-variant/30 rounded-2xl"
+                        title="PDF Viewer"
+                      />
+                    )
+                  }
+
+                  return (
+                    <div className="text-center p-8 max-w-sm rounded-2xl border border-dashed border-outline-variant bg-surface-container-low/20">
+                      <span className="material-symbols-outlined text-4xl text-primary">menu_book</span>
+                      <h4 className="font-bold text-xs mt-2 text-on-surface">Secure Document Stream</h4>
+                      <p className="text-[10px] text-outline font-semibold mt-1">
+                        Resource files of format .{ext} are streamed securely in-app. Local download is disabled by administrator policy.
+                      </p>
+                      <a 
+                        href={getAttachmentUrl(viewingMaterial.file_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-xl text-[10px] font-bold shadow-xs hover:bg-opacity-95 text-decoration-none"
+                      >
+                        <span className="material-symbols-outlined text-xs">open_in_new</span>
+                        <span>Stream Live View</span>
+                      </a>
+                    </div>
+                  )
+                })()}
+
+              </div>
+
+              {/* Secure Footnote */}
+              <div className="p-3 bg-surface-container-low border-t border-outline-variant/20 text-center text-[9px] font-bold text-outline uppercase tracking-wider flex items-center justify-center gap-1.5">
+                <span className="material-symbols-outlined text-[13px] text-primary">lock</span>
+                <span>Protected by Educore Security Shield Policy &bull; Local copies disallowed</span>
+              </div>
+
+            </div>
+          </div>
         )}
 
       </div>
