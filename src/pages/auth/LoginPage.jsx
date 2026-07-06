@@ -127,7 +127,11 @@ export default function LoginPage() {
                 />
                 <span className="text-label-md text-on-surface-variant group-hover:text-on-surface transition-colors">Remember me</span>
               </label>
-              <button type="button" className="text-label-md text-primary font-bold hover:underline">
+              <button 
+                type="button" 
+                onClick={() => navigate('/forgot-password')}
+                className="text-label-md text-primary font-bold hover:underline cursor-pointer"
+              >
                 Forgot password?
               </button>
             </div>
