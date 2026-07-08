@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 
-export default function SchedulePage() {
+export default function SchedulePage({ embed = false }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const role = user?.role || 'student'
@@ -192,11 +192,11 @@ export default function SchedulePage() {
     }
   }
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-stack-md mt-stack-sm pb-24 text-left">
-        
-        {/* Header bar */}
+  const content = (
+    <div className="space-y-stack-md mt-stack-sm pb-24 text-left">
+      
+      {/* Header bar */}
+      {!embed && (
         <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
           <div className="flex items-center gap-3">
             <button 
@@ -231,6 +231,7 @@ export default function SchedulePage() {
             </div>
           )}
         </section>
+      )}
 
         {/* Notifications alerts banner */}
         {success && (
@@ -527,7 +528,9 @@ export default function SchedulePage() {
           </div>
         )}
 
-      </div>
-    </DashboardLayout>
+    </div>
   )
+
+  if (embed) return content
+  return <DashboardLayout>{content}</DashboardLayout>
 }

@@ -270,6 +270,14 @@ export default function AdminDashboard() {
               </button>
               <button 
                 type="button"
+                onClick={() => navigate('/admin/sms-logs')}
+                className="flex items-center gap-2 px-4.5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">sms</span>
+                <span>Audit SMS Logs</span>
+              </button>
+              <button 
+                type="button"
                 onClick={() => navigate('/admin/announcements')}
                 className="flex items-center gap-2 px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-all active:scale-95 duration-100 cursor-pointer"
               >

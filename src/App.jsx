@@ -5,6 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute'
 import LoginPage from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
+import PausedPage from './pages/auth/PausedPage'
 
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/StudentProfile'
@@ -34,6 +35,7 @@ import LeaveApproval from './pages/admin/LeaveApproval'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminReports from './pages/admin/AdminReports'
 import AdminChatLogs from './pages/admin/AdminChatLogs'
+import AdminSmsLogs from './pages/admin/AdminSmsLogs'
 
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import AdminManagement from './pages/superadmin/AdminManagement'
@@ -53,6 +55,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/paused" element={<PausedPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
 
@@ -107,6 +110,7 @@ function App() {
             <Route path="academics" element={<AcademicsHub />} />
             <Route path="reports" element={<AcademicsHub />} />
             <Route path="chat-logs" element={<AdminChatLogs />} />
+            <Route path="sms-logs" element={<AdminSmsLogs />} />
             <Route path="notifications" element={<NotificationCenter />} />
             <Route path="schedule" element={<SchedulePage />} />
             <Route path="settings" element={<AdminSettings />} />

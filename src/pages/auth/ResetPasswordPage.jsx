@@ -58,20 +58,25 @@ export default function ResetPasswordPage() {
       <main className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-surface-container-lowest rounded-[32px] overflow-hidden shadow-lg border border-outline-variant/30">
 
         {/* Illustration — desktop only */}
-        <div className="hidden lg:flex flex-col justify-center items-center bg-surface-container-low p-stack-lg relative overflow-hidden">
-          <div className="absolute top-12 left-12 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
-            <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
-          </div>
-          <div className="relative z-10 w-full max-w-sm">
+        <div className="hidden lg:flex flex-col justify-center items-center bg-surface-container-low p-6 relative overflow-hidden">
+          <div className="w-full max-w-sm flex flex-col items-center gap-3.5 relative z-10">
+            {/* Logo */}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
+            </div>
+            
+            {/* Photo */}
             <div className="w-full h-64 bg-transparent rounded-3xl flex items-center justify-center overflow-hidden">
               <img 
                 src={loginIllustration} 
                 alt="EduCore Illustration" 
-                className="w-full h-full object-contain animate-float"
+                className="w-full h-full object-contain"
               />
             </div>
-            <div className="mt-stack-lg text-center">
+            
+            {/* Text */}
+            <div className="text-center mt-1">
               <h2 className="text-headline-lg font-semibold text-on-surface">Secure password reset.</h2>
               <p className="text-body-md text-on-surface-variant mt-2">Enter your new credentials to restore access.</p>
             </div>

@@ -86,6 +86,14 @@ export default function ChatConversation() {
   }
 
   useEffect(() => {
+    // Lock body scroll to prevent page double scrollbars
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
+
+  useEffect(() => {
     if (user && conversationId) {
       loadChatDetails()
       setEditingMessageId(null)
@@ -466,7 +474,7 @@ export default function ChatConversation() {
 
   return (
     <DashboardLayout>
-      <div className="flex h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-3 bg-surface-container-lowest">
+      <div className="flex h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-3 bg-surface-container-lowest">
         
         {/* Left Pane: Hide on mobile, show on desktop */}
         <div className="hidden md:block w-80 lg:w-96 shrink-0 h-full">

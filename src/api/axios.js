@@ -13,6 +13,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
+    const detail = error.response?.data?.detail || ''
+    if (error.response?.status === 403 && (detail.includes('paused') || detail.includes('Paused'))) {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
+      window.location.href = '/paused'
+      return Promise.reject(error)
+    }
     const original = error.config
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true

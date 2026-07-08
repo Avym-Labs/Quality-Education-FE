@@ -14,6 +14,24 @@ export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  const handleQuickLogin = async (idVal, passVal) => {
+    setError('')
+    setLoading(true)
+    try {
+      const user = await login({ identifier: idVal, password: passVal }, rememberMe)
+      navigate(`/${user.role}/dashboard`, { replace: true })
+    } catch (err) {
+      const detail = err.response?.data?.detail || ''
+      if (err.response?.status === 403 && (detail.includes('paused') || detail.includes('Paused'))) {
+        navigate('/paused', { replace: true })
+        return
+      }
+      setError(detail || 'Invalid credentials. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -22,7 +40,12 @@ export default function LoginPage() {
       const user = await login({ identifier, password }, rememberMe)
       navigate(`/${user.role}/dashboard`, { replace: true })
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid credentials. Please try again.')
+      const detail = err.response?.data?.detail || ''
+      if (err.response?.status === 403 && (detail.includes('paused') || detail.includes('Paused'))) {
+        navigate('/paused', { replace: true })
+        return
+      }
+      setError(detail || 'Invalid credentials. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -33,20 +56,25 @@ export default function LoginPage() {
       <main className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-surface-container-lowest rounded-[32px] overflow-hidden shadow-lg border border-outline-variant/30">
 
         {/* Illustration — desktop only */}
-        <div className="hidden lg:flex flex-col justify-center items-center bg-surface-container-low p-stack-lg relative overflow-hidden">
-          <div className="absolute top-12 left-12 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
-            <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
-          </div>
-          <div className="relative z-10 w-full max-w-sm">
+        <div className="hidden lg:flex flex-col justify-center items-center bg-surface-container-low p-6 relative overflow-hidden">
+          <div className="w-full max-w-sm flex flex-col items-center gap-3.5 relative z-10">
+            {/* Logo */}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
+            </div>
+            
+            {/* Photo */}
             <div className="w-full h-64 bg-transparent rounded-3xl flex items-center justify-center overflow-hidden">
               <img 
                 src={loginIllustration} 
                 alt="EduCore Illustration" 
-                className="w-full h-full object-contain animate-float"
+                className="w-full h-full object-contain"
               />
             </div>
-            <div className="mt-stack-lg text-center">
+            
+            {/* Text */}
+            <div className="text-center mt-1">
               <h2 className="text-headline-lg font-semibold text-on-surface">Modern learning for the next generation.</h2>
               <p className="text-body-md text-on-surface-variant mt-2">Empowering teachers and students.</p>
             </div>
@@ -160,12 +188,34 @@ export default function LoginPage() {
               )}
             </button>
 
-            <p className="text-center text-label-md text-on-surface-variant mt-stack-lg">
-              Don&apos;t have an account?{' '}
-              <button type="button" className="text-primary font-bold hover:underline">
-                Contact Administrator
-              </button>
-            </p>
+            {/* Quick login helper buttons */}
+            <div className="pt-6 border-t border-outline-variant/20 mt-6 text-center space-y-3">
+              <p className="text-[11px] font-bold text-outline uppercase tracking-wider">Login as:</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('admin@educore.com', 'admin123')}
+                  className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-[11px] font-bold text-on-surface-variant transition-all hover:text-primary active:scale-95 cursor-pointer"
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('teacher@educore.com', 'teacher123')}
+                  className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-[11px] font-bold text-on-surface-variant transition-all hover:text-primary active:scale-95 cursor-pointer"
+                >
+                  Teacher Sarah
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('student@educore.com', 'student123')}
+                  className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-[11px] font-bold text-on-surface-variant transition-all hover:text-primary active:scale-95 cursor-pointer"
+                >
+                  Student Arjun
+                </button>
+              </div>
+            </div>
+
           </form>
         </div>
       </main>

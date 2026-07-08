@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import SchedulePage from './SchedulePage'
 
 export default function AcademicsHub() {
   const { user } = useAuth()
@@ -648,11 +649,22 @@ export default function AcademicsHub() {
               <span className="material-symbols-outlined text-sm">bar_chart</span>
               <span>Performance Reports</span>
             </button>
+            <button 
+              onClick={() => setActiveTab('schedules')}
+              className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl font-bold text-xs select-none cursor-pointer border transition-all duration-150 active:scale-95 ${
+                activeTab === 'schedules' 
+                  ? 'bg-primary text-on-primary border-primary shadow-sm' 
+                  : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">calendar_today</span>
+              <span>Lecture Calendar</span>
+            </button>
           </div>
         </section>
 
         {/* Global Notifications Panel */}
-        {(error || success) && activeTab !== 'results' && activeTab !== 'reports' && (
+        {(error || success) && activeTab !== 'results' && activeTab !== 'reports' && activeTab !== 'schedules' && (
           <div className="print:hidden">
             {error && (
               <div className="p-3 bg-error-container rounded-xl text-error text-xs font-bold flex items-center gap-2 mb-2">
@@ -1632,11 +1644,14 @@ export default function AcademicsHub() {
           </div>
         </section>
       )}
+      {activeTab === 'schedules' && (
+        <SchedulePage embed={true} />
+      )}
 
         {/* Secure In-App Viewer Modal (Student view restriction) */}
         {viewingMaterial && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] animate-fadeIn p-4">
-            <div className="bg-surface-container-lowest rounded-[28px] border border-outline-variant/30 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
+          <div className="fixed inset-0 bg-surface-container-lowest z-[100] flex flex-col animate-fadeIn">
+            <div className="w-full h-full flex flex-col relative">
               
               {/* Header */}
               <div className="p-4 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low text-left">
@@ -1683,7 +1698,7 @@ export default function AcademicsHub() {
                       <img 
                         src={getAttachmentUrl(viewingMaterial.file_url)} 
                         alt="Study Resource" 
-                        className="max-h-[65vh] object-contain rounded-2xl shadow-sm border border-outline-variant/20"
+                        className="max-h-[80vh] object-contain rounded-2xl shadow-sm border border-outline-variant/20"
                       />
                     )
                   }
@@ -1692,7 +1707,7 @@ export default function AcademicsHub() {
                     return (
                       <iframe 
                         src={getAttachmentUrl(viewingMaterial.file_url) + '#toolbar=0&navpanes=0'} 
-                        className="w-full h-[65vh] border border-outline-variant/30 rounded-2xl"
+                        className="w-full h-full border border-outline-variant/30 rounded-2xl"
                         title="PDF Viewer"
                       />
                     )

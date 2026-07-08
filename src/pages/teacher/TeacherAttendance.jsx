@@ -31,6 +31,8 @@ export default function TeacherAttendance() {
 
   const [students, setStudents] = useState([])
   const [attendanceStates, setAttendanceStates] = useState({}) // user_id -> 'present' | 'absent' | 'late'
+  const [leavesList, setLeavesList] = useState([])
+  const [attendanceRates, setAttendanceRates] = useState({})
   const [searchQuery, setSearchQuery] = useState('')
   const [markingLoading, setMarkingLoading] = useState(false)
   const [markingMessage, setMarkingMessage] = useState('')
@@ -57,7 +59,20 @@ export default function TeacherAttendance() {
         const studentList = studRes.data || []
         setStudents(studentList)
 
-        // Fetch existing attendance
+        // Fetch approved leaves
+        const leavesRes = await api.get('/leave', {
+          params: { status: 'approved' }
+        })
+        const approvedLeaves = leavesRes.data || []
+        setLeavesList(approvedLeaves)
+
+        // Fetch historical attendance to calculate rates
+        const historyRes = await api.get('/attendance', {
+          params: { grade, section: section || '' }
+        })
+        const classHistory = historyRes.data || []
+
+        // Fetch existing attendance for the selected date
         const attRes = await api.get('/attendance', {
           params: {
             grade,
@@ -69,11 +84,32 @@ export default function TeacherAttendance() {
         const attRecords = attRes.data || []
 
         const initialStates = {}
+        const computedRates = {}
+
         studentList.forEach(s => {
-          const record = attRecords.find(r => r.student_id === s.user_id)
-          initialStates[s.user_id] = record ? record.status : 'present'
+          // Check if on leave for current marking date
+          const isOnLeave = approvedLeaves.some(l => 
+            l.user_id === s.user_id && 
+            markingDate >= l.start_date && 
+            markingDate <= l.end_date
+          )
+
+          if (isOnLeave) {
+            initialStates[s.user_id] = 'absent'
+          } else {
+            const record = attRecords.find(r => r.student_id === s.user_id)
+            initialStates[s.user_id] = record ? record.status : 'present'
+          }
+
+          // Calculate student attendance rate
+          const sHistory = classHistory.filter(r => r.student_id === s.user_id)
+          const total = sHistory.length
+          const present = sHistory.filter(r => r.status === 'present').length
+          computedRates[s.user_id] = total > 0 ? Math.round((present / total) * 100) : 100
         })
+
         setAttendanceStates(initialStates)
+        setAttendanceRates(computedRates)
       } catch (err) {
         console.error('Failed to load students list:', err)
         setMarkingMessage('Error loading students list.')
@@ -395,10 +431,19 @@ export default function TeacherAttendance() {
               <div className="space-y-2">
                 {filteredStudents.map((student, idx) => {
                   const status = attendanceStates[student.user_id] || 'present'
+                  const rate = attendanceRates[student.user_id] ?? 100
+                  const isLowAttendance = rate < 75
+
+                  const isOnLeave = leavesList.some(l => 
+                    l.user_id === student.user_id && 
+                    markingDate >= l.start_date && 
+                    markingDate <= l.end_date
+                  )
+
                   return (
                     <div 
                       key={student.id} 
-                      className="flex items-center bg-surface-container-lowest rounded-xl p-3 shadow-sm border border-outline-variant/20 hover:bg-surface-container-low transition-all"
+                      className="flex items-center bg-surface-container-lowest rounded-xl p-3 shadow-sm border border-outline-variant/20 hover:bg-surface-container-low transition-all animate-fadeIn"
                     >
                       <div className="w-8 font-numeric-bold text-on-surface-variant text-xs">
                         {student.roll_number || String(idx + 1).padStart(2, '0')}
@@ -406,41 +451,46 @@ export default function TeacherAttendance() {
                       
                       <div 
                         onClick={() => handleOpenProfile(student)}
-                        className="flex-1 font-label-md text-xs font-bold text-on-surface flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
+                        className={`flex-1 font-label-md text-xs font-bold flex items-center gap-2 cursor-pointer hover:text-primary transition-colors ${
+                          isLowAttendance ? 'text-error' : 'text-on-surface'
+                        }`}
                       >
                         <span>{student.full_name}</span>
+                        {isLowAttendance && (
+                          <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
+                            {rate}% Att.
+                          </span>
+                        )}
+                        {isOnLeave && (
+                          <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-[10px]">sick</span>
+                            <span>Ab (Leave)</span>
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex gap-1.5">
                         <button 
-                          onClick={() => toggleStatus(student.user_id, 'present')}
+                          onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
+                          disabled={isOnLeave}
                           className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 cursor-pointer ${
                             status === 'present' 
                               ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
-                              : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+                              : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30 disabled:cursor-not-allowed'
                           }`}
                         >
                           P
                         </button>
                         <button 
-                          onClick={() => toggleStatus(student.user_id, 'absent')}
+                          onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
+                          disabled={isOnLeave}
                           className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 cursor-pointer ${
                             status === 'absent' 
                               ? 'bg-error border-error text-white shadow-sm' 
-                              : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+                              : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30 disabled:cursor-not-allowed'
                           }`}
                         >
                           A
-                        </button>
-                        <button 
-                          onClick={() => toggleStatus(student.user_id, 'late')}
-                          className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 cursor-pointer ${
-                            status === 'late' 
-                              ? 'bg-amber-500 border-amber-500 text-white shadow-sm' 
-                              : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
-                          }`}
-                        >
-                          L
                         </button>
                       </div>
                     </div>

@@ -9,6 +9,8 @@ export default function TeacherDashboard() {
   const navigate = useNavigate()
   const [homeworkCount, setHomeworkCount] = useState(5)
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
+  const [presentCount, setPresentCount] = useState(38)
+  const [absentCount, setAbsentCount] = useState(4)
 
   const [showSwitchModal, setShowSwitchModal] = useState(false)
   const [switchingTo, setSwitchingTo] = useState(null)
@@ -80,6 +82,13 @@ export default function TeacherDashboard() {
             setPendingLeaveCount(leaveRes.data.length)
           }
         }
+
+        // Fetch today's attendance summary
+        const summaryRes = await api.get('/attendance/today-summary')
+        if (summaryRes.data) {
+          setPresentCount(summaryRes.data.present)
+          setAbsentCount(summaryRes.data.absent)
+        }
       } catch (err) {
         console.error('Failed to load teacher stats:', err)
       }
@@ -125,31 +134,31 @@ export default function TeacherDashboard() {
             <span className="material-symbols-outlined text-primary text-3xl">groups</span>
             <div>
               <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">42</div>
-              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Students Taught</div>
+              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Students</div>
             </div>
           </div>
 
-          {/* Attendance Status */}
+          {/* Present Students */}
           <div 
-            onClick={() => navigate('/teacher/attendance/mark')}
+            onClick={() => navigate('/teacher/attendance')}
             className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
-            <span className="material-symbols-outlined text-error text-3xl">event_busy</span>
+            <span className="material-symbols-outlined text-emerald-600 text-3xl">check_circle</span>
             <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">2</div>
-              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Attendance Pending</div>
+              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{presentCount}</div>
+              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Present Students</div>
             </div>
           </div>
 
-          {/* Results Pending */}
+          {/* Absent Students */}
           <div 
-            onClick={() => navigate('/teacher/results')}
+            onClick={() => navigate('/teacher/attendance')}
             className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
-            <span className="material-symbols-outlined text-tertiary text-3xl">pending_actions</span>
+            <span className="material-symbols-outlined text-error text-3xl">cancel</span>
             <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">1</div>
-              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Results Pending</div>
+              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{absentCount}</div>
+              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Absent Students</div>
             </div>
           </div>
 
@@ -166,47 +175,6 @@ export default function TeacherDashboard() {
           </div>
         </section>
 
-        {/* Quick Actions Shortcuts */}
-        <section className="space-y-stack-sm">
-          <h3 className="font-title-lg text-base text-on-surface font-bold">Quick Actions</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-gutter">
-            <button 
-              onClick={() => navigate('/teacher/attendance')}
-              className="flex items-center justify-center gap-2.5 bg-primary text-on-primary py-3.5 rounded-2xl font-bold text-sm shadow-md hover:opacity-95 active:scale-95 transition-all hover:shadow-lg"
-            >
-              <span className="material-symbols-outlined text-base">rule</span>
-              <span>Take Attendance</span>
-            </button>
-            <button 
-              onClick={() => navigate('/teacher/results')}
-              className="flex items-center justify-center gap-2.5 bg-secondary-container text-on-secondary-container py-3.5 rounded-2xl font-bold text-sm shadow-sm border border-outline-variant hover:bg-opacity-95 active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-base">upload_file</span>
-              <span>Upload Results</span>
-            </button>
-            <button 
-              onClick={() => navigate('/teacher/homework')}
-              className="flex items-center justify-center gap-2.5 bg-surface-container-lowest text-on-surface py-3.5 rounded-2xl font-bold text-sm shadow-sm border border-outline-variant hover:bg-surface-container-low active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-base">add_task</span>
-              <span>Assign Homework</span>
-            </button>
-            <button 
-              onClick={() => navigate('/teacher/leave')}
-              className="flex items-center justify-center gap-2.5 bg-surface-container-lowest text-on-surface py-3.5 rounded-2xl font-bold text-sm shadow-sm border border-outline-variant hover:bg-surface-container-low active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-base">time_to_leave</span>
-              <span>Request Leave {pendingLeaveCount > 0 && `(${pendingLeaveCount})`}</span>
-            </button>
-            <button 
-              onClick={() => navigate('/teacher/schedule')}
-              className="flex items-center justify-center gap-2.5 bg-surface-container-lowest text-on-surface py-3.5 rounded-2xl font-bold text-sm shadow-sm border border-outline-variant hover:bg-surface-container-low active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-base">calendar_today</span>
-              <span>Lecture Calendar</span>
-            </button>
-          </div>
-        </section>
 
         {/* Main Content Bento */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
