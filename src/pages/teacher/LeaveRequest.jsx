@@ -174,9 +174,6 @@ export default function LeaveRequest() {
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
               Leave Request
             </h2>
-            <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-              Submit requests & track approval status
-            </p>
           </div>
         </section>
 

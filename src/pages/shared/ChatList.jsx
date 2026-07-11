@@ -12,8 +12,8 @@ export default function ChatList() {
   }, [])
 
   return (
-    <DashboardLayout>
-      <div className="flex h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-3 bg-surface-container-lowest">
+    <DashboardLayout fixedHeight={true}>
+      <div className="flex flex-1 rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-1 bg-surface-container-lowest h-full min-h-0">
         
         {/* Left Pane: Scrollable conversations list (visible everywhere on /chat route) */}
         <div className="w-full md:w-80 lg:w-96 shrink-0 h-full">

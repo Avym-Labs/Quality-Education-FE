@@ -83,7 +83,6 @@ export default function NewAnnouncement() {
           </button>
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">New Announcement</h2>
-            <p className="text-on-surface-variant text-xs">Publish system-wide notifications and broadcasts</p>
           </div>
         </section>
 

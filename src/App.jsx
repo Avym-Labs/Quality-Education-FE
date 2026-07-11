@@ -28,8 +28,7 @@ import TeacherResults from './pages/teacher/TeacherResults'
 import TeacherReports from './pages/teacher/TeacherReports'
 
 import AdminDashboard from './pages/admin/AdminDashboard'
-import StudentManagement from './pages/admin/StudentManagement'
-import TeacherManagement from './pages/admin/TeacherManagement'
+import UserManagement from './pages/admin/UserManagement'
 import NewAnnouncement from './pages/admin/NewAnnouncement'
 import LeaveApproval from './pages/admin/LeaveApproval'
 import AdminSettings from './pages/admin/AdminSettings'
@@ -103,14 +102,17 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute role="admin" />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="students" element={<StudentManagement />} />
-            <Route path="teachers" element={<TeacherManagement />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="students" element={<Navigate to="/admin/users" replace />} />
+            <Route path="teachers" element={<Navigate to="/admin/users" replace />} />
             <Route path="announcements" element={<NewAnnouncement />} />
             <Route path="leave" element={<LeaveApproval />} />
             <Route path="academics" element={<AcademicsHub />} />
             <Route path="reports" element={<AcademicsHub />} />
             <Route path="chat-logs" element={<AdminChatLogs />} />
             <Route path="sms-logs" element={<AdminSmsLogs />} />
+            <Route path="chat" element={<ChatList />} />
+            <Route path="chat/:conversationId" element={<ChatConversation />} />
             <Route path="notifications" element={<NotificationCenter />} />
             <Route path="schedule" element={<SchedulePage />} />
             <Route path="settings" element={<AdminSettings />} />

@@ -45,7 +45,6 @@ export default function SuperAdminDashboard() {
         {/* Welcome Section */}
         <section className="flex flex-col gap-1 pb-4 border-b border-outline-variant/20">
           <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Super Admin Suite</h2>
-          <p className="text-xs text-on-surface-variant font-medium">Global platform analytics and administrator directories.</p>
         </section>
 
         {error && (

@@ -102,6 +102,14 @@ export default function AttendanceMarking() {
     }
   }
 
+  const handleStartChat = () => {
+    if (!user || !selectedStudent) return
+    const sortedIds = [user.id, selectedStudent.user_id].sort()
+    const conversationId = `${sortedIds[0]}__${sortedIds[1]}`
+    setSheetOpen(false)
+    navigate(`/teacher/chat/${conversationId}`)
+  }
+
   // Save student remarks
   const handleSaveNotes = () => {
     if (selectedStudent) {
@@ -434,7 +442,7 @@ export default function AttendanceMarking() {
                       <span className="material-symbols-outlined text-[16px]">call</span>
                     </a>
                     <button 
-                      onClick={() => navigate('/teacher/chat')}
+                      onClick={handleStartChat}
                       className="bg-emerald-100 text-emerald-700 p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
                     >
                       <span className="material-symbols-outlined text-[16px]">chat</span>

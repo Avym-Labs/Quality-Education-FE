@@ -139,7 +139,6 @@ export default function LeaveApproval() {
         <section className="flex justify-between items-center pb-2 border-b border-outline-variant/20">
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Leave Approvals</h2>
-            <p className="text-on-surface-variant text-xs">Review student and teacher leave requests</p>
           </div>
           <span className="material-symbols-outlined text-primary text-2xl">pending_actions</span>
         </section>

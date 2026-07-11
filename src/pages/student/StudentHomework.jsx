@@ -57,9 +57,6 @@ export default function StudentHomework() {
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
               Homework Hub
             </h2>
-            <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-              View assignments, deadlines, and reference sheets.
-            </p>
           </div>
         </section>
 

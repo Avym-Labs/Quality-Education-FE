@@ -21,10 +21,10 @@ const NAV_ITEMS = {
   ],
   admin: [
     { icon: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
-    { icon: 'group', label: 'Students', path: '/admin/students' },
-    { icon: 'school', label: 'Teachers', path: '/admin/teachers' },
+    { icon: 'group', label: 'Users', path: '/admin/users' },
     { icon: 'school', label: 'Academics', path: '/admin/academics' },
     { icon: 'campaign', label: 'Announce', path: '/admin/announcements' },
+    { icon: 'chat', label: 'Chat', path: '/admin/chat' },
     { icon: 'person', label: 'Account', path: '/admin/settings' },
   ],
   superadmin: [
@@ -43,7 +43,7 @@ export default function BottomNav({ role = 'student' }) {
   const items = NAV_ITEMS[role] || NAV_ITEMS.student
   
   // Instagram Switch Account states
-  const [isRosterOpen, setIsRosterOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [savedAccounts, setSavedAccounts] = useState([])
   
   // Chat Unread Count Notification badge State
@@ -75,22 +75,22 @@ export default function BottomNav({ role = 'student' }) {
   }, [user, location.pathname])
 
   useEffect(() => {
-    if (isRosterOpen) {
+    if (isOpen) {
       try {
-        const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
-        setSavedAccounts(roster)
+        const saved = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+        setSavedAccounts(saved.filter(r => r.user_id !== user.id))
       } catch (err) {
         console.error(err)
       }
     }
-  }, [isRosterOpen])
+  }, [isOpen])
 
   // Custom long press event handlers
   const handleStart = () => {
     isLongPress.current = false
     timerRef.current = setTimeout(() => {
       isLongPress.current = true
-      setIsRosterOpen(true)
+      setIsOpen(true)
     }, 600)
   }
 
@@ -110,13 +110,13 @@ export default function BottomNav({ role = 'student' }) {
 
   const handleSwitchProfile = async (targetUserId) => {
     try {
-      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
-      const match = roster.find(r => r.user_id === targetUserId)
+      const saved = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const match = saved.find(r => r.user_id === targetUserId)
       if (!match) return
 
-      // Save active session user to roster before switching
-      const currentRoster = roster.filter(r => r.user_id !== user.id)
-      currentRoster.push({
+      // Save active session user to saved before switching
+      const current = saved.filter(r => r.user_id !== user.id)
+      current.push({
         user_id: user.id,
         email: user.email,
         phone: user.phone,
@@ -128,7 +128,7 @@ export default function BottomNav({ role = 'student' }) {
         access_token: localStorage.getItem('access_token'),
         refresh_token: localStorage.getItem('refresh_token'),
       })
-      localStorage.setItem('educore_saved_accounts', JSON.stringify(currentRoster))
+      localStorage.setItem('educore_saved_accounts', JSON.stringify(current))
 
       // Swap active session details
       localStorage.setItem('access_token', match.access_token)
@@ -144,7 +144,7 @@ export default function BottomNav({ role = 'student' }) {
         avatar: match.avatar,
       }))
 
-      setIsRosterOpen(false)
+      setIsOpen(false)
       window.location.href = `/${match.role}/dashboard`
     } catch (err) {
       console.error(err)
@@ -153,9 +153,9 @@ export default function BottomNav({ role = 'student' }) {
 
   const handleAddNewAccount = () => {
     try {
-      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
-      const currentRoster = roster.filter(r => r.user_id !== user.id)
-      currentRoster.push({
+      const saved = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const current = saved.filter(r => r.user_id !== user.id)
+      current.push({
         user_id: user.id,
         email: user.email,
         phone: user.phone,
@@ -167,13 +167,13 @@ export default function BottomNav({ role = 'student' }) {
         access_token: localStorage.getItem('access_token'),
         refresh_token: localStorage.getItem('refresh_token'),
       })
-      localStorage.setItem('educore_saved_accounts', JSON.stringify(currentRoster))
+      localStorage.setItem('educore_saved_accounts', JSON.stringify(current))
 
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('user')
 
-      setIsRosterOpen(false)
+      setIsOpen(false)
       window.location.href = '/login'
     } catch (err) {
       console.error(err)
@@ -225,12 +225,12 @@ export default function BottomNav({ role = 'student' }) {
         })}
       </nav>
 
-      {/* Instagram-style Bottom Sheet Roster Overlay */}
-      {isRosterOpen && (
+      {/* Instagram-style Bottom Sheet  Overlay */}
+      {isOpen && (
         <>
           <div 
             className="fixed inset-0 bg-black/45 z-50 transition-opacity duration-300 animate-fadeIn" 
-            onClick={() => setIsRosterOpen(false)} 
+            onClick={() => setIsOpen(false)} 
           />
           <div className="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest border-t border-outline-variant/35 rounded-t-[28px] p-5 shadow-2xl max-h-[80vh] flex flex-col animate-slideUp text-xs select-none max-w-md mx-auto">
             
@@ -241,7 +241,7 @@ export default function BottomNav({ role = 'student' }) {
               Switch Accounts
             </h3>
 
-            {/* Roster list */}
+            {/*  list */}
             <div className="flex-1 overflow-y-auto space-y-3 mb-5 pr-1">
               {savedAccounts.length === 0 ? (
                 <div className="text-center py-6 text-outline font-semibold">
@@ -280,7 +280,7 @@ export default function BottomNav({ role = 'student' }) {
               )}
             </div>
 
-            {/* Add active roster option */}
+            {/* Add active  option */}
             <div className="space-y-2">
               <button 
                 onClick={handleAddNewAccount}
@@ -291,7 +291,7 @@ export default function BottomNav({ role = 'student' }) {
               </button>
               
               <button 
-                onClick={() => setIsRosterOpen(false)}
+                onClick={() => setIsOpen(false)}
                 className="w-full py-3.5 bg-surface-container-high hover:bg-surface-container-highest rounded-2xl text-xs font-bold text-on-surface transition-colors cursor-pointer"
               >
                 Cancel

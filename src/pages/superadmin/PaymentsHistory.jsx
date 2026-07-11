@@ -77,7 +77,6 @@ export default function PaymentsHistory() {
         <section className="flex items-center justify-between pb-4 border-b border-outline-variant/20">
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Payments Ledger</h2>
-            <p className="text-xs text-on-surface-variant font-medium">Track student billing cycles, payments, and transaction history.</p>
           </div>
         </section>
 

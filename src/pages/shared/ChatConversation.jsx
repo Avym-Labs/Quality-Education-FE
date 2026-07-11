@@ -70,15 +70,25 @@ export default function ChatConversation() {
           role: match.other_user_role || 'Contact'
         })
       } else {
-        // Fallback: decode recipient user ID from conversationId
+        // Fallback: decode recipient user ID from conversationId and fetch profile
         const parts = conversationId.split('__')
         const otherUserId = parts.find(id => id !== user.id)
-        setRecipient({
-          id: otherUserId,
-          full_name: 'Recipient',
-          avatar: null,
-          role: 'Contact'
-        })
+        try {
+          const userRes = await api.get(`/chat/users/${otherUserId}`)
+          setRecipient({
+            id: userRes.data.id,
+            full_name: userRes.data.full_name,
+            avatar: userRes.data.avatar,
+            role: userRes.data.role || 'Contact'
+          })
+        } catch (err) {
+          setRecipient({
+            id: otherUserId,
+            full_name: 'Recipient',
+            avatar: null,
+            role: 'Contact'
+          })
+        }
       }
     } catch (err) {
       console.error('Failed to load chat conversation details:', err)
@@ -473,8 +483,8 @@ export default function ChatConversation() {
   const isOnline = recipient ? recipient.id.charCodeAt(recipient.id.length - 1) % 2 === 0 : false
 
   return (
-    <DashboardLayout>
-      <div className="flex h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-3 bg-surface-container-lowest">
+    <DashboardLayout fixedHeight={true}>
+      <div className="flex flex-1 rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-1 bg-surface-container-lowest h-full min-h-0">
         
         {/* Left Pane: Hide on mobile, show on desktop */}
         <div className="hidden md:block w-80 lg:w-96 shrink-0 h-full">

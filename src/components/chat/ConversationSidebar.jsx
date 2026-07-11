@@ -150,7 +150,7 @@ export default function ConversationSidebar({ activeConversationId }) {
         </div>
       </div>
 
-      {/* Roster list */}
+      {/*  list */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1.5 min-h-0">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 text-outline gap-2">
@@ -218,7 +218,7 @@ export default function ConversationSidebar({ activeConversationId }) {
         )}
       </div>
 
-      {/* Roster / Broadcast Selection Modal */}
+      {/*  / Broadcast Selection Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-surface-container-lowest border border-outline-variant/45 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scaleIn">
@@ -236,7 +236,7 @@ export default function ConversationSidebar({ activeConversationId }) {
               </button>
             </div>
 
-            {/* Roster Toggles (Only for Teachers/Admins) */}
+            {/*  Toggles (Only for Teachers/Admins) */}
             {user?.role !== 'student' && (
               <div className="flex border-b border-outline-variant/20 bg-surface-container-low/20">
                 <button
@@ -265,13 +265,13 @@ export default function ConversationSidebar({ activeConversationId }) {
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4 min-h-0">
               {modalMode === 'direct' ? (
-                /* Direct Message Flow: Searchable Contact roster */
+                /* Direct Message Flow: Searchable Contact  */
                 <div className="space-y-4 h-full flex flex-col">
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-3 top-2.5 text-outline text-base">search</span>
                     <input
                       type="text"
-                      placeholder={user?.role === 'student' ? 'Search teachers...' : 'Search students...'}
+                      placeholder={user?.role === 'student' || user?.role === 'admin' ? 'Search teachers...' : 'Search students...'}
                       value={contactSearch}
                       onChange={(e) => setContactSearch(e.target.value)}
                       className="w-full pl-9 pr-4 py-2 border border-outline bg-surface-container-low rounded-xl text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -282,7 +282,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                     {contactsLoading ? (
                       <div className="flex flex-col items-center justify-center py-12 text-outline gap-2">
                         <span className="material-symbols-outlined text-2xl animate-spin">sync</span>
-                        <p className="text-[10px] font-bold uppercase tracking-wider">Loading roster...</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider">Loading ...</p>
                       </div>
                     ) : filteredContacts.length === 0 ? (
                       <div className="text-center py-12 text-outline">
@@ -333,9 +333,18 @@ export default function ConversationSidebar({ activeConversationId }) {
                       }}
                       className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
                     >
-                      <option value="overall">All Registered Students</option>
-                      <option value="class">Class Wise</option>
-                      <option value="subject">Subject Wise</option>
+                      {user?.role === 'admin' ? (
+                        <>
+                          <option value="overall">All Registered Teachers</option>
+                          <option value="department">Department Wise</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="overall">All Registered Students</option>
+                          <option value="class">Class Wise</option>
+                          <option value="subject">Subject Wise</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -374,28 +383,47 @@ export default function ConversationSidebar({ activeConversationId }) {
                     </div>
                   )}
 
+                  {broadcastScope === 'department' && (
+                    <div className="flex flex-col gap-1 text-left animate-fadeIn">
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Department</label>
+                      <select
+                        value={broadcastTarget}
+                        onChange={(e) => setBroadcastTarget(e.target.value)}
+                        className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
+                        required
+                      >
+                        <option value="">-- Choose Department --</option>
+                        {['Mathematics', 'Science', 'English', 'Languages', 'Humanities', 'Administration'].map((dept) => (
+                          <option key={dept} value={dept}>{dept} Department</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   {/* Select Prebuilt Template */}
-                  <div className="flex flex-col gap-1 text-left">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Prebuilt Message Template</label>
-                    <select
-                      onChange={(e) => {
-                        const val = e.target.value
-                        if (val) {
-                          setBroadcastContent(val)
-                        }
-                      }}
-                      className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
-                    >
-                      <option value="">-- Choose designed template (Optional) --</option>
-                      <option value="Hello {name},&#10;&#10;Your results for the recent exam have been uploaded. Please log in to your Academics Hub to review your marks.&#10;&#10;Regards, Admin.">📚 Exam Results Uploaded</option>
-                      <option value="Dear {name},&#10;&#10;This is a reminder that your tuition fee installment is currently pending. Please proceed with payment via the payments section.&#10;&#10;Thank you.">💰 Outstanding Fee Reminder</option>
-                      <option value="Hi {name},&#10;&#10;Please check your homework panel. You have outstanding assignments due for submission. Ensure completion by the deadline.&#10;&#10;Regards, {sender_name}.">📝 Pending Homework Alert</option>
-                      <option value="Hi {name},&#10;&#10;Your attendance rate is currently below the 75% minimum requirement. Please meet with your homeroom teacher to address this standing.">⚠️ Attendance Shortage Warning</option>
-                    </select>
-                    <p className="text-[9px] text-outline font-semibold uppercase tracking-wider mt-0.5">
-                      Tip: Use <span className="text-primary font-bold">{"{name}"}</span> or <span className="text-primary font-bold">{"{first_name}"}</span> for auto student personalization.
-                    </p>
-                  </div>
+                  {user?.role !== 'admin' && (
+                    <div className="flex flex-col gap-1 text-left">
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Prebuilt Message Template</label>
+                      <select
+                        onChange={(e) => {
+                          const val = e.target.value
+                          if (val) {
+                            setBroadcastContent(val)
+                          }
+                        }}
+                        className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
+                      >
+                        <option value="">-- Choose designed template (Optional) --</option>
+                        <option value="Hello {name},&#10;&#10;Your results for the recent exam have been uploaded. Please log in to your Academics Hub to review your marks.&#10;&#10;Regards, Admin.">📚 Exam Results Uploaded</option>
+                        <option value="Dear {name},&#10;&#10;This is a reminder that your tuition fee installment is currently pending. Please proceed with payment via the payments section.&#10;&#10;Thank you.">💰 Outstanding Fee Reminder</option>
+                        <option value="Hi {name},&#10;&#10;Please check your homework panel. You have outstanding assignments due for submission. Ensure completion by the deadline.&#10;&#10;Regards, {sender_name}.">📝 Pending Homework Alert</option>
+                        <option value="Hi {name},&#10;&#10;Your attendance rate is currently below the 75% minimum requirement. Please meet with your homeroom teacher to address this standing.">⚠️ Attendance Shortage Warning</option>
+                      </select>
+                      <p className="text-[9px] text-outline font-semibold uppercase tracking-wider mt-0.5">
+                        Tip: Use <span className="text-primary font-bold">{"{name}"}</span> or <span className="text-primary font-bold">{"{first_name}"}</span> for auto student personalization.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Message Content */}
                   <div className="flex flex-col gap-1 text-left">

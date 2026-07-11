@@ -46,7 +46,7 @@ export default function AcademicsHub() {
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
 
-  // Class students roster list (Only for Teacher/Admin)
+  // Class students  list (Only for Teacher/Admin)
   const [studentsList, setStudentsList] = useState([])
   // Filtered results list
   const [filteredResults, setFilteredResults] = useState([])
@@ -450,7 +450,7 @@ export default function AcademicsHub() {
       fetchFilteredResults()
     } catch (err) {
       console.error(err)
-      setError(err.message || 'Failed to submit marks roster.')
+      setError(err.message || 'Failed to submit marks .')
     } finally {
       setSubmittingMarks(false)
     }
@@ -458,7 +458,7 @@ export default function AcademicsHub() {
 
   const handleDownloadCSVTemplate = () => {
     if (studentsList.length === 0) {
-      alert('No students available in the roster list.');
+      alert('No students available in the  list.');
       return;
     }
     const headers = ['Roll Number', 'Student Name', 'Student User ID', 'Marks Obtained', 'Remarks'];
@@ -474,7 +474,7 @@ export default function AcademicsHub() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `Roster_Template_Class_${filterClass}_${recordSubject}.csv`);
+    link.setAttribute('download', `_Template_Class_${filterClass}_${recordSubject}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -526,7 +526,7 @@ export default function AcademicsHub() {
           }
         }
         setMarksData(parsedStates);
-        alert(`Successfully imported scores for ${matchCount} students from CSV! Please review the roster below and click "Submit Score Roster" to save.`);
+        alert(`Successfully imported scores for ${matchCount} students from CSV! Please review the  below and click "Submit Score " to save.`);
       } catch (err) {
         console.error('Failed to parse CSV:', err);
         alert('Failed to parse CSV. Please make sure the structure matches the downloaded template.');
@@ -597,9 +597,6 @@ export default function AcademicsHub() {
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
                 Academic Hub
               </h2>
-              <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-                Consolidated learning materials, test keys, and scores workspace.
-              </p>
             </div>
           </div>
 

@@ -11,6 +11,14 @@ export default function TeacherDashboard() {
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
   const [presentCount, setPresentCount] = useState(38)
   const [absentCount, setAbsentCount] = useState(4)
+  const [activeChart, setActiveChart] = useState('performance')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveChart(prev => prev === 'performance' ? 'attendance' : 'performance')
+    }, 10000)
+    return () => clearTimeout(timer)
+  }, [activeChart])
 
   const [showSwitchModal, setShowSwitchModal] = useState(false)
   const [switchingTo, setSwitchingTo] = useState(null)
@@ -114,17 +122,89 @@ export default function TeacherDashboard() {
     <DashboardLayout>
       <div className="space-y-stack-lg mt-stack-md pb-24">
         
-        {/* Welcome Header */}
-        <section className="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-2 border-b border-outline-variant/20">
-          <div>
-            <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              Hello, {user?.first_name || 'Teacher'}!
-            </h2>
-            <p className="text-on-surface-variant text-xs font-medium mt-0.5">
-              {user?.department || 'Mathematics Department'} • {todayDate}
-            </p>
+
+        {/* Horizontal Quick Actions Scroll */}
+        <section className="space-y-stack-sm">
+          <h3 className="font-title-lg text-title-lg text-on-surface px-1 font-bold">Quick Actions</h3>
+          <div className="flex overflow-x-auto gap-4 pb-2 px-1 snap-x scroll-smooth scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div 
+              onClick={() => navigate('/teacher/attendance')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
+            >
+              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
+                rule
+              </span>
+              <div>
+                <p className="text-xs font-bold text-on-surface">Mark Attendance</p>
+                <p className="text-[10px] font-medium text-on-surface-variant">Class Register</p>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => navigate('/teacher/homework')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
+            >
+              <span className="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">
+                assignment
+              </span>
+              <div>
+                <p className="text-xs font-bold text-on-surface">Homework Panel</p>
+                <p className="text-[10px] font-medium text-on-surface-variant">Assign & Review</p>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => navigate('/teacher/academics')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
+            >
+              <span className="material-symbols-outlined text-tertiary group-hover:scale-110 transition-transform">
+                school
+              </span>
+              <div>
+                <p className="text-xs font-bold text-on-surface">Academics Hub</p>
+                <p className="text-[10px] font-medium text-on-surface-variant">Manage Grades</p>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => navigate('/teacher/leave')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
+            >
+              <span className="material-symbols-outlined text-error group-hover:scale-110 transition-transform">
+                logout
+              </span>
+              <div>
+                <p className="text-xs font-bold text-on-surface">Leave Request</p>
+                <p className="text-[10px] font-medium text-on-surface-variant">Apply Leave</p>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => navigate('/teacher/chat')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
+            >
+              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
+                chat_bubble
+              </span>
+              <div>
+                <p className="text-xs font-bold text-on-surface">Inbox Chat</p>
+                <p className="text-[10px] font-medium text-on-surface-variant">DMs & Broadcasts</p>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => navigate('/teacher/schedule')}
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
+            >
+              <span className="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">
+                calendar_today
+              </span>
+              <div>
+                <p className="text-xs font-bold text-on-surface">Calendar Schedule</p>
+                <p className="text-[10px] font-medium text-on-surface-variant">Weekly Lectures</p>
+              </div>
+            </div>
           </div>
-          {/* Actions removed as requested */}
         </section>
 
         {/* Stats Bento Grid */}
@@ -179,34 +259,77 @@ export default function TeacherDashboard() {
         {/* Main Content Bento */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
           
-          {/* Class Performance Overview */}
+          {/* Consolidated Graphs Carousel */}
           <div className="lg:col-span-8 bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col justify-between h-[360px]">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-title-lg text-base text-on-surface font-bold">Class Performance Overview</h3>
-              <span className="px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-xs font-bold">Grade 10-A</span>
+            <div className="flex justify-between items-center gap-2 mb-4 w-full">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h3 className="font-title-lg text-base text-on-surface font-bold truncate">
+                  {activeChart === 'performance' ? 'Class Performance Overview' : 'Weekly Class Attendance'}
+                </h3>
+                <span className="px-2 py-0.5 bg-primary-container text-on-primary-container rounded-full text-[9px] font-bold shrink-0">Grade 10-A</span>
+              </div>
+              <select
+                value={activeChart}
+                onChange={(e) => setActiveChart(e.target.value)}
+                className="w-fit px-2 py-0.5 rounded-lg border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface shrink-0"
+              >
+                <option value="performance">Academics Performance</option>
+                <option value="attendance">Weekly Attendance</option>
+              </select>
             </div>
-            {/* Custom Bar Graph */}
-            <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-6">
-              {[60, 75, 94, 70, 50].map((val, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group" name={`bar-group-${idx}`}>
-                  <div className="relative w-full h-full flex items-end justify-center">
-                    <div 
-                      className={`w-full max-w-[40px] rounded-t-lg transition-all duration-500 hover:opacity-90 ${
-                        idx === 2 ? 'bg-primary' : 'bg-primary-fixed-dim'
-                      }`}
-                      style={{ height: `${val}%` }}
-                    ></div>
-                    <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
-                      {val}%
-                    </span>
+
+            <div className="flex-1 transition-all duration-300">
+              {activeChart === 'performance' ? (
+                <div className="animate-fadeIn h-full flex flex-col justify-between">
+                  {/* Custom Bar Graph */}
+                  <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-6 h-[180px]">
+                    {[60, 75, 94, 70, 50].map((val, idx) => (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group" name={`bar-group-${idx}`}>
+                        <div className="relative w-full h-full flex items-end justify-center">
+                          <div 
+                            className={`w-full max-w-[40px] rounded-t-lg transition-all duration-500 hover:opacity-90 ${
+                              idx === 2 ? 'bg-primary' : 'bg-primary-fixed-dim'
+                            }`}
+                            style={{ height: `${val}%` }}
+                          ></div>
+                          <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
+                            {val}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
+                    {['Algebra', 'Geometry', 'Trig', 'Calculus', 'Stats'].map((subj, idx) => (
+                      <span key={idx} className="flex-1 text-center truncate">{subj}</span>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-              {['Algebra', 'Geometry', 'Trig', 'Calculus', 'Stats'].map((subj, idx) => (
-                <span key={idx} className="flex-1 text-center truncate">{subj}</span>
-              ))}
+              ) : (
+                <div className="animate-fadeIn h-full flex flex-col justify-between">
+                  {/* Weekly Attendance Bars */}
+                  <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-6 h-[180px]">
+                    {[92, 95, 88, 96, 91].map((val, idx) => (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                        <div className="relative w-full h-full flex items-end justify-center">
+                          <div 
+                            className="w-full max-w-[40px] rounded-t-lg bg-emerald-500 transition-all duration-500 hover:opacity-90"
+                            style={{ height: `${val}%` }}
+                          ></div>
+                          <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
+                            {val}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, idx) => (
+                      <span key={idx} className="flex-1 text-center truncate">{day}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

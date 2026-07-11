@@ -198,9 +198,6 @@ export default function TeacherResults() {
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
               Grades & Results
             </h2>
-            <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-              Record exam scores and view academic grade rosters.
-            </p>
           </div>
         </section>
 

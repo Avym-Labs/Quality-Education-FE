@@ -167,7 +167,6 @@ export default function AdminManagement() {
         <section className="flex items-center justify-between pb-4 border-b border-outline-variant/20">
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Admin Management</h2>
-            <p className="text-xs text-on-surface-variant font-medium">Create, edit, pause or oversee administrator access privileges.</p>
           </div>
           <button 
             onClick={handleOpenCreateModal}

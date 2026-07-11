@@ -103,9 +103,6 @@ export default function TeacherReports() {
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
               Reports & Academic Cards
             </h2>
-            <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-              Generate official performance cards and view class metrics.
-            </p>
           </div>
         </section>
 

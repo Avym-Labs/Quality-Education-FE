@@ -138,6 +138,14 @@ export default function TeacherAttendance() {
     }
   }
 
+  const handleStartChat = () => {
+    if (!user || !selectedStudent) return
+    const sortedIds = [user.id, selectedStudent.user_id].sort()
+    const conversationId = `${sortedIds[0]}__${sortedIds[1]}`
+    setSheetOpen(false)
+    navigate(`/teacher/chat/${conversationId}`)
+  }
+
   const handleSaveNotes = () => {
     if (selectedStudent) {
       localStorage.setItem(`note_${selectedStudent.id}`, studentNotes)
@@ -734,7 +742,7 @@ export default function TeacherAttendance() {
                       <span className="material-symbols-outlined text-[16px]">call</span>
                     </a>
                     <button 
-                      onClick={() => navigate('/teacher/chat') & setSheetOpen(false)}
+                      onClick={handleStartChat}
                       className="bg-emerald-100 text-emerald-700 p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center border-none cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[16px]">chat</span>

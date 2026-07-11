@@ -17,7 +17,7 @@ export default function SchedulePage({ embed = false }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // Roster filters (only for Teacher/Admin)
+  //  filters (only for Teacher/Admin)
   const [classFilter, setClassFilter] = useState(user?.assigned_classes?.[0] || '10-A')
 
   // Edit / Create Modal state
@@ -209,9 +209,6 @@ export default function SchedulePage({ embed = false }) {
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
                 Lecture Calendar
               </h2>
-              <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-                Track lecture timings, exams, and class details.
-              </p>
             </div>
           </div>
 
@@ -329,7 +326,7 @@ export default function SchedulePage({ embed = false }) {
           {/* RIGHT: Scheduled Lectures detail Roster */}
           <div className="lg:col-span-5 bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/35 shadow-sm flex flex-col justify-between min-h-[350px]">
             <div>
-              <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2.5 mb-4">
+              <div className="flex items-centerfy-between border-b border-outline-variant/15 pb-2.5 mb-4">
                 <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
                   Schedules for {selectedDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}
                 </h3>

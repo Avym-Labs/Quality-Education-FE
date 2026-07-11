@@ -15,6 +15,14 @@ export default function StudentDashboard() {
   })
   const [homeworkCount, setHomeworkCount] = useState(3)
   const [loading, setLoading] = useState(true)
+  const [activeChart, setActiveChart] = useState('attendance')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveChart(prev => prev === 'attendance' ? 'performance' : 'attendance')
+    }, 10000)
+    return () => clearTimeout(timer)
+  }, [activeChart])
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -58,32 +66,13 @@ export default function StudentDashboard() {
     <DashboardLayout hideTopBar={false}>
       <div className="space-y-stack-lg mt-stack-md">
         
-        {/* Profile & Welcome Section */}
-        <section className="space-y-stack-sm">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-bold">
-                {user?.full_name || 'Arjun H.'}
-              </h2>
-              <p className="font-label-md text-label-md text-on-surface-variant">
-                Grade {user?.grade || '10'}-{user?.section || 'A'} • Academic Precision School
-              </p>
-            </div>
-            <div className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-              <span className="material-symbols-outlined text-sm animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
-                stars
-              </span>
-              <span className="font-label-md text-label-md">{tier}</span>
-            </div>
-          </div>
-        </section>
 
         {/* Stats Section (Gamified) */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-stack-md">
           {/* Attendance Card */}
           <div 
             onClick={() => navigate('/student/attendance')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-md transition-shadow h-28"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-md transition-shadow h-32"
           >
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary-fixed opacity-10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
             <div className="flex justify-between items-start mb-1">
@@ -101,7 +90,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Attendance Score Card */}
-          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group h-28">
+          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group h-32">
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-tertiary-fixed opacity-10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
             <div className="flex justify-between items-start mb-1">
               <div className="w-10 h-10 rounded-xl bg-tertiary-fixed flex items-center justify-center">
@@ -122,7 +111,7 @@ export default function StudentDashboard() {
           {/* Current Rank Card */}
           <div 
             onClick={() => navigate('/student/results')}
-            className="bg-primary-container p-stack-md rounded-[24px] shadow-lg flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow h-28"
+            className="bg-primary-container p-stack-md rounded-[24px] shadow-lg flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow h-32"
           >
             <div className="absolute -right-2 -top-2 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
             <div className="flex justify-between items-start mb-1">
@@ -141,11 +130,11 @@ export default function StudentDashboard() {
         {/* Quick Actions Grid */}
         <section className="space-y-stack-sm">
           <h3 className="font-title-lg text-title-lg text-on-surface px-1 font-bold">Action Items</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="flex overflow-x-auto gap-4 pb-2 px-1 snap-x scroll-smooth scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* Homework Action */}
             <div 
               onClick={() => navigate('/student/homework')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
             >
               <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
                 assignment
@@ -159,7 +148,7 @@ export default function StudentDashboard() {
             {/* Test Performance Action */}
             <div 
               onClick={() => navigate('/student/results')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
             >
               <span className="material-symbols-outlined text-error group-hover:scale-110 transition-transform">
                 event
@@ -173,7 +162,7 @@ export default function StudentDashboard() {
             {/* Achievements Action */}
             <div 
               onClick={() => navigate('/student/profile/achievements')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
             >
               <span className="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">
                 workspace_premium
@@ -187,7 +176,7 @@ export default function StudentDashboard() {
             {/* Chat Action */}
             <div 
               onClick={() => navigate('/student/chat')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
             >
               <span className="material-symbols-outlined text-tertiary-container group-hover:scale-110 transition-transform">
                 chat_bubble
@@ -201,7 +190,7 @@ export default function StudentDashboard() {
             {/* Reports Card Action */}
             <div 
               onClick={() => navigate('/student/reports')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
             >
               <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
                 analytics
@@ -215,7 +204,7 @@ export default function StudentDashboard() {
             {/* Calendar Schedule Action */}
             <div 
               onClick={() => navigate('/student/schedule')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group"
+              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
             >
               <span className="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">
                 calendar_today
@@ -229,61 +218,74 @@ export default function StudentDashboard() {
         </section>
 
         {/* Charts & Performance */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-stack-lg">
-          {/* Attendance Trend */}
-          <div className="bg-white p-stack-md rounded-[24px] shadow-sm border border-outline-variant space-y-stack-md">
-            <div className="flex justify-between items-center">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Weekly Consistency</h3>
-              <div className="flex gap-1 items-center">
-                <div className="w-3 h-3 rounded-full bg-primary"></div>
-                <span className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Present</span>
-              </div>
-            </div>
-            <div className="flex items-end justify-between h-32 px-2 gap-2 pt-2">
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '90%' }}></div>
-                <span className="text-[10px] font-medium text-on-surface-variant">Mon</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '100%' }}></div>
-                <span className="text-[10px] font-medium text-on-surface-variant">Tue</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <div className="w-full bg-primary-fixed-dim rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '20%' }}></div>
-                <span className="text-[10px] font-medium text-on-surface-variant">Wed</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '85%' }}></div>
-                <span className="text-[10px] font-medium text-on-surface-variant">Thu</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '95%' }}></div>
-                <span className="text-[10px] font-medium text-on-surface-variant">Fri</span>
-              </div>
-            </div>
+        <section className="bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35 space-y-stack-md">
+          <div className="flex justify-between items-center gap-2 mb-4 w-full">
+            <h3 className="font-title-lg text-base text-on-surface font-bold truncate pr-1">
+              {activeChart === 'attendance' ? 'Weekly Consistency' : 'Performance Trend'}
+            </h3>
+            <select
+              value={activeChart}
+              onChange={(e) => setActiveChart(e.target.value)}
+              className="w-fit px-2 py-0.5 rounded-lg border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface shrink-0"
+            >
+              <option value="attendance">Weekly Attendance</option>
+              <option value="performance">Academic Performance</option>
+            </select>
           </div>
 
-          {/* Performance Trend */}
-          <div className="bg-white p-stack-md rounded-[24px] shadow-sm border border-outline-variant space-y-stack-md">
-            <div className="flex justify-between items-center">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Performance Trend</h3>
-              <span className="material-symbols-outlined text-primary">trending_up</span>
-            </div>
-            <div className="relative h-32 w-full mt-4">
-              <svg className="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
-                <path d="M0 80 Q 50 70, 100 65 T 200 40 T 300 35 T 400 10" fill="none" stroke="#3525cd" strokeLinecap="round" strokeWidth="4"></path>
-                <circle cx="0" cy="80" fill="#3525cd" r="4"></circle>
-                <circle cx="100" cy="65" fill="#3525cd" r="4"></circle>
-                <circle cx="200" cy="40" fill="#3525cd" r="4"></circle>
-                <circle cx="300" cy="35" fill="#3525cd" r="4"></circle>
-                <circle className="animate-pulse" cx="400" cy="10" fill="#3525cd" r="6"></circle>
-              </svg>
-              <div className="flex justify-between mt-2">
-                <span className="text-[10px] font-semibold text-on-surface-variant">Test 1</span>
-                <span className="text-[10px] font-semibold text-on-surface-variant">Test {testsCount}</span>
+          <div className="transition-all duration-300">
+            {activeChart === 'attendance' ? (
+              <div className="animate-fadeIn">
+                <div className="flex justify-end items-center mb-2">
+                  <div className="flex gap-1.5 items-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary"></div>
+                    <span className="text-[10px] text-on-surface-variant font-semibold uppercase tracking-wider">Present</span>
+                  </div>
+                </div>
+                <div className="flex items-end justify-between h-32 px-2 gap-3 pt-2">
+                  <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '90%' }}></div>
+                    <span className="text-[10px] font-semibold text-on-surface-variant">Mon</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '100%' }}></div>
+                    <span className="text-[10px] font-semibold text-on-surface-variant">Tue</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="w-full bg-primary-fixed-dim rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '20%' }}></div>
+                    <span className="text-[10px] font-semibold text-on-surface-variant">Wed</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '85%' }}></div>
+                    <span className="text-[10px] font-semibold text-on-surface-variant">Thu</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="w-full bg-primary rounded-t-lg transition-all duration-500 hover:opacity-90" style={{ height: '95%' }}></div>
+                    <span className="text-[10px] font-semibold text-on-surface-variant">Fri</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            <p className="text-[12px] text-on-surface-variant italic">Impressive! Your average score is at {score}%.</p>
+            ) : (
+              <div className="animate-fadeIn">
+                <div className="relative h-32 w-full mt-2">
+                  <svg className="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
+                    <path d="M0 80 Q 50 70, 100 65 T 200 40 T 300 35 T 400 10" fill="none" stroke="#3525cd" strokeLinecap="round" strokeWidth="4"></path>
+                    <circle cx="0" cy="80" fill="#3525cd" r="4"></circle>
+                    <circle cx="100" cy="65" fill="#3525cd" r="4"></circle>
+                    <circle cx="200" cy="40" fill="#3525cd" r="4"></circle>
+                    <circle cx="300" cy="35" fill="#3525cd" r="4"></circle>
+                    <circle className="animate-pulse" cx="400" cy="10" fill="#3525cd" r="6"></circle>
+                  </svg>
+                  <div className="flex justify-between mt-2 font-semibold">
+                    <span className="text-[10px] text-on-surface-variant">Test 1</span>
+                    <span className="text-[10px] text-on-surface-variant">Test {testsCount}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-on-surface-variant font-semibold italic mt-2">
+                  Impressive! Your average score is at {score}%.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 

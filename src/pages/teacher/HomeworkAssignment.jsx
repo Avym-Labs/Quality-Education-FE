@@ -23,6 +23,17 @@ export default function HomeworkAssignment() {
   
   const [homeworkList, setHomeworkList] = useState([])
   const [activeTab, setActiveTab] = useState('active') // active | past
+  const [editingHomeworkId, setEditingHomeworkId] = useState(null)
+
+  const handleCancelEdit = () => {
+    setEditingHomeworkId(null)
+    setTitle('')
+    setDescription('')
+    setDueDate('')
+    setHomeworkLink('')
+    setAttachments([])
+    setMessage('')
+  }
   
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
@@ -86,7 +97,7 @@ export default function HomeworkAssignment() {
 
     try {
       const [grade, section] = selectedClass.split('-')
-      await api.post('/homework', {
+      const payload = {
         title,
         description,
         subject,
@@ -95,23 +106,31 @@ export default function HomeworkAssignment() {
         due_date: dueDate,
         attachments: attachments.map(a => `${a.name}|${a.url}`),
         homework_link: homeworkLink
-      })
+      }
 
-      setMessage('Homework assigned successfully!')
+      if (editingHomeworkId) {
+        await api.put(`/homework/${editingHomeworkId}`, payload)
+        setMessage('Homework updated successfully!')
+      } else {
+        await api.post('/homework', payload)
+        setMessage('Homework assigned successfully!')
+      }
+
       // Clear form
       setTitle('')
       setDescription('')
       setDueDate('')
       setHomeworkLink('')
       setAttachments([])
+      setEditingHomeworkId(null)
 
       // Reload list
       loadHomework()
       
       setTimeout(() => setMessage(''), 4000)
     } catch (err) {
-      console.error('Failed to assign homework:', err)
-      setMessage('Failed to assign homework.')
+      console.error('Failed to save homework:', err)
+      setMessage(editingHomeworkId ? 'Failed to update homework.' : 'Failed to assign homework.')
     }
   }
 
@@ -168,9 +187,6 @@ export default function HomeworkAssignment() {
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
               Homework assignments
             </h2>
-            <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-              Assign tasks & manage due schedules
-            </p>
           </div>
         </section>
 
@@ -192,8 +208,12 @@ export default function HomeworkAssignment() {
           <div className="lg:col-span-5">
             <section className="bg-surface-container-lowest p-stack-md rounded-[28px] shadow-sm border border-outline-variant/30 space-y-4">
               <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-                <h3 className="font-title-lg text-sm text-on-surface font-bold">Assign Homework</h3>
-                <span className="material-symbols-outlined text-primary">edit_note</span>
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">
+                  {editingHomeworkId ? 'Edit Homework' : 'Assign Homework'}
+                </h3>
+                <span className="material-symbols-outlined text-primary">
+                  {editingHomeworkId ? 'edit' : 'edit_note'}
+                </span>
               </div>
 
               <form onSubmit={handleAssign} className="space-y-4">
@@ -317,13 +337,26 @@ export default function HomeworkAssignment() {
                 </div>
 
                 {/* Submit button */}
-                <button 
-                  type="submit"
-                  className="w-full py-3 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-sm">send</span>
-                  <span>Assign Homework</span>
-                </button>
+                 <div className="flex gap-2">
+                   <button 
+                     type="submit"
+                     className="flex-1 py-3 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                   >
+                     <span className="material-symbols-outlined text-sm">
+                       {editingHomeworkId ? 'save' : 'send'}
+                     </span>
+                     <span>{editingHomeworkId ? 'Update Homework' : 'Assign Homework'}</span>
+                   </button>
+                   {editingHomeworkId && (
+                     <button 
+                       type="button"
+                       onClick={handleCancelEdit}
+                       className="px-4 py-3 border border-outline text-xs text-on-surface-variant font-bold rounded-2xl hover:bg-surface-container transition-all active:scale-95 cursor-pointer bg-transparent"
+                     >
+                       Cancel
+                     </button>
+                   )}
+                 </div>
               </form>
             </section>
           </div>
@@ -428,15 +461,35 @@ export default function HomeworkAssignment() {
                         </div>
                         <div className="flex gap-2 border-t border-outline-variant/15 pt-2.5">
                           <button 
+                            onClick={() => {
+                              setEditingHomeworkId(hw.id)
+                              setTitle(hw.title)
+                              setDescription(hw.description)
+                              setSubject(hw.subject)
+                              setSelectedClass(`${hw.grade}-${hw.section}`)
+                              setDueDate(hw.due_date)
+                              setHomeworkLink(hw.homework_link || '')
+                              setAttachments(hw.attachments ? hw.attachments.map(attStr => {
+                                const [name, url] = attStr.includes('|') ? attStr.split('|') : ['Attachment', attStr]
+                                return { name, url }
+                              }) : [])
+                              window.scrollTo({ top: 0, behavior: 'smooth' })
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold border-none cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <span>Edit</span>
+                          </button>
+                          <button 
                             onClick={() => handleDuplicate(hw)}
-                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold"
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold border-none cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-xs">content_copy</span>
                             <span>Reuse</span>
                           </button>
                           <button 
                             onClick={() => handleDelete(hw.id)}
-                            className="p-1.5 rounded-xl bg-error-container/20 text-error hover:bg-error-container/40 transition-colors active:scale-95 flex items-center justify-center"
+                            className="p-1.5 rounded-xl bg-error-container/20 text-error hover:bg-error-container/40 transition-colors active:scale-95 flex items-center justify-center border-none cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-xs">delete</span>
                           </button>
@@ -508,11 +561,37 @@ export default function HomeworkAssignment() {
                         </div>
                         <div className="flex gap-2 border-t border-outline-variant/15 pt-2.5">
                           <button 
+                            onClick={() => {
+                              setEditingHomeworkId(hw.id)
+                              setTitle(hw.title)
+                              setDescription(hw.description)
+                              setSubject(hw.subject)
+                              setSelectedClass(`${hw.grade}-${hw.section}`)
+                              setDueDate(hw.due_date)
+                              setHomeworkLink(hw.homework_link || '')
+                              setAttachments(hw.attachments ? hw.attachments.map(attStr => {
+                                const [name, url] = attStr.includes('|') ? attStr.split('|') : ['Attachment', attStr]
+                                return { name, url }
+                              }) : [])
+                              window.scrollTo({ top: 0, behavior: 'smooth' })
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold border-none cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <span>Edit</span>
+                          </button>
+                          <button 
                             onClick={() => handleDuplicate(hw)}
-                            className="w-full flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold"
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold border-none cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-xs">restore</span>
-                            <span>Reuse Parameters</span>
+                            <span>Reuse</span>
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(hw.id)}
+                            className="p-1.5 rounded-xl bg-error-container/20 text-error hover:bg-error-container/40 transition-colors active:scale-95 flex items-center justify-center border-none cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-xs">delete</span>
                           </button>
                         </div>
                       </div>

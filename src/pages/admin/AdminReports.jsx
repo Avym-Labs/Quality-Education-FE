@@ -16,7 +16,7 @@ export default function AdminReports() {
     overallAverage: 78.4
   })
 
-  // Rosters for dropdown selectors
+  // s for dropdown selectors
   const [teachers, setTeachers] = useState([])
   const [students, setStudents] = useState([])
 
@@ -54,7 +54,7 @@ export default function AdminReports() {
     return 'F'
   }
 
-  // Load rosters and counts
+  // Load s and counts
   useEffect(() => {
     async function loadData() {
       try {

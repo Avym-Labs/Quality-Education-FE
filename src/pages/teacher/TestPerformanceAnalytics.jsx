@@ -200,9 +200,6 @@ export default function TestPerformanceAnalytics() {
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
                 Upload Results
               </h2>
-              <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-                Batch Marks entry spreadsheet
-              </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">

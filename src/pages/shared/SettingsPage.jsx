@@ -44,8 +44,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!user) return
     try {
-      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
-      const others = roster.filter(r => r.user_id !== user.id)
+      const saved = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const others = saved.filter(r => r.user_id !== user.id)
       setSavedAccounts(others)
     } catch (err) {
       console.error('Failed to load accounts in Settings:', err)
@@ -54,12 +54,10 @@ export default function SettingsPage() {
 
   const handleSwitchProfile = async (targetUserId) => {
     try {
-      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
-      const match = roster.find(r => r.user_id === targetUserId)
+      const saved = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const match = saved.find(r => r.user_id === targetUserId)
       if (!match) return
-
-      // Save current profile to roster before swapping
-      const currentRoster = roster.filter(r => r.user_id !== user.id)
+      const current = saved.filter(r => r.user_id !== user.id)
       const currentSavedUser = {
         user_id: user.id,
         email: user.email,
@@ -77,8 +75,8 @@ export default function SettingsPage() {
         grade: user.grade,
         section: user.section
       }
-      currentRoster.push(currentSavedUser)
-      localStorage.setItem('educore_saved_accounts', JSON.stringify(currentRoster))
+      current.push(currentSavedUser)
+      localStorage.setItem('educore_saved_accounts', JSON.stringify(current))
 
       // Swap active session details
       localStorage.setItem('access_token', match.access_token)
@@ -108,9 +106,9 @@ export default function SettingsPage() {
 
   const handleAddNewAccount = () => {
     try {
-      const roster = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
-      const currentRoster = roster.filter(r => r.user_id !== user.id)
-      currentRoster.push({
+      const saved = JSON.parse(localStorage.getItem('educore_saved_accounts') || '[]')
+      const current = saved.filter(r => r.user_id !== user.id)
+      current.push({
         user_id: user.id,
         email: user.email,
         phone: user.phone,
@@ -127,7 +125,7 @@ export default function SettingsPage() {
         grade: user.grade,
         section: user.section
       })
-      localStorage.setItem('educore_saved_accounts', JSON.stringify(currentRoster))
+      localStorage.setItem('educore_saved_accounts', JSON.stringify(current))
 
       // Wipe active session
       localStorage.removeItem('access_token')
@@ -598,7 +596,7 @@ export default function SettingsPage() {
         {activeView === 'switch-profile' && user?.role === 'teacher' && (
           <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn text-xs">
             <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
-              <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Saved Roster Swaps</h3>
+              <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Saved  Swaps</h3>
               <button 
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
