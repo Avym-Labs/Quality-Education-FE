@@ -123,134 +123,52 @@ export default function TeacherDashboard() {
       <div className="space-y-stack-lg mt-stack-md pb-24">
         
 
-        {/* Horizontal Quick Actions Scroll */}
-        <section className="space-y-stack-sm">
-          <h3 className="font-title-lg text-title-lg text-on-surface px-1 font-bold">Quick Actions</h3>
-          <div className="flex overflow-x-auto gap-4 pb-2 px-1 snap-x scroll-smooth scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div 
-              onClick={() => navigate('/teacher/attendance')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
-                rule
-              </span>
-              <div>
-                <p className="text-xs font-bold text-on-surface">Mark Attendance</p>
-                <p className="text-[10px] font-medium text-on-surface-variant">Class Register</p>
-              </div>
-            </div>
 
-            <div 
-              onClick={() => navigate('/teacher/homework')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">
-                assignment
-              </span>
-              <div>
-                <p className="text-xs font-bold text-on-surface">Homework Panel</p>
-                <p className="text-[10px] font-medium text-on-surface-variant">Assign & Review</p>
-              </div>
-            </div>
-
-            <div 
-              onClick={() => navigate('/teacher/academics')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-tertiary group-hover:scale-110 transition-transform">
-                school
-              </span>
-              <div>
-                <p className="text-xs font-bold text-on-surface">Academics Hub</p>
-                <p className="text-[10px] font-medium text-on-surface-variant">Manage Grades</p>
-              </div>
-            </div>
-
-            <div 
-              onClick={() => navigate('/teacher/leave')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-error group-hover:scale-110 transition-transform">
-                logout
-              </span>
-              <div>
-                <p className="text-xs font-bold text-on-surface">Leave Request</p>
-                <p className="text-[10px] font-medium text-on-surface-variant">Apply Leave</p>
-              </div>
-            </div>
-
-            <div 
-              onClick={() => navigate('/teacher/chat')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
-                chat_bubble
-              </span>
-              <div>
-                <p className="text-xs font-bold text-on-surface">Inbox Chat</p>
-                <p className="text-[10px] font-medium text-on-surface-variant">DMs & Broadcasts</p>
-              </div>
-            </div>
-
-            <div 
-              onClick={() => navigate('/teacher/schedule')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">
-                calendar_today
-              </span>
-              <div>
-                <p className="text-xs font-bold text-on-surface">Calendar Schedule</p>
-                <p className="text-[10px] font-medium text-on-surface-variant">Weekly Lectures</p>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Stats Bento Grid */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
           {/* Total Students handled */}
-          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default hover:bg-surface-container-low transition-colors duration-200">
+          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-default hover:bg-surface-container-low transition-colors duration-200">
             <span className="material-symbols-outlined text-primary text-3xl">groups</span>
             <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">42</div>
-              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Students</div>
+              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">42</div>
+              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Total Students</div>
             </div>
           </div>
 
           {/* Present Students */}
           <div 
             onClick={() => navigate('/teacher/attendance')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-emerald-600 text-3xl">check_circle</span>
             <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{presentCount}</div>
-              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Present Students</div>
+              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">{presentCount}</div>
+              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Present Students</div>
             </div>
           </div>
 
           {/* Absent Students */}
           <div 
             onClick={() => navigate('/teacher/attendance')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-error text-3xl">cancel</span>
             <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{absentCount}</div>
-              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Absent Students</div>
+              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">{absentCount}</div>
+              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Absent Students</div>
             </div>
           </div>
 
           {/* Homeworks */}
           <div 
             onClick={() => navigate('/teacher/homework')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-secondary text-3xl">assignment</span>
             <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{homeworkCount}</div>
-              <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Homework Assigned</div>
+              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">{homeworkCount}</div>
+              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Homework Assigned</div>
             </div>
           </div>
         </section>
@@ -355,77 +273,43 @@ export default function TeacherDashboard() {
 
         </div>
 
-        {/* Alerts & Notifications Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-lg">
-          
-          {/* Low Attendance Alerts */}
-          <div className="bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-title-lg text-base text-on-surface font-bold">Attendance Alerts</h3>
-              <span 
-                onClick={() => navigate('/teacher/attendance')}
-                className="text-primary font-bold text-xs cursor-pointer hover:underline"
-              >
-                View History
-              </span>
+        {/* Attendance Alerts */}
+        <div className="bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-title-lg text-base text-on-surface font-bold">Attendance Alerts</h3>
+            <span 
+              onClick={() => navigate('/teacher/attendance')}
+              className="text-primary font-bold text-xs cursor-pointer hover:underline"
+            >
+              View History
+            </span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-2.5 bg-error-container/10 border border-error/10 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center text-xs font-bold shrink-0">
+                  LH
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-on-surface">Leo Harrison</h4>
+                  <p className="text-[10px] text-on-surface-variant font-medium">68% Overall Attendance</p>
+                </div>
+              </div>
+              <div className="text-error font-bold text-xs uppercase tracking-wider">Critical</div>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-2.5 bg-error-container/10 border border-error/10 rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center text-xs font-bold shrink-0">
-                    LH
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-on-surface">Leo Harrison</h4>
-                    <p className="text-[10px] text-on-surface-variant font-medium">68% Overall Attendance</p>
-                  </div>
+            <div className="flex items-center justify-between p-2.5 bg-orange-50 border border-orange-100 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-800 flex items-center justify-center text-xs font-bold shrink-0">
+                  MT
                 </div>
-                <div className="text-error font-bold text-xs uppercase tracking-wider">Critical</div>
-              </div>
-              <div className="flex items-center justify-between p-2.5 bg-orange-50 border border-orange-100 rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-800 flex items-center justify-center text-xs font-bold shrink-0">
-                    MT
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-on-surface">Mia Thompson</h4>
-                    <p className="text-[10px] text-on-surface-variant font-medium">74% Overall Attendance</p>
-                  </div>
+                <div>
+                  <h4 className="font-bold text-xs text-on-surface">Mia Thompson</h4>
+                  <p className="text-[10px] text-on-surface-variant font-medium">74% Overall Attendance</p>
                 </div>
-                <div className="text-orange-500 font-bold text-xs uppercase tracking-wider">Warning</div>
               </div>
+              <div className="text-orange-500 font-bold text-xs uppercase tracking-wider">Warning</div>
             </div>
           </div>
-
-          {/* Recent System Notifications */}
-          <div className="bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-title-lg text-base text-on-surface font-bold">Recent Notifications</h3>
-              <span 
-                onClick={() => navigate('/teacher/notifications')}
-                className="text-primary font-bold text-xs cursor-pointer hover:underline"
-              >
-                Open Center
-              </span>
-            </div>
-            <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar pr-1.5">
-              <div className="flex gap-3">
-                <div className="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0"></div>
-                <div>
-                  <p className="font-semibold text-xs text-on-surface">Final exam scheduling is now open for Grade 10.</p>
-                  <p className="text-[9px] text-on-surface-variant font-semibold mt-0.5">10 mins ago</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0"></div>
-                <div>
-                  <p className="font-semibold text-xs text-on-surface">Staff meeting rescheduled to Friday at 3:00 PM.</p>
-                  <p className="text-[9px] text-on-surface-variant font-semibold mt-0.5">2 hours ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
 
       </div>

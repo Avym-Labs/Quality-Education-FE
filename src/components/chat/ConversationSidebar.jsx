@@ -29,6 +29,82 @@ export default function ConversationSidebar({ activeConversationId }) {
   const classOptions = ['10-A', '10-B', '11-A', '11-B', '12-A', '12-B']
   const subjectOptions = ['Mathematics', 'Physics', 'Chemistry', 'Science', 'English Literature']
 
+  // Broadcast Templates
+  const adminTemplates = [
+    {
+      title: '📢 Holiday Announcement',
+      content: 'Dear Teachers/Staff,\n\nPlease note that there will be a holiday on [Date] on account of [Event]. Regular classes and operations will resume on [Date].\n\nRegards,\nAdministration.'
+    },
+    {
+      title: '📊 Results Upload Deadline',
+      content: 'Dear Faculty,\n\nPlease ensure that all student marks and exam results are uploaded in the system by [Date]. Late submissions will not be accepted.\n\nRegards,\nAdministration.'
+    },
+    {
+      title: '📅 Test Timetable Released',
+      content: 'Dear Teachers/Staff,\n\nThe timetable for the upcoming exams/tests has been finalized and uploaded. Please review it in your Academics Hub and coordinate with your students accordingly.\n\nRegards,\nAdministration.'
+    },
+    {
+      title: '🔄 Schedule Modification',
+      content: 'Dear Teachers/Staff,\n\nPlease be informed of a schedule adjustment on [Date]. Classes will follow the [Alternate Schedule/Day] timetable for that day. Details are available on the school calendar.\n\nRegards,\nAdministration.'
+    }
+  ]
+
+  const teacherTemplates = [
+    {
+      title: '📚 Exam Results Uploaded',
+      content: 'Hello {name},\n\nYour results for the recent exam have been uploaded. Please log in to your Academics Hub to review your marks.\n\nRegards,\nAdmin.'
+    },
+    {
+      title: '💰 Outstanding Fee Reminder',
+      content: 'Dear {name},\n\nThis is a reminder that your tuition fee installment is currently pending. Please proceed with payment via the payments section.\n\nThank you.'
+    },
+    {
+      title: '📝 Pending Homework Alert',
+      content: 'Hi {name},\n\nPlease check your homework panel. You have outstanding assignments due for submission. Ensure completion by the deadline.\n\nRegards,\n{sender_name}.'
+    },
+    {
+      title: '⚠️ Attendance Shortage Warning',
+      content: 'Hi {name},\n\nYour attendance rate is currently below the 75% minimum requirement. Please meet with your homeroom teacher to address this standing.'
+    }
+  ]
+
+  const activeTemplates = user?.role === 'admin' ? adminTemplates : teacherTemplates
+
+  const [customTemplates, setCustomTemplates] = useState([])
+  const [newTemplateTitle, setNewTemplateTitle] = useState('')
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+
+  useEffect(() => {
+    if (user?.id) {
+      const saved = localStorage.getItem(`educore_custom_templates_${user.id}`)
+      if (saved) {
+        try {
+          setCustomTemplates(JSON.parse(saved))
+        } catch (e) {
+          console.error(e)
+        }
+      } else {
+        setCustomTemplates([])
+      }
+    }
+  }, [user])
+
+  const handleSaveCustomTemplate = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!newTemplateTitle.trim() || !broadcastContent.trim() || !user?.id) return
+    const newTemplate = {
+      id: Date.now().toString(),
+      title: `⭐ ${newTemplateTitle.trim()}`,
+      content: broadcastContent
+    }
+    const updated = [...customTemplates, newTemplate]
+    setCustomTemplates(updated)
+    localStorage.setItem(`educore_custom_templates_${user.id}`, JSON.stringify(updated))
+    setNewTemplateTitle('')
+    setIsSavingTemplate(false)
+  }
+
   const fetchConversations = async () => {
     try {
       const { data } = await api.get('/chat/conversations')
@@ -400,43 +476,87 @@ export default function ConversationSidebar({ activeConversationId }) {
                     </div>
                   )}
 
-                  {/* Select Prebuilt Template */}
-                  {user?.role !== 'admin' && (
-                    <div className="flex flex-col gap-1 text-left">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Prebuilt Message Template</label>
-                      <select
-                        onChange={(e) => {
-                          const val = e.target.value
-                          if (val) {
-                            setBroadcastContent(val)
-                          }
-                        }}
-                        className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
-                      >
-                        <option value="">-- Choose designed template (Optional) --</option>
-                        <option value="Hello {name},&#10;&#10;Your results for the recent exam have been uploaded. Please log in to your Academics Hub to review your marks.&#10;&#10;Regards, Admin.">📚 Exam Results Uploaded</option>
-                        <option value="Dear {name},&#10;&#10;This is a reminder that your tuition fee installment is currently pending. Please proceed with payment via the payments section.&#10;&#10;Thank you.">💰 Outstanding Fee Reminder</option>
-                        <option value="Hi {name},&#10;&#10;Please check your homework panel. You have outstanding assignments due for submission. Ensure completion by the deadline.&#10;&#10;Regards, {sender_name}.">📝 Pending Homework Alert</option>
-                        <option value="Hi {name},&#10;&#10;Your attendance rate is currently below the 75% minimum requirement. Please meet with your homeroom teacher to address this standing.">⚠️ Attendance Shortage Warning</option>
-                      </select>
-                      <p className="text-[9px] text-outline font-semibold uppercase tracking-wider mt-0.5">
-                        Tip: Use <span className="text-primary font-bold">{"{name}"}</span> or <span className="text-primary font-bold">{"{first_name}"}</span> for auto student personalization.
-                      </p>
-                    </div>
-                  )}
+                  {/* Select Prebuilt/Custom Template */}
+                  <div className="flex flex-col gap-1 text-left">
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Template</label>
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val) {
+                          setBroadcastContent(val)
+                        }
+                      }}
+                      className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary text-on-surface"
+                    >
+                      <option value="">-- Choose template (Optional) --</option>
+                      {activeTemplates.map((t, idx) => (
+                        <option key={`prebuilt-${idx}`} value={t.content}>
+                          {t.title}
+                        </option>
+                      ))}
+                      {customTemplates.length > 0 && (
+                        <optgroup label="Your Templates">
+                          {customTemplates.map((t) => (
+                            <option key={t.id} value={t.content}>
+                              {t.title}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                    <p className="text-[9px] text-outline font-semibold uppercase tracking-wider mt-0.5">
+                      Tip: Select a prebuilt option or create your own custom templates.
+                    </p>
+                  </div>
 
                   {/* Message Content */}
                   <div className="flex flex-col gap-1 text-left">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Content</label>
+                    <div className="flex justify-between items-center">
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Content</label>
+                      {broadcastContent.trim() && (
+                        <button
+                          type="button"
+                          onClick={() => setIsSavingTemplate(!isSavingTemplate)}
+                          className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
+                        >
+                          {isSavingTemplate ? 'Cancel Save' : '+ Save as Template'}
+                        </button>
+                      )}
+                    </div>
                     <textarea
                       placeholder="Type your announcement broadcast..."
                       value={broadcastContent}
                       onChange={(e) => setBroadcastContent(e.target.value)}
                       rows={4}
-                      className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary resize-none"
+                      className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary resize-none text-on-surface"
                       required
                     />
                   </div>
+
+                  {/* Inline template saving form */}
+                  {isSavingTemplate && (
+                    <div className="p-3 bg-surface-container-low rounded-2xl border border-outline-variant/35 flex flex-col gap-2.5 animate-fadeIn">
+                      <span className="font-bold text-[9px] text-primary uppercase">Save Current Message as Custom Template</span>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Template Title (e.g. Test Timetable)"
+                          value={newTemplateTitle}
+                          onChange={(e) => setNewTemplateTitle(e.target.value)}
+                          className="flex-1 px-3 py-1.5 border border-outline bg-surface-container-lowest rounded-xl text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveCustomTemplate}
+                          disabled={!newTemplateTitle.trim()}
+                          className="px-3 py-1.5 bg-primary text-on-primary font-bold text-xs rounded-xl hover:bg-opacity-95 disabled:opacity-50 cursor-pointer"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     type="submit"
