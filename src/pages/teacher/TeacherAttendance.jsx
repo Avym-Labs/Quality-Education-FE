@@ -542,7 +542,7 @@ export default function TeacherAttendance() {
                     <span className="material-symbols-outlined text-[16px]">check_circle</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-numeric-bold font-black text-emerald-700">{presentCount}</span>
+                    <span className="attendance-pct-card text-emerald-700">{presentCount}</span>
                     <span className="text-[10px] text-emerald-600">students</span>
                   </div>
                 </div>
@@ -554,7 +554,7 @@ export default function TeacherAttendance() {
                     <span className="material-symbols-outlined text-[16px]">cancel</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-numeric-bold font-black text-error">{absentCount}</span>
+                    <span className="attendance-pct-card text-error">{absentCount}</span>
                     <span className="text-[10px] text-red-500">students</span>
                   </div>
                 </div>
@@ -566,7 +566,7 @@ export default function TeacherAttendance() {
                     <span className="material-symbols-outlined text-[16px]">analytics</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-2xl font-numeric-bold font-black text-primary">
+                    <span className="attendance-pct-card text-primary">
                       {students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0}%
                     </span>
                     <span className="text-[10px] text-primary/70">total</span>

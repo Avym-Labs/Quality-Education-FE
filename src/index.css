@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,9 +12,9 @@
   }
 
   body {
-    font-family: 'Inter', sans-serif;
-    background-color: #fcf8ff;
-    color: #1b1b24;
+    font-family: 'Nunito Sans', sans-serif;
+    background-color: #F2F2F2;
+    color: #1E1E1E;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100dvh;
@@ -74,6 +76,28 @@
 
   .animate-float {
     animation: float 4s ease-in-out infinite;
+  }
+
+  /* Custom Typography Utility Styles */
+  .heading-bold {
+    font-size: 21px !important;
+    font-weight: 700 !important;
+  }
+  .subheading-semibold {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+  }
+  .title-desc {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+  }
+  .pill-normal {
+    font-size: 9px !important;
+    font-weight: 500 !important;
+  }
+  .attendance-pct-card {
+    font-size: 28px !important;
+    font-weight: 700 !important;
   }
 }
 

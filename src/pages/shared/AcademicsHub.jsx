@@ -1885,7 +1885,7 @@ export default function AcademicsHub() {
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Total Days</span>
-                          <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{rData.schoolDays}</h4>
+                          <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.schoolDays}</h4>
                           <p className="text-[9px] text-on-surface-variant font-semibold mt-1.5 flex items-center gap-1">
                             <span className="material-symbols-outlined text-xs text-primary">calendar_today</span>
                             <span>Total Period Days</span>
@@ -1893,7 +1893,7 @@ export default function AcademicsHub() {
                         </div>
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Present Days</span>
-                          <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{rData.present}</h4>
+                          <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.present}</h4>
                           <p className="text-[9px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
                             <span className="material-symbols-outlined text-xs">check_circle</span>
                             <span>Present Days</span>
@@ -1901,7 +1901,7 @@ export default function AcademicsHub() {
                         </div>
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Absent Days</span>
-                          <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{rData.absent}</h4>
+                          <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.absent}</h4>
                           <p className="text-[9px] text-error font-bold mt-1.5 flex items-center gap-1">
                             <span className="material-symbols-outlined text-xs">cancel</span>
                             <span>Absent Days</span>
@@ -1909,7 +1909,7 @@ export default function AcademicsHub() {
                         </div>
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Attendance Rate</span>
-                          <h4 className={`text-xl font-numeric-bold font-black leading-none mt-1 ${rData.rate < 75 ? 'text-error' : 'text-primary'}`}>{rData.rate}%</h4>
+                          <h4 className={`attendance-pct-card leading-none mt-1 ${rData.rate < 75 ? 'text-error' : 'text-primary'}`}>{rData.rate}%</h4>
                           <p className={`text-[9px] font-bold mt-1.5 flex items-center gap-1 ${rData.rate < 75 ? 'text-error' : 'text-primary'}`}>
                             <span className="material-symbols-outlined text-xs">trending_up</span>
                             <span>Overall Rate</span>
