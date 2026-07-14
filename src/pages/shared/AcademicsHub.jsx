@@ -264,11 +264,7 @@ export default function AcademicsHub() {
       const filename = `${className.replace(/\s+/g, '_')}_attendance_report_${reportsStartDate}_to_${reportsEndDate}.csv`
       downloadCSV(filename, csvContent)
     } else {
-      setReportsExportMessage(`Exporting ${className} report as PDF...`)
-      setTimeout(() => {
-        setReportsExportMessage('')
-        alert(`${className} attendance report has been successfully downloaded as PDF!`)
-      }, 1000)
+      window.print()
     }
   }
 
@@ -311,7 +307,11 @@ export default function AcademicsHub() {
       const filename = `${report.name}_attendance_report_${reportsModalStartDate}_to_${reportsModalEndDate}.csv`
       downloadCSV(filename, csvContent)
     } else {
-      alert(`Attendance report for ${name} has been successfully downloaded as PDF!`)
+      document.body.classList.add('print-modal-active')
+      window.print()
+      setTimeout(() => {
+        document.body.classList.remove('print-modal-active')
+      }, 1000)
     }
   }
 

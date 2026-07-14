@@ -276,7 +276,7 @@ export default function TeacherDashboard() {
         {/* Attendance Alerts */}
         <div className="bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-title-lg text-base text-on-surface font-bold">Attendance Alerts</h3>
+            <h3 className="font-title-lg text-base text-on-surface font-bold">Low Attendance</h3>
             <span 
               onClick={() => navigate('/teacher/attendance')}
               className="text-primary font-bold text-xs cursor-pointer hover:underline"
