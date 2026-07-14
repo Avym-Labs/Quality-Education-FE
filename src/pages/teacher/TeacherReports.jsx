@@ -107,7 +107,7 @@ export default function TeacherReports() {
         </section>
 
         {/* Configurations - Hidden in Print */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden text-left">
           
           <div className="flex flex-col gap-1.5 bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-sm">
             <label className="text-[10px] font-bold text-on-surface-variant uppercase">Select Class</label>
@@ -135,8 +135,8 @@ export default function TeacherReports() {
 
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Class Average</p>
-              <h4 className="text-xl font-black text-primary mt-0.5">{classAverage}%</h4>
+              <p className="text-[10px] font-bold text-primary uppercase tracking-wider text-left">Class Average</p>
+              <h4 className="text-xl font-black text-primary mt-0.5 text-left">{classAverage}%</h4>
             </div>
             <div className="text-right">
               <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Pass Ratio</p>
@@ -156,7 +156,7 @@ export default function TeacherReports() {
 
         {/* Printable Report Card Section */}
         {selectedStudent && !loadingReport && (
-          <section className="bg-white text-gray-900 rounded-[28px] border-2 border-dashed border-gray-300 p-8 shadow-sm max-w-2xl mx-auto space-y-6 print:border-none print:shadow-none print:p-0 print:max-w-full">
+          <section className="bg-white text-gray-900 rounded-[28px] border-2 border-dashed border-gray-300 p-8 shadow-sm max-w-2xl mx-auto space-y-6 print:border-none print:shadow-none print:p-0 print:max-w-full text-left">
             
             {/* Report Header */}
             <div className="flex justify-between items-start border-b-2 border-gray-800 pb-4">
@@ -243,7 +243,7 @@ export default function TeacherReports() {
             <div className="flex justify-end pt-4 border-t border-gray-100 print:hidden">
               <button 
                 onClick={handlePrint}
-                className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl text-xs font-bold hover:shadow-md cursor-pointer active:scale-95 transition-all"
+                className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl text-xs font-bold hover:shadow-md cursor-pointer active:scale-95 transition-all border-none"
               >
                 <span className="material-symbols-outlined text-sm">print</span>
                 <span>Print Report Card</span>

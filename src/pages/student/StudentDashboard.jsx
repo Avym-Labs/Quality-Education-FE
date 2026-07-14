@@ -62,6 +62,26 @@ export default function StudentDashboard() {
   const rankPercentile = score >= 90 ? 'Top 0.5%' : score >= 80 ? 'Top 1%' : 'Top 5%'
   const tier = score >= 90 ? 'Legend Tier' : score >= 80 ? 'Elite Tier' : 'Aspirant Tier'
 
+  const trendData = stats?.performance_trend && stats.performance_trend.length > 0
+    ? stats.performance_trend
+    : [
+        { test_title: 'Test 1', personal: 76, class_average: 70, topper: 90 },
+        { test_title: 'Test 2', personal: 82, class_average: 72, topper: 92 },
+        { test_title: 'Test 3', personal: 80, class_average: 74, topper: 95 },
+        { test_title: 'Test 4', personal: 88, class_average: 75, topper: 96 },
+        { test_title: 'Test 5', personal: score, class_average: 77, topper: 98 }
+      ]
+
+  const getPoints = (key) => {
+    if (!trendData || trendData.length === 0) return ''
+    const step = 400 / Math.max(1, trendData.length - 1)
+    return trendData.map((d, idx) => {
+      const x = idx * step
+      const y = 100 - ((d[key] || 0) * 0.8 + 10)
+      return `${x},${y}`
+    }).join(' ')
+  }
+
   return (
     <DashboardLayout hideTopBar={false}>
       <div className="space-y-stack-lg mt-stack-md">
@@ -131,20 +151,6 @@ export default function StudentDashboard() {
         <section className="space-y-stack-sm">
           <h3 className="font-title-lg text-title-lg text-on-surface px-1 font-bold">Action Items</h3>
           <div className="flex overflow-x-auto gap-4 pb-2 px-1 snap-x scroll-smooth scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Homework Action */}
-            <div 
-              onClick={() => navigate('/student/homework')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
-                assignment
-              </span>
-              <div>
-                <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">{homeworkCount}</p>
-                <p className="text-xs font-medium text-on-surface-variant">Pending Homework</p>
-              </div>
-            </div>
-
             {/* Test Performance Action */}
             <div 
               onClick={() => navigate('/student/results')}
@@ -170,20 +176,6 @@ export default function StudentDashboard() {
               <div>
                 <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">Cabinet</p>
                 <p className="text-xs font-medium text-on-surface-variant">Achievements</p>
-              </div>
-            </div>
-
-            {/* Chat Action */}
-            <div 
-              onClick={() => navigate('/student/chat')}
-              className="bg-surface-container-low p-stack-md rounded-xl hover:bg-surface-container-high transition-all cursor-pointer border border-outline-variant/30 flex flex-col gap-2 group min-w-[150px] md:min-w-[170px] snap-align-start shrink-0"
-            >
-              <span className="material-symbols-outlined text-tertiary-container group-hover:scale-110 transition-transform">
-                chat_bubble
-              </span>
-              <div>
-                <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">Inbox</p>
-                <p className="text-xs font-medium text-on-surface-variant">Class Messages</p>
               </div>
             </div>
 
@@ -267,21 +259,55 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="animate-fadeIn">
-                <div className="relative h-32 w-full mt-2">
-                  <svg className="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
-                    <path d="M0 80 Q 50 70, 100 65 T 200 40 T 300 35 T 400 10" fill="none" stroke="#3525cd" strokeLinecap="round" strokeWidth="4"></path>
-                    <circle cx="0" cy="80" fill="#3525cd" r="4"></circle>
-                    <circle cx="100" cy="65" fill="#3525cd" r="4"></circle>
-                    <circle cx="200" cy="40" fill="#3525cd" r="4"></circle>
-                    <circle cx="300" cy="35" fill="#3525cd" r="4"></circle>
-                    <circle className="animate-pulse" cx="400" cy="10" fill="#3525cd" r="6"></circle>
-                  </svg>
-                  <div className="flex justify-between mt-2 font-semibold">
-                    <span className="text-[10px] text-on-surface-variant">Test 1</span>
-                    <span className="text-[10px] text-on-surface-variant">Test {testsCount}</span>
+                {/* Legend for the 3 lines */}
+                <div className="flex items-center gap-4 justify-start mb-3 px-1 text-[10px] font-bold">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
+                    <span className="text-on-surface-variant">Personal</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block"></span>
+                    <span className="text-on-surface-variant">Class Avg</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                    <span className="text-on-surface-variant">Topper</span>
                   </div>
                 </div>
-                <p className="text-xs text-on-surface-variant font-semibold italic mt-2">
+
+                <div className="relative h-32 w-full mt-2">
+                  <svg className="w-full h-full overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
+                    {/* Grid lines */}
+                    <line x1="0" y1="10" x2="400" y2="10" stroke="#e2e8f0" strokeDasharray="3,3" />
+                    <line x1="0" y1="50" x2="400" y2="50" stroke="#e2e8f0" strokeDasharray="3,3" />
+                    <line x1="0" y1="90" x2="400" y2="90" stroke="#e2e8f0" strokeDasharray="3,3" />
+                    
+                    {/* Topper line */}
+                    <polyline points={getPoints('topper')} fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Class Avg line */}
+                    <polyline points={getPoints('class_average')} fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,4" />
+                    {/* Personal line */}
+                    <polyline points={getPoints('personal')} fill="none" stroke="#3525cd" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                    
+                    {/* Data dots */}
+                    {trendData.map((d, idx) => {
+                      const step = 400 / Math.max(1, trendData.length - 1)
+                      const x = idx * step
+                      return (
+                        <g key={idx}>
+                          <circle cx={x} cy={100 - ((d.topper || 0) * 0.8 + 10)} r="3.5" fill="#f59e0b" />
+                          <circle cx={x} cy={100 - ((d.class_average || 0) * 0.8 + 10)} r="3.5" fill="#94a3b8" />
+                          <circle cx={x} cy={100 - ((d.personal || 0) * 0.8 + 10)} r="4.5" fill="#3525cd" className={idx === trendData.length - 1 ? "animate-pulse" : ""} />
+                        </g>
+                      )
+                    })}
+                  </svg>
+                  <div className="flex justify-between mt-2 font-semibold">
+                    <span className="text-[10px] text-on-surface-variant">{trendData[0]?.test_title || 'Test 1'}</span>
+                    <span className="text-[10px] text-on-surface-variant">{trendData[trendData.length - 1]?.test_title || 'Latest'}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-on-surface-variant font-semibold italic mt-4">
                   Impressive! Your average score is at {score}%.
                 </p>
               </div>

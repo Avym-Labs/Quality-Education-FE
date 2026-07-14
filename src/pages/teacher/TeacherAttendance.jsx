@@ -36,6 +36,51 @@ export default function TeacherAttendance() {
   const [searchQuery, setSearchQuery] = useState('')
   const [markingLoading, setMarkingLoading] = useState(false)
   const [markingMessage, setMarkingMessage] = useState('')
+  const [classHistory, setClassHistory] = useState([])
+
+  const getWeekDays = (refDateStr) => {
+    if (!refDateStr) return []
+    const refDate = new Date(refDateStr)
+    const day = refDate.getDay()
+    const sunday = new Date(refDate)
+    sunday.setDate(refDate.getDate() - day)
+    
+    const week = []
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sunday)
+      d.setDate(sunday.getDate() + i)
+      week.push(d)
+    }
+    return week
+  }
+
+  const handleShiftWeek = (days) => {
+    const d = new Date(markingDate)
+    d.setDate(d.getDate() + days)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    setMarkingDate(`${yyyy}-${mm}-${dd}`)
+  }
+
+  const getDayAttendanceStatus = (dayDate) => {
+    const dStr = dayDate.toISOString().split('T')[0]
+    
+    const recordsOnDate = classHistory.filter(r => 
+      r.date && r.date.split('T')[0] === dStr && r.subject === selectedSubject
+    )
+    
+    if (recordsOnDate.length === 0) {
+      const dayOfWeek = dayDate.getDay()
+      if (dayOfWeek === 0 || dayOfWeek === 6) return 'weekend'
+      return 'norecord'
+    }
+    
+    const total = recordsOnDate.length
+    const present = recordsOnDate.filter(r => r.status === 'present').length
+    const rate = (present / total) * 100
+    return rate >= 75 ? 'present' : 'late'
+  }
 
   // Bottom Sheet selected student
   const [selectedStudent, setSelectedStudent] = useState(null)
@@ -71,6 +116,7 @@ export default function TeacherAttendance() {
           params: { grade, section: section || '' }
         })
         const classHistory = historyRes.data || []
+        setClassHistory(classHistory)
 
         // Fetch existing attendance for the selected date
         const attRes = await api.get('/attendance', {
@@ -332,14 +378,7 @@ export default function TeacherAttendance() {
 
           {/* Action buttons matching current view */}
           <div className="flex items-center gap-2">
-            {viewMode === 'students' ? (
-              <input 
-                type="date"
-                value={markingDate}
-                onChange={(e) => setMarkingDate(e.target.value)}
-                className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none"
-              />
-            ) : (
+            {viewMode === 'students' ? null : (
               <button 
                 onClick={() => navigate('/teacher/leave')}
                 className="flex items-center gap-1.5 bg-primary text-on-primary px-4 py-1.5 rounded-xl text-xs font-bold shadow-md hover:opacity-95 active:scale-95 transition-all border-none cursor-pointer"
@@ -356,6 +395,89 @@ export default function TeacherAttendance() {
             ========================================================================= */}
         {viewMode === 'students' && (
           <div className="space-y-4 animate-fadeIn">
+            {/* Weekly sliding calendar selector strip (Visual Strip matching mockup) */}
+            <section className="bg-surface-container-lowest border border-outline-variant shadow-sm rounded-[24px] p-5 max-w-lg mx-auto text-center space-y-4 animate-fadeIn">
+              {/* Calendar Header Month/Year */}
+              <div className="flex justify-between items-center px-2">
+                <button 
+                  onClick={() => handleShiftWeek(-7)}
+                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  chevron_left
+                </button>
+                <h3 className="text-sm font-black text-on-surface">
+                  {new Date(markingDate).toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+                </h3>
+                <button 
+                  onClick={() => handleShiftWeek(7)}
+                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  chevron_right
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {/* Weekday letters */}
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((letter, idx) => (
+                  <span key={idx} className="text-[10px] font-bold text-outline uppercase tracking-wider">
+                    {letter}
+                  </span>
+                ))}
+
+                {/* Days list */}
+                {getWeekDays(markingDate).map((dayDate, idx) => {
+                  const dayDateStr = dayDate.toISOString().split('T')[0]
+                  const isSelected = dayDateStr === markingDate
+                  const dayNum = dayDate.getDate()
+                  const status = getDayAttendanceStatus(dayDate)
+                  const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
+
+                  let textColorClass = 'text-on-surface'
+                  if (isWeekend) textColorClass = 'text-outline-variant/80'
+
+                  let underlineClass = 'bg-slate-200 w-3 h-0.5 rounded-full'
+                  if (status === 'present') underlineClass = 'bg-emerald-500 w-4 h-1 rounded-full'
+                  else if (status === 'absent') underlineClass = 'bg-red-500 w-1.5 h-1.5 rounded-full'
+                  else if (status === 'late') underlineClass = 'bg-amber-500 w-3 h-0.75 rounded-full'
+
+                  return (
+                    <div 
+                      key={idx}
+                      onClick={() => {
+                        const yyyy = dayDate.getFullYear()
+                        const mm = String(dayDate.getMonth() + 1).padStart(2, '0')
+                        const dd = String(dayDate.getDate()).padStart(2, '0')
+                        setMarkingDate(`${yyyy}-${mm}-${dd}`)
+                      }}
+                      className={`flex flex-col items-center justify-between py-2 rounded-xl aspect-[3/4] cursor-pointer transition-all hover:scale-105 select-none ${
+                        isSelected 
+                          ? 'bg-sky-100 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-200 font-black shadow-xs' 
+                          : `${textColorClass}`
+                      }`}
+                    >
+                      <span className="text-xs">{dayNum}</span>
+                      <div className="h-2 flex items-center justify-center mt-1">
+                        <div className={underlineClass}></div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Interactive Date Detail Bar */}
+              <div className="bg-surface-container-low/40 rounded-xl p-2.5 text-[11px] font-semibold text-on-surface-variant flex items-center justify-between border border-outline-variant/30">
+                <span>Date: {new Date(markingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                <span className={`capitalize font-bold ${
+                  getDayAttendanceStatus(new Date(markingDate)) === 'present' ? 'text-emerald-600' :
+                  getDayAttendanceStatus(new Date(markingDate)) === 'late' ? 'text-amber-600' :
+                  getDayAttendanceStatus(new Date(markingDate)) === 'absent' ? 'text-error' : 'text-outline'
+                }`}>
+                  {getDayAttendanceStatus(new Date(markingDate)) === 'norecord' ? 'No Record' : 
+                   getDayAttendanceStatus(new Date(markingDate)) === 'weekend' ? 'Weekend' : 'Attendance Logged'}
+                </span>
+              </div>
+            </section>
+
             {/* Dynamic Class & Subject Buttons */}
             <section className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/35 shadow-xs space-y-3.5">
               <div className="space-y-1">
@@ -395,6 +517,78 @@ export default function TeacherAttendance() {
                       {subj}
                     </button>
                   ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Class & Subject Attendance Statistics Summary Card */}
+            <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-xs font-bold text-outline uppercase tracking-wider">Attendance Breakdown</h4>
+                  <p className="text-sm font-black text-on-surface">Class {selectedClass} • {selectedSubject}</p>
+                </div>
+                <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-xl text-[10px] font-black uppercase">
+                  <span className="material-symbols-outlined text-[12px]">info</span>
+                  <span>Active Selection</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                {/* Present card */}
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-emerald-800">
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Present</span>
+                    <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-2xl font-numeric-bold font-black text-emerald-700">{presentCount}</span>
+                    <span className="text-[10px] text-emerald-600">students</span>
+                  </div>
+                </div>
+                
+                {/* Absent card */}
+                <div className="bg-red-50 border border-red-100 rounded-2xl p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-error">
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Absent</span>
+                    <span className="material-symbols-outlined text-[16px]">cancel</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-2xl font-numeric-bold font-black text-error">{absentCount}</span>
+                    <span className="text-[10px] text-red-500">students</span>
+                  </div>
+                </div>
+                
+                {/* Attendance Rate card */}
+                <div className="bg-primary-container/20 border border-primary/10 rounded-2xl p-3 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-primary">
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Present Rate</span>
+                    <span className="material-symbols-outlined text-[16px]">analytics</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-2xl font-numeric-bold font-black text-primary">
+                      {students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0}%
+                    </span>
+                    <span className="text-[10px] text-primary/70">total</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Ratio indicator progress bar */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-bold text-on-surface-variant">
+                  <span>Present Ratio</span>
+                  <span>{presentCount} / {students.length} Students</span>
+                </div>
+                <div className="h-2.5 w-full bg-surface-container-high rounded-full overflow-hidden flex">
+                  <div 
+                    className="h-full bg-emerald-500 transition-all duration-500" 
+                    style={{ width: `${students.length > 0 ? (presentCount / students.length) * 100 : 0}%` }}
+                  ></div>
+                  <div 
+                    className="h-full bg-red-500 transition-all duration-500" 
+                    style={{ width: `${students.length > 0 ? (absentCount / students.length) * 100 : 0}%` }}
+                  ></div>
                 </div>
               </div>
             </section>
