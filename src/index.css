@@ -99,5 +99,14 @@
     font-size: 28px !important;
     font-weight: 700 !important;
   }
+
+  /* hide scrollbar utility */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none !important;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none !important;  /* IE and Edge */
+    scrollbar-width: none !important;  /* Firefox */
+  }
 }
 

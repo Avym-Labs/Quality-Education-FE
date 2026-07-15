@@ -37,6 +37,19 @@ export default function TeacherAttendance() {
   const [markingLoading, setMarkingLoading] = useState(false)
   const [markingMessage, setMarkingMessage] = useState('')
   const [classHistory, setClassHistory] = useState([])
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [activeFilterTab, setActiveFilterTab] = useState('class')
+
+  const getAvatarColors = (index) => {
+    const mod = index % 3
+    if (mod === 0) {
+      return { bg: 'bg-[#FDE8E4]', text: 'text-[#FF6B49]' }
+    } else if (mod === 1) {
+      return { bg: 'bg-[#EAE8FC]', text: 'text-[#6351E0]' }
+    } else {
+      return { bg: 'bg-[#E3EEFE]', text: 'text-[#4681F1]' }
+    }
+  }
 
   const getWeekDays = (refDateStr) => {
     if (!refDateStr) return []
@@ -350,95 +363,81 @@ export default function TeacherAttendance() {
     <DashboardLayout>
       <div className="space-y-stack-md mt-stack-sm pb-36 text-left">
         
-        {/* Unified Header */}
-        <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2.5 border-b border-outline-variant/20">
+        {/* Header Block matching mockup */}
+        <section className="flex items-center justify-between pb-3.5 border-b border-outline-variant/10">
           <div className="flex items-center gap-3">
-            <button 
+            <span 
+              className="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform font-bold" 
               onClick={() => navigate('/teacher/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200 border-none bg-transparent cursor-pointer"
             >
               arrow_back
+            </span>
+            <h1 className="text-[22px] font-bold text-on-surface">Attendance</h1>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Filter Toggle Button */}
+            <button 
+              onClick={() => setFilterSheetOpen(true)}
+              className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors border-none cursor-pointer active:scale-95 duration-100"
+            >
+              <span className="material-symbols-outlined text-[20px]">tune</span>
             </button>
             
-            {/* Mode Switcher Dropdown */}
-            <div className="flex flex-col">
-              <select
-                value={viewMode}
-                onChange={e => setViewMode(e.target.value)}
-                className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3.5 py-1.5 text-xs font-black text-primary uppercase tracking-wide focus:outline-none cursor-pointer"
-              >
-                <option value="students">Student Attendance</option>
-                <option value="teacher">My Attendance Logs</option>
-              </select>
-              <span className="text-[10px] text-outline font-semibold uppercase mt-0.5 pl-1">
-                {viewMode === 'students' ? formattedMarkingDate : 'Personal Faculty Logs'}
-              </span>
-            </div>
-          </div>
-
-          {/* Action buttons matching current view */}
-          <div className="flex items-center gap-2">
-            {viewMode === 'students' ? null : (
-              <button 
-                onClick={() => navigate('/teacher/leave')}
-                className="flex items-center gap-1.5 bg-primary text-on-primary px-4 py-1.5 rounded-xl text-xs font-bold shadow-md hover:opacity-95 active:scale-95 transition-all border-none cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">time_to_leave</span>
-                <span>Request Leave</span>
-              </button>
-            )}
+            {/* Search Toggle Button */}
+            <button 
+              className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors border-none cursor-pointer active:scale-95 duration-100"
+            >
+              <span className="material-symbols-outlined text-[20px]">search</span>
+            </button>
           </div>
         </section>
+
+        {/* Tab Selection Pill Container */}
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-full p-1 flex gap-1 max-w-md mx-auto mt-2 shadow-xs">
+          <div 
+            onClick={() => setViewMode('students')}
+            className={`flex-1 text-center py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer select-none ${
+              viewMode === 'students' 
+                ? 'bg-gradient-to-r from-[#6351E0] to-[#DD62F2] text-white shadow-sm font-black' 
+                : 'text-on-surface-variant hover:bg-surface-container-low font-semibold'
+            }`}
+          >
+            Student Attendance
+          </div>
+          <div 
+            onClick={() => setViewMode('teacher')}
+            className={`flex-1 text-center py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer select-none ${
+              viewMode === 'teacher' 
+                ? 'bg-gradient-to-r from-[#6351E0] to-[#DD62F2] text-white shadow-sm font-black' 
+                : 'text-on-surface-variant hover:bg-surface-container-low font-semibold'
+            }`}
+          >
+            My Attendance Logs
+          </div>
+        </div>
 
         {/* =========================================================================
             RENDER VIEW 1: STUDENT ATTENDANCE
             ========================================================================= */}
         {viewMode === 'students' && (
           <div className="space-y-4 animate-fadeIn">
-            {/* Weekly sliding calendar selector strip (Visual Strip matching mockup) */}
-            <section className="bg-surface-container-lowest border border-outline-variant shadow-sm rounded-[24px] p-5 max-w-lg mx-auto text-center space-y-4 animate-fadeIn">
-              {/* Calendar Header Month/Year */}
-              <div className="flex justify-between items-center px-2">
-                <button 
-                  onClick={() => handleShiftWeek(-7)}
-                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer"
-                >
-                  chevron_left
-                </button>
-                <h3 className="text-sm font-black text-on-surface">
-                  {new Date(markingDate).toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-                </h3>
-                <button 
-                  onClick={() => handleShiftWeek(7)}
-                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer"
-                >
-                  chevron_right
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1">
-                {/* Weekday letters */}
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((letter, idx) => (
-                  <span key={idx} className="text-[10px] font-bold text-outline uppercase tracking-wider">
-                    {letter}
-                  </span>
-                ))}
-
-                {/* Days list */}
+            {/* Weekly sliding calendar selector strip (mockup matching layout) */}
+            <section className="py-4 max-w-xl mx-auto flex items-center justify-between gap-1 border-b border-outline-variant/10 animate-fadeIn bg-white rounded-3xl px-4 shadow-xs border border-outline-variant/20">
+              <button 
+                onClick={() => handleShiftWeek(-7)}
+                className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
+              >
+                chevron_left
+              </button>
+              
+              <div className="flex justify-between items-center flex-1 px-1 overflow-x-auto overflow-y-hidden hide-scrollbar py-1">
                 {getWeekDays(markingDate).map((dayDate, idx) => {
                   const dayDateStr = dayDate.toISOString().split('T')[0]
                   const isSelected = dayDateStr === markingDate
-                  const dayNum = dayDate.getDate()
-                  const status = getDayAttendanceStatus(dayDate)
+                  const dayNum = dayDate.getDate().toString().padStart(2, '0')
+                  const dayName = dayDate.toLocaleString('en-US', { weekday: 'short' })
                   const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
-
-                  let textColorClass = 'text-on-surface'
-                  if (isWeekend) textColorClass = 'text-outline-variant/80'
-
-                  let underlineClass = 'bg-slate-200 w-3 h-0.5 rounded-full'
-                  if (status === 'present') underlineClass = 'bg-emerald-500 w-4 h-1 rounded-full'
-                  else if (status === 'absent') underlineClass = 'bg-red-500 w-1.5 h-1.5 rounded-full'
-                  else if (status === 'late') underlineClass = 'bg-amber-500 w-3 h-0.75 rounded-full'
 
                   return (
                     <div 
@@ -449,149 +448,41 @@ export default function TeacherAttendance() {
                         const dd = String(dayDate.getDate()).padStart(2, '0')
                         setMarkingDate(`${yyyy}-${mm}-${dd}`)
                       }}
-                      className={`flex flex-col items-center justify-between py-2 rounded-xl aspect-[3/4] cursor-pointer transition-all hover:scale-105 select-none ${
+                      className={`flex flex-col items-center justify-between py-2 px-2.5 rounded-full cursor-pointer transition-all select-none w-11 aspect-[2/3] ${
                         isSelected 
-                          ? 'bg-sky-100 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-200 font-black shadow-xs' 
-                          : `${textColorClass}`
+                          ? 'bg-[#6351E0] text-white shadow-md transform scale-105 font-bold' 
+                          : isWeekend 
+                            ? 'text-outline-variant/80' 
+                            : 'text-on-surface'
                       }`}
                     >
-                      <span className="text-xs">{dayNum}</span>
-                      <div className="h-2 flex items-center justify-center mt-1">
-                        <div className={underlineClass}></div>
-                      </div>
+                      <span className="text-sm font-bold leading-none">{dayNum}</span>
+                      <span className={`text-[9px] uppercase tracking-wider mt-1 ${isSelected ? 'text-white/80' : 'text-outline'}`}>{dayName}</span>
                     </div>
                   )
                 })}
               </div>
 
-              {/* Interactive Date Detail Bar */}
-              <div className="bg-surface-container-low/40 rounded-xl p-2.5 text-[11px] font-semibold text-on-surface-variant flex items-center justify-between border border-outline-variant/30">
-                <span>Date: {new Date(markingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                <span className={`capitalize font-bold ${
-                  getDayAttendanceStatus(new Date(markingDate)) === 'present' ? 'text-emerald-600' :
-                  getDayAttendanceStatus(new Date(markingDate)) === 'late' ? 'text-amber-600' :
-                  getDayAttendanceStatus(new Date(markingDate)) === 'absent' ? 'text-error' : 'text-outline'
-                }`}>
-                  {getDayAttendanceStatus(new Date(markingDate)) === 'norecord' ? 'No Record' : 
-                   getDayAttendanceStatus(new Date(markingDate)) === 'weekend' ? 'Weekend' : 'Attendance Logged'}
-                </span>
-              </div>
+              <button 
+                onClick={() => handleShiftWeek(7)}
+                className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
+              >
+                chevron_right
+              </button>
             </section>
 
-            {/* Dynamic Class & Subject Buttons */}
-            <section className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/35 shadow-xs space-y-3.5">
-              <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-outline">Target Class:</span>
-                <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
-                  {assignedClasses.map(cls => (
-                    <button
-                      key={cls}
-                      type="button"
-                      onClick={() => setSelectedClass(cls)}
-                      className={`flex-shrink-0 px-4 py-2 rounded-2xl font-label-md text-xs font-bold transition-all border shadow-xs cursor-pointer select-none active:scale-95 duration-100 ${
-                        selectedClass === cls 
-                          ? 'bg-primary text-on-primary border-primary' 
-                          : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
-                      }`}
-                    >
-                      Class {cls}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-outline">Subject:</span>
-                <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
-                  {subjects.map(subj => (
-                    <button
-                      key={subj}
-                      type="button"
-                      onClick={() => setSelectedSubject(subj)}
-                      className={`flex-shrink-0 px-4 py-2 rounded-2xl font-label-md text-xs font-bold transition-all border shadow-xs cursor-pointer select-none active:scale-95 duration-100 ${
-                        selectedSubject === subj 
-                          ? 'bg-primary text-on-primary border-primary' 
-                          : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
-                      }`}
-                    >
-                      {subj}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Class & Subject Attendance Statistics Summary Card */}
-            <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h4 className="text-xs font-bold text-outline uppercase tracking-wider">Attendance Breakdown</h4>
-                  <p className="text-sm font-black text-on-surface">Class {selectedClass} • {selectedSubject}</p>
-                </div>
-                <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-xl text-[10px] font-black uppercase">
-                  <span className="material-symbols-outlined text-[12px]">info</span>
-                  <span>Active Selection</span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-3">
-                {/* Present card */}
-                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-emerald-800">
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Present</span>
-                    <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                  </div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="attendance-pct-card text-emerald-700">{presentCount}</span>
-                    <span className="text-[10px] text-emerald-600">students</span>
-                  </div>
-                </div>
-                
-                {/* Absent card */}
-                <div className="bg-red-50 border border-red-100 rounded-2xl p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-error">
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Absent</span>
-                    <span className="material-symbols-outlined text-[16px]">cancel</span>
-                  </div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="attendance-pct-card text-error">{absentCount}</span>
-                    <span className="text-[10px] text-red-500">students</span>
-                  </div>
-                </div>
-                
-                {/* Attendance Rate card */}
-                <div className="bg-primary-container/20 border border-primary/10 rounded-2xl p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-primary">
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Present Rate</span>
-                    <span className="material-symbols-outlined text-[16px]">analytics</span>
-                  </div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="attendance-pct-card text-primary">
-                      {students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0}%
-                    </span>
-                    <span className="text-[10px] text-primary/70">total</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Ratio indicator progress bar */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-bold text-on-surface-variant">
-                  <span>Present Ratio</span>
-                  <span>{presentCount} / {students.length} Students</span>
-                </div>
-                <div className="h-2.5 w-full bg-surface-container-high rounded-full overflow-hidden flex">
-                  <div 
-                    className="h-full bg-emerald-500 transition-all duration-500" 
-                    style={{ width: `${students.length > 0 ? (presentCount / students.length) * 100 : 0}%` }}
-                  ></div>
-                  <div 
-                    className="h-full bg-red-500 transition-all duration-500" 
-                    style={{ width: `${students.length > 0 ? (absentCount / students.length) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-            </section>
+            {/* Active target Selection Sub-header */}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-white rounded-3xl border border-outline-variant/20 text-xs font-semibold text-on-surface-variant max-w-lg mx-auto shadow-xs">
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-primary">school</span>
+                <span>Class: <strong className="text-on-surface">Class {selectedClass}</strong></span>
+              </span>
+              <span className="w-px h-4 bg-outline-variant/30"></span>
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-[#DD62F2]">book</span>
+                <span>Subject: <strong className="text-on-surface">{selectedSubject}</strong></span>
+              </span>
+            </div>
 
             {/* Status Messages */}
             {markingMessage && (
@@ -645,40 +536,56 @@ export default function TeacherAttendance() {
                   return (
                     <div 
                       key={student.id} 
-                      className="flex items-center bg-surface-container-lowest rounded-xl p-3 shadow-sm border border-outline-variant/20 hover:bg-surface-container-low transition-all animate-fadeIn"
+                      className="flex items-center justify-between bg-white rounded-3xl p-4 shadow-xs border border-outline-variant/30 hover:shadow-sm transition-all duration-300 animate-fadeIn"
                     >
-                      <div className="w-8 font-numeric-bold text-on-surface-variant text-xs">
-                        {student.roll_number || String(idx + 1).padStart(2, '0')}
-                      </div>
-                      
-                      <div 
-                        onClick={() => handleOpenProfile(student)}
-                        className={`flex-1 font-label-md text-xs font-bold flex items-center gap-2 cursor-pointer hover:text-primary transition-colors ${
-                          isLowAttendance ? 'text-error' : 'text-on-surface'
-                        }`}
-                      >
-                        <span>{student.full_name}</span>
-                        {isLowAttendance && (
-                          <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
-                            {rate}% Att.
+                      <div className="flex items-center gap-3.5">
+                        {/* Avatar colored initial circle */}
+                        {(() => {
+                          const initial = student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S'
+                          const colors = getAvatarColors(idx)
+                          return (
+                            <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-base shadow-xs ${colors.bg} ${colors.text} shrink-0`}>
+                              {initial}
+                            </div>
+                          )
+                        })()}
+                        
+                        {/* Info */}
+                        <div className="text-left">
+                          <h4 
+                            onClick={() => handleOpenProfile(student)}
+                            className={`text-sm font-bold leading-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-1.5 flex-wrap ${
+                              isLowAttendance ? 'text-error' : 'text-[#1E1E1E]'
+                            }`}
+                          >
+                            <span>{student.full_name}</span>
+                            {isLowAttendance && (
+                              <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
+                                {rate}% Att.
+                              </span>
+                            )}
+                            {isOnLeave && (
+                              <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
+                                <span className="material-symbols-outlined text-[10px]">sick</span>
+                                <span>Ab (Leave)</span>
+                              </span>
+                            )}
+                          </h4>
+                          <span className="text-[10px] text-outline font-semibold mt-0.5 block">
+                            {student.roll_number || String(idx + 1).padStart(2, '0')}
                           </span>
-                        )}
-                        {isOnLeave && (
-                          <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-[10px]">sick</span>
-                            <span>Ab (Leave)</span>
-                          </span>
-                        )}
+                        </div>
                       </div>
 
-                      <div className="flex gap-1.5">
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
                         <button 
                           onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
                           disabled={isOnLeave}
-                          className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                          className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
                             status === 'present' 
-                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
-                              : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30 disabled:cursor-not-allowed'
+                              ? 'bg-[#2ecc71] text-white border-none shadow-sm font-black' 
+                              : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
                           }`}
                         >
                           P
@@ -686,10 +593,10 @@ export default function TeacherAttendance() {
                         <button 
                           onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
                           disabled={isOnLeave}
-                          className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                          className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
                             status === 'absent' 
-                              ? 'bg-error border-error text-white shadow-sm' 
-                              : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high disabled:opacity-30 disabled:cursor-not-allowed'
+                              ? 'bg-[#e74c3c] text-white border-none shadow-sm font-black' 
+                              : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
                           }`}
                         >
                           A
@@ -1015,6 +922,120 @@ export default function TeacherAttendance() {
               </button>
             </div>
           </>
+        )}
+
+        {/* Filter Bottom Sheet Modal Overlay */}
+        {filterSheetOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-end justify-center z-50 animate-fadeIn duration-200">
+            <div className="bg-white w-full max-w-lg rounded-t-[32px] shadow-xl flex flex-col max-h-[85vh] animate-slideUp">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10">
+                <h3 className="text-base font-black text-on-surface">Filter</h3>
+                <button 
+                  onClick={() => setFilterSheetOpen(false)}
+                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-1.5 rounded-full border-none bg-transparent cursor-pointer active:scale-95"
+                >
+                  close
+                </button>
+              </div>
+
+              {/* Body split layout */}
+              <div className="flex-1 flex overflow-hidden min-h-[300px]">
+                {/* Left Tabs Sidebar */}
+                <div className="w-1/3 bg-slate-50 border-r border-outline-variant/15 flex flex-col">
+                  <div 
+                    onClick={() => setActiveFilterTab('class')}
+                    className={`py-4 px-5 text-xs font-bold cursor-pointer transition-all border-l-4 select-none ${
+                      activeFilterTab === 'class'
+                        ? 'bg-sky-50 text-[#6351E0] border-[#6351E0]'
+                        : 'text-on-surface-variant border-transparent hover:bg-slate-100'
+                    }`}
+                  >
+                    Class
+                  </div>
+                  <div 
+                    onClick={() => setActiveFilterTab('subject')}
+                    className={`py-4 px-5 text-xs font-bold cursor-pointer transition-all border-l-4 select-none ${
+                      activeFilterTab === 'subject'
+                        ? 'bg-sky-50 text-[#6351E0] border-[#6351E0]'
+                        : 'text-on-surface-variant border-transparent hover:bg-slate-100'
+                    }`}
+                  >
+                    Subject
+                  </div>
+                </div>
+
+                {/* Right Options Content */}
+                <div className="w-2/3 p-5 overflow-y-auto space-y-4">
+                  {activeFilterTab === 'class' ? (
+                    <div className="space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-outline">Select Class</span>
+                      <div className="flex flex-wrap gap-2">
+                        {assignedClasses.map(cls => {
+                          const isSelected = selectedClass === cls
+                          return (
+                            <button
+                              key={cls}
+                              onClick={() => setSelectedClass(cls)}
+                              className={`px-4 py-2 rounded-full font-bold text-xs transition-all border cursor-pointer select-none ${
+                                isSelected
+                                  ? 'bg-[#6351E0] text-white border-none shadow-sm'
+                                  : 'bg-white border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
+                              }`}
+                            >
+                              Class {cls}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-outline">Select Subject</span>
+                      <div className="flex flex-wrap gap-2">
+                        {subjects.map(subj => {
+                          const isSelected = selectedSubject === subj
+                          return (
+                            <button
+                              key={subj}
+                              onClick={() => setSelectedSubject(subj)}
+                              className={`px-4 py-2 rounded-full font-bold text-xs transition-all border cursor-pointer select-none ${
+                                isSelected
+                                  ? 'bg-[#6351E0] text-white border-none shadow-sm'
+                                  : 'bg-white border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
+                              }`}
+                            >
+                              {subj}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Actions footer */}
+              <div className="p-4 border-t border-outline-variant/10 flex gap-3 bg-white">
+                <button 
+                  onClick={() => {
+                    setSelectedClass(assignedClasses[0] || '10-A')
+                    setSelectedSubject(subjects[0] || 'Mathematics')
+                    setFilterSheetOpen(false)
+                  }}
+                  className="flex-1 py-3 rounded-full border border-[#D9D9D9] text-[#1E1E1E] font-bold text-xs hover:bg-slate-50 border-none bg-transparent cursor-pointer"
+                >
+                  Reset
+                </button>
+                <button 
+                  onClick={() => setFilterSheetOpen(false)}
+                  className="flex-1 py-3 rounded-full bg-[#6351E0] text-white font-bold text-xs hover:opacity-95 shadow-md border-none cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
       </div>
