@@ -9,7 +9,7 @@ export default function TeacherAttendance() {
   const navigate = useNavigate()
   const role = user?.role || 'teacher'
 
-  // View Mode: 'students' (Student Attendance - Default) | 'teacher' (My Attendance Logs)
+  // View Mode: 'students' (Student Attendance - Default) | 'teacher' (My Attendance)
   const [viewMode, setViewMode] = useState('students')
 
   // =========================================================================
@@ -259,6 +259,15 @@ export default function TeacherAttendance() {
     s.roll_number.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Desktop only: students grouped alphabetically by first name letter
+  const studentsByLetter = {}
+  filteredStudents.forEach(student => {
+    const letter = student.full_name ? student.full_name.charAt(0).toUpperCase() : '#'
+    if (!studentsByLetter[letter]) studentsByLetter[letter] = []
+    studentsByLetter[letter].push(student)
+  })
+  const sortedLetters = Object.keys(studentsByLetter).sort()
+
   const formattedMarkingDate = new Date(markingDate).toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
@@ -267,7 +276,7 @@ export default function TeacherAttendance() {
   })
 
   // =========================================================================
-  // VIEW MODE 2: MY ATTENDANCE LOGS (Personal stats & calendar states)
+  // VIEW MODE 2: MY ATTENDANCE (Personal stats & calendar states)
   // =========================================================================
   const [leaves, setLeaves] = useState([])
   const [personalLoading, setPersonalLoading] = useState(false)
@@ -406,7 +415,7 @@ export default function TeacherAttendance() {
                 : 'text-on-surface-variant hover:bg-surface-container-low font-semibold'
             }`}
           >
-            My Attendance Logs
+            My Attendance
           </div>
         </div>
 
@@ -473,7 +482,7 @@ export default function TeacherAttendance() {
                 <div className="absolute -left-6 -bottom-6 w-20 h-20 bg-white/10 rounded-full blur-lg pointer-events-none"></div>
                 
                 <div className="flex items-center justify-between z-10">
-                  <span className="text-[10px] uppercase tracking-widest font-black text-white/85">Attendance Target</span>
+                  <span className="text-[10px] uppercase tracking-widest font-black text-white/85">Attendance of</span>
                   <span className="material-symbols-outlined text-[18px] text-white/90 animate-pulse">radio_button_checked</span>
                 </div>
                 
@@ -523,106 +532,167 @@ export default function TeacherAttendance() {
                   <p className="text-xs text-on-surface-variant font-bold mt-2">No students found matching filters.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {filteredStudents.map((student, idx) => {
-                    const status = attendanceStates[student.user_id] || 'present'
-                    const rate = attendanceRates[student.user_id] ?? 100
-                    const isLowAttendance = rate < 75
+                (() => {
+                  // Group filtered students by the first letter of their full_name
+                  const groupedStudents = filteredStudents.reduce((acc, student) => {
+                    const name = (student.full_name || 'Student').trim()
+                    const firstLetter = name.charAt(0).toUpperCase()
+                    const letterKey = /[A-Z]/.test(firstLetter) ? firstLetter : '#'
+                    if (!acc[letterKey]) {
+                      acc[letterKey] = []
+                    }
+                    acc[letterKey].push(student)
+                    return acc
+                  }, {})
 
-                    const isOnLeave = leavesList.some(l => 
-                      l.user_id === student.user_id && 
-                      markingDate >= l.start_date && 
-                      markingDate <= l.end_date
-                    )
+                  const sortedLetters = Object.keys(groupedStudents).sort()
 
-                    return (
-                      <div 
-                        key={student.id} 
-                        className={`flex items-center justify-between bg-white rounded-3xl p-4 shadow-xs border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 relative overflow-hidden ${
-                          status === 'present' 
-                            ? 'border-emerald-200/60 bg-gradient-to-r from-emerald-50/20 to-white' 
-                            : status === 'absent' 
-                              ? 'border-red-200/60 bg-gradient-to-r from-red-50/20 to-white' 
-                              : 'border-outline-variant/30'
-                        }`}
-                      >
-                        {/* Visual Left Color indicator edge */}
-                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-3xl transition-colors duration-300 ${
-                          status === 'present' 
-                            ? 'bg-[#2ecc71]' 
-                            : status === 'absent' 
-                              ? 'bg-[#e74c3c]' 
-                              : 'bg-outline-variant/30'
-                        }`} />
+                  return (
+                    <div className="space-y-6">
+                      {sortedLetters.map((letter) => {
+                        const groupList = groupedStudents[letter].sort((a, b) => 
+                          (a.full_name || '').localeCompare(b.full_name || '')
+                        )
 
-                        <div className="flex items-center gap-3.5 pl-1.5">
-                          {/* Avatar colored initial circle */}
-                          {(() => {
-                            const initial = student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S'
-                            const colors = getAvatarColors(idx)
-                            return (
-                              <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-base shadow-xs ${colors.bg} ${colors.text} shrink-0`}>
-                                {initial}
-                              </div>
-                            )
-                          })()}
-                          
-                          {/* Info */}
-                          <div className="text-left">
-                            <h4 
-                              onClick={() => handleOpenProfile(student)}
-                              className={`text-sm font-bold leading-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-1.5 flex-wrap ${
-                                isLowAttendance ? 'text-error' : 'text-[#1E1E1E]'
-                              }`}
-                            >
-                              <span>{student.full_name}</span>
-                              {isLowAttendance && (
-                                <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
-                                  {rate}% Att.
-                                </span>
-                              )}
-                              {isOnLeave && (
-                                <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
-                                  <span className="material-symbols-outlined text-[10px]">sick</span>
-                                  <span>Ab (Leave)</span>
-                                </span>
-                              )}
-                            </h4>
-                            <span className="text-[10px] text-outline font-semibold mt-0.5 block">
-                              {student.roll_number || String(idx + 1).padStart(2, '0')}
-                            </span>
+                        return (
+                          <div key={letter} className="space-y-3">
+                            <h3 className="text-base font-black text-on-surface text-left pl-1 tracking-wider uppercase">
+                              {letter}
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                              {groupList.map((student, idx) => {
+                                const status = attendanceStates[student.user_id] || 'present'
+                                const rate = attendanceRates[student.user_id] ?? 100
+                                const isLowAttendance = rate < 75
+
+                                const isOnLeave = leavesList.some(l => 
+                                  l.user_id === student.user_id && 
+                                  markingDate >= l.start_date && 
+                                  markingDate <= l.end_date
+                                )
+
+                                return (
+                                  <div 
+                                    key={student.id} 
+                                    className={`flex flex-col items-center justify-between bg-white rounded-[24px] p-5 shadow-xs border transition-all duration-300 hover:shadow-md hover:-translate-y-1 relative overflow-hidden text-center min-h-[210px] ${
+                                      status === 'present' 
+                                        ? 'border-emerald-200/60' 
+                                        : status === 'absent' 
+                                          ? 'border-red-200/60' 
+                                          : status === 'late'
+                                            ? 'border-amber-200/60'
+                                            : 'border-outline-variant/30'
+                                    }`}
+                                  >
+                                    {/* Top Indicator Accent Bar */}
+                                    <div className={`absolute top-0 left-0 right-0 h-1 transition-colors duration-300 ${
+                                      status === 'present' 
+                                        ? 'bg-[#00D284]' 
+                                        : status === 'absent' 
+                                          ? 'bg-[#FF3B6B]' 
+                                          : status === 'late'
+                                            ? 'bg-[#FFB020]'
+                                            : 'bg-transparent'
+                                    }`} />
+
+                                    {/* Top / Center Avatar & Name Container */}
+                                    <div className="flex flex-col items-center w-full">
+                                      {student.avatar ? (
+                                        <img 
+                                          src={student.avatar} 
+                                          alt={student.full_name} 
+                                          className="w-16 h-16 rounded-full object-cover shadow-sm mb-3 border border-outline-variant/20" 
+                                        />
+                                      ) : (
+                                        (() => {
+                                          const initial = student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S'
+                                          const colors = getAvatarColors(idx)
+                                          return (
+                                            <div className={`w-16 h-16 rounded-full flex items-center justify-center font-black text-xl shadow-sm mb-3 ${colors.bg} ${colors.text} shrink-0`}>
+                                              {initial}
+                                            </div>
+                                          )
+                                        })()
+                                      )}
+
+                                      {/* Student Name */}
+                                      <h4 
+                                        onClick={() => handleOpenProfile(student)}
+                                        className={`text-sm font-bold leading-snug cursor-pointer hover:text-primary transition-colors text-center line-clamp-2 px-1 ${
+                                          isLowAttendance ? 'text-error' : 'text-[#1E1E1E]'
+                                        }`}
+                                      >
+                                        {student.full_name}
+                                      </h4>
+
+                                      {/* Badges / Information */}
+                                      <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
+                                        {isLowAttendance && (
+                                          <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
+                                            {rate}% Att.
+                                          </span>
+                                        )}
+                                        {isOnLeave && (
+                                          <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
+                                            <span className="material-symbols-outlined text-[10px]">sick</span>
+                                            <span>Leave</span>
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* P, A, L Action Buttons Row */}
+                                    <div className="flex items-center justify-center gap-2 mt-4 pt-1 w-full">
+                                      <button 
+                                        type="button"
+                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
+                                        disabled={isOnLeave}
+                                        title="Mark Present"
+                                        className={`w-9 h-9 rounded-full font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
+                                          status === 'present' 
+                                            ? 'bg-[#00D284] text-white border-none shadow-sm font-black' 
+                                            : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        P
+                                      </button>
+                                      <button 
+                                        type="button"
+                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
+                                        disabled={isOnLeave}
+                                        title="Mark Absent"
+                                        className={`w-9 h-9 rounded-full font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
+                                          status === 'absent' 
+                                            ? 'bg-[#FF3B6B] text-white border-none shadow-sm font-black' 
+                                            : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        A
+                                      </button>
+                                      <button 
+                                        type="button"
+                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'late')}
+                                        disabled={isOnLeave}
+                                        title="Mark Late / Leave"
+                                        className={`w-9 h-9 rounded-full font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
+                                          status === 'late' 
+                                            ? 'bg-[#FFB020] text-white border-none shadow-sm font-black' 
+                                            : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        L
+                                      </button>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
-                            disabled={isOnLeave}
-                            className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
-                              status === 'present' 
-                                ? 'bg-[#2ecc71] text-white border-none shadow-sm font-black' 
-                                : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
-                            }`}
-                          >
-                            P
-                          </button>
-                          <button 
-                            onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
-                            disabled={isOnLeave}
-                            className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
-                              status === 'absent' 
-                                ? 'bg-[#e74c3c] text-white border-none shadow-sm font-black' 
-                                : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
-                            }`}
-                          >
-                            A
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()
               )}
 
               {/* Floating Live Counter Footer */}
@@ -655,71 +725,71 @@ export default function TeacherAttendance() {
         )}
 
         {/* =========================================================================
-            RENDER VIEW 2: MY ATTENDANCE LOGS
+            RENDER VIEW 2: MY ATTENDANCE
             ========================================================================= */}
         {viewMode === 'teacher' && (
-          <div className="space-y-6 animate-fadeIn">
+          <div className="space-y-3.5 animate-fadeIn">
             {/* Stats Bento Grid */}
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-surface-container-lowest p-stack-md rounded-[24px] border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
                 <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Attendance Rate</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-primary font-bold">{personalStats.rate}%</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-numeric-bold text-xl text-primary font-black">{personalStats.rate}%</span>
                 </div>
-                <p className="text-[10px] text-emerald-600 font-bold mt-2">Top 5% of Faculty</p>
+                <p className="text-[9px] text-emerald-600 font-bold">Top 5% of Faculty</p>
               </div>
 
-              <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
+              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
                 <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Days Checked-In</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-on-surface font-bold">{personalStats.present} Days</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-numeric-bold text-xl text-on-surface font-black">{personalStats.present} Days</span>
                 </div>
-                <p className="text-[10px] text-on-surface-variant font-medium mt-2">This Semester</p>
+                <p className="text-[9px] text-on-surface-variant font-medium">This Semester</p>
               </div>
 
-              <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
+              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
                 <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Late Arrivals</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-amber-500 font-bold">{personalStats.late} Day</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-numeric-bold text-xl text-amber-500 font-black">{personalStats.late} Day</span>
                 </div>
-                <p className="text-[10px] text-on-surface-variant font-medium mt-2">Checked in after 09:00 AM</p>
+                <p className="text-[9px] text-on-surface-variant font-medium">After 09:00 AM</p>
               </div>
 
-              <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
+              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
                 <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Approved Leaves</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-secondary font-bold">{personalStats.approvedLeaves} Days</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-numeric-bold text-xl text-secondary font-black">{personalStats.approvedLeaves} Days</span>
                 </div>
-                <p className="text-[10px] text-on-surface-variant font-medium mt-2">Excused absences</p>
+                <p className="text-[9px] text-on-surface-variant font-medium">Excused absences</p>
               </div>
             </section>
 
             {/* Calendar and List Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               
               {/* Calendar View */}
-              <div className="lg:col-span-8 bg-surface-container-lowest p-5 rounded-[28px] border border-outline-variant/35 shadow-sm space-y-4">
-                <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold">
+              <div className="lg:col-span-8 bg-surface-container-lowest p-4 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-3">
+                <div className="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+                  <h3 className="font-title-lg text-xs text-on-surface font-bold">
                     {monthNames[currentMonth]} {currentYear}
                   </h3>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <button 
                       onClick={handlePrevMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-xl transition-all border-none bg-transparent cursor-pointer"
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm"
                     >
                       chevron_left
                     </button>
                     <button 
                       onClick={handleNextMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-xl transition-all border-none bg-transparent cursor-pointer"
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm"
                     >
                       chevron_right
                     </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-2 text-center text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">
+                <div className="grid grid-cols-7 gap-1.5 text-center text-[9px] uppercase font-bold tracking-wider text-on-surface-variant">
                   <span>Sun</span>
                   <span>Mon</span>
                   <span>Tue</span>
@@ -729,9 +799,9 @@ export default function TeacherAttendance() {
                   <span>Sat</span>
                 </div>
 
-                <div className="grid grid-cols-7 gap-2">
+                <div className="grid grid-cols-7 gap-1.5">
                   {Array.from({ length: firstDayIndex }).map((_, i) => (
-                    <div key={`offset-${i}`} className="aspect-square"></div>
+                    <div key={`offset-${i}`} className="h-8"></div>
                   ))}
                   
                   {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -750,9 +820,9 @@ export default function TeacherAttendance() {
                       <div 
                         key={`day-${dayNum}`}
                         title={dayObj.label}
-                        className={`aspect-square rounded-xl border flex flex-col items-center justify-center p-1 font-numeric-bold text-xs font-bold cursor-default hover:opacity-90 active:scale-95 transition-all ${colorClass}`}
+                        className={`h-8 rounded-lg border flex flex-col items-center justify-center p-0.5 font-numeric-bold text-xs font-bold cursor-default hover:opacity-90 active:scale-95 transition-all ${colorClass}`}
                       >
-                        <span>{dayNum}</span>
+                        <span className="leading-none">{dayNum}</span>
                         {dayObj.status === 'present' && <span className="w-1 h-1 rounded-full bg-emerald-500 mt-0.5"></span>}
                         {dayObj.status === 'leave' && <span className="w-1 h-1 rounded-full bg-orange-500 mt-0.5"></span>}
                         {dayObj.status === 'pending_request' && <span className="w-1 h-1 rounded-full bg-amber-400 mt-0.5"></span>}
@@ -762,22 +832,22 @@ export default function TeacherAttendance() {
                   })}
                 </div>
 
-                <div className="flex flex-wrap gap-3 pt-3 border-t border-outline-variant/15 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Present</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500"></span> Late</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500"></span> Leave</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"></span> Pending</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300"></span> Weekend</span>
+                <div className="flex flex-wrap gap-2.5 pt-2 border-t border-outline-variant/15 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Present</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Late</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Leave</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Pending</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Weekend</span>
                 </div>
               </div>
 
               {/* Leave Allocation Guidelines */}
-              <div className="lg:col-span-4 bg-surface-container-lowest p-5 rounded-[28px] border border-outline-variant/35 shadow-sm space-y-4">
+              <div className="lg:col-span-4 bg-surface-container-lowest p-4 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-3">
                 <h3 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider">Leave Allocation</h3>
                 
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-on-surface-variant">
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-bold text-on-surface-variant">
                       <span>Casual Leaves</span>
                       <span>10 / 12 Remaining</span>
                     </div>
@@ -786,8 +856,8 @@ export default function TeacherAttendance() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-on-surface-variant">
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-bold text-on-surface-variant">
                       <span>Sick Leaves</span>
                       <span>7 / 10 Remaining</span>
                     </div>
@@ -796,9 +866,9 @@ export default function TeacherAttendance() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-on-surface-variant">
-                      <span>Maternity/Paternity Leaves</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-bold text-on-surface-variant">
+                      <span>Maternity/Paternity</span>
                       <span>30 / 30 Remaining</span>
                     </div>
                     <div className="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
@@ -807,12 +877,12 @@ export default function TeacherAttendance() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-outline-variant/20 space-y-2">
-                  <h4 className="text-[10px] uppercase font-bold text-on-surface-variant">Quick Guidelines</h4>
-                  <p className="text-[11px] text-on-surface-variant leading-relaxed font-semibold">
+                <div className="pt-2.5 border-t border-outline-variant/20 space-y-1">
+                  <h4 className="text-[9px] uppercase font-bold text-on-surface-variant">Quick Guidelines</h4>
+                  <p className="text-[10px] text-on-surface-variant leading-normal font-semibold">
                     - Leave requests must be submitted 24 hours in advance.<br />
                     - Late check-ins are logged automatically via biometric gateway.<br />
-                    - Unexcused absences can affect performance rating metrics.
+                    - Unexcused absences affect rating metrics.
                   </p>
                 </div>
               </div>
