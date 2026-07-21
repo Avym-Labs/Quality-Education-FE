@@ -408,6 +408,12 @@ export default function AcademicsHub() {
 
   const activeModalStudentReport = getModalStudentReport()
 
+  // Switches the active tab and keeps the URL's ?tab= param in sync with the sidebar submenu
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    navigate(`${location.pathname}?tab=${tab}`, { replace: true })
+  }
+
   const getMonthlyBreakdown = (report) => {
     const start = new Date(reportsModalStartDate);
     const end = new Date(reportsModalEndDate);
@@ -542,14 +548,19 @@ export default function AcademicsHub() {
   }
 
 
-  // Auto-route tabs based on pathname
+  // Auto-route tabs based on the ?tab= query param (used by the sidebar submenu),
+  // falling back to legacy dedicated paths like /results and /reports
   useEffect(() => {
-    if (location.pathname.includes('/results')) {
+    const tabParam = new URLSearchParams(location.search).get('tab')
+    const validTabs = ['material', 'tests', 'results', 'reports', 'schedules']
+    if (tabParam && validTabs.includes(tabParam)) {
+      setActiveTab(tabParam)
+    } else if (location.pathname.includes('/results')) {
       setActiveTab('results')
     } else if (location.pathname.includes('/reports')) {
       setActiveTab('reports')
     }
-  }, [location.pathname])
+  }, [location.pathname, location.search])
 
   // Load basic resources & materials
   const loadAcademicAssets = async () => {
@@ -1057,6 +1068,31 @@ export default function AcademicsHub() {
     }
   }
 
+  const getSubjectBadge = (subject) => {
+    const sub = subject || 'General'
+    let bgClass = 'bg-[#6351E0]/10 text-[#6351E0] border-[#6351E0]/20' // Default purple tint
+    
+    if (sub.toLowerCase() === 'mathematics') {
+      bgClass = 'bg-indigo-50 text-indigo-700 border-indigo-200'
+    } else if (sub.toLowerCase() === 'physics') {
+      bgClass = 'bg-sky-50 text-sky-700 border-sky-200'
+    } else if (sub.toLowerCase() === 'chemistry') {
+      bgClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    } else if (sub.toLowerCase() === 'biology') {
+      bgClass = 'bg-green-50 text-green-700 border-green-200'
+    } else if (sub.toLowerCase() === 'english') {
+      bgClass = 'bg-amber-50 text-amber-700 border-amber-200'
+    } else if (sub.toLowerCase() === 'computer science') {
+      bgClass = 'bg-purple-50 text-purple-700 border-purple-200'
+    }
+
+    return (
+      <span className={`px-2.5 py-0.5 border rounded-full text-[10px] font-extrabold uppercase tracking-wide shadow-2xs select-none ${bgClass}`}>
+        {sub}
+      </span>
+    )
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-stack-lg mt-stack-md pb-24 print:p-0 print:m-0">
@@ -1077,10 +1113,10 @@ export default function AcademicsHub() {
             </div>
           </div>
 
-          {/* Segmented Grid Controls (2x2 on Mobile, Flex on Desktop) */}
-          <div className="grid grid-cols-2 gap-2 pb-1 mt-2 border-t border-outline-variant/10 pt-3 md:flex md:flex-wrap md:justify-start">
-            <button 
-              onClick={() => setActiveTab('material')}
+          {/* Segmented Grid Controls (Mobile only - desktop navigation now lives in the sidebar's Academics submenu) */}
+          <div className="grid grid-cols-2 gap-2 pb-1 mt-2 border-t border-outline-variant/10 pt-3 md:hidden">
+            <button
+              onClick={() => handleTabChange('material')}
               className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl font-bold text-xs select-none cursor-pointer border transition-all duration-150 active:scale-95 ${
                 activeTab === 'material' 
                   ? 'bg-primary text-on-primary border-primary shadow-sm' 
@@ -1090,8 +1126,8 @@ export default function AcademicsHub() {
               <span className="material-symbols-outlined text-sm">library_books</span>
               <span>Study Material</span>
             </button>
-            <button 
-              onClick={() => setActiveTab('tests')}
+            <button
+              onClick={() => handleTabChange('tests')}
               className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl font-bold text-xs select-none cursor-pointer border transition-all duration-150 active:scale-95 ${
                 activeTab === 'tests' 
                   ? 'bg-primary text-on-primary border-primary shadow-sm' 
@@ -1101,8 +1137,8 @@ export default function AcademicsHub() {
               <span className="material-symbols-outlined text-sm">quiz</span>
               <span>Tests & Answer Keys</span>
             </button>
-            <button 
-              onClick={() => setActiveTab('results')}
+            <button
+              onClick={() => handleTabChange('results')}
               className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl font-bold text-xs select-none cursor-pointer border transition-all duration-150 active:scale-95 ${
                 activeTab === 'results' 
                   ? 'bg-primary text-on-primary border-primary shadow-sm' 
@@ -1112,8 +1148,8 @@ export default function AcademicsHub() {
               <span className="material-symbols-outlined text-sm">grade</span>
               <span>Grades & Results</span>
             </button>
-            <button 
-              onClick={() => setActiveTab('reports')}
+            <button
+              onClick={() => handleTabChange('reports')}
               className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl font-bold text-xs select-none cursor-pointer border transition-all duration-150 active:scale-95 ${
                 activeTab === 'reports' 
                   ? 'bg-primary text-on-primary border-primary shadow-sm' 
@@ -1123,8 +1159,8 @@ export default function AcademicsHub() {
               <span className="material-symbols-outlined text-sm">bar_chart</span>
               <span>Performance Reports</span>
             </button>
-            <button 
-              onClick={() => setActiveTab('schedules')}
+            <button
+              onClick={() => handleTabChange('schedules')}
               className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl font-bold text-xs select-none cursor-pointer border transition-all duration-150 active:scale-95 ${
                 activeTab === 'schedules' 
                   ? 'bg-primary text-on-primary border-primary shadow-sm' 
@@ -1239,9 +1275,7 @@ export default function AcademicsHub() {
                     <div key={mat.id} className="p-4 rounded-2xl border border-outline-variant/30 bg-surface-container-low/20 flex flex-col justify-between text-left group">
                       <div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="px-2 py-0.5 bg-primary-fixed text-primary text-[8px] font-black uppercase rounded-md">
-                            {mat.subject}
-                          </span>
+                          {getSubjectBadge(mat.subject)}
                           <span className="text-[9px] text-outline font-bold">Class {mat.grade}</span>
                         </div>
                         <h4 className="text-xs font-bold text-on-surface mt-2 group-hover:text-primary transition-colors truncate">
@@ -1379,7 +1413,7 @@ export default function AcademicsHub() {
 
             <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/35 p-5 shadow-sm space-y-4">
               <h3 className="text-xs font-black uppercase text-on-surface tracking-wider border-b border-outline-variant/15 pb-2 text-left">
-                Test Files & Roster Keys
+                Test Papers & Answer Keys
               </h3>
 
               {loading ? (
@@ -1392,9 +1426,7 @@ export default function AcademicsHub() {
                     <div key={test.id} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4.5 rounded-2xl border border-outline-variant/30 hover:border-primary/30 transition-all text-left bg-surface-container-low/10">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="bg-secondary-container text-on-secondary-container text-[8px] font-black uppercase rounded-md">
-                            {test.subject}
-                          </span>
+                          {getSubjectBadge(test.subject)}
                           <span className="text-[9px] text-outline font-bold">Class {test.grade}</span>
                         </div>
                         <h4 className="text-xs font-bold text-on-surface mt-1.5">{test.title}</h4>
@@ -1453,7 +1485,7 @@ export default function AcademicsHub() {
               <div className="flex items-center gap-1.5 border-b border-outline-variant/15 pb-2">
                 <span className="material-symbols-outlined text-primary text-base">filter_alt</span>
                 <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
-                  Result Roster Filters
+                  Search & Filter Results
                 </h3>
               </div>
 
@@ -1630,11 +1662,11 @@ export default function AcademicsHub() {
                     </div>
 
                     {/* CSV Batch Operations */}
-                    <div className="flex flex-wrap items-center gap-3.5 bg-surface-container-low/30 p-3.5 rounded-2xl border border-outline-variant/30 text-[10px]">
-                      <div className="flex-1 text-left">
-                        <span className="font-bold text-on-surface uppercase block">Excel / CSV Batch Operations</span>
-                        <span className="text-outline font-medium">Download the student roster list, fill details offline, and upload.</span>
-                      </div>
+                      <div className="flex flex-wrap items-center gap-3.5 bg-surface-container-low/30 p-3.5 rounded-2xl border border-outline-variant/30 text-[10px]">
+                        <div className="flex-1 text-left">
+                          <span className="font-bold text-on-surface uppercase block">Excel / CSV Batch Operations</span>
+                          <span className="text-outline font-medium">Download the student template sheet, fill details offline, and upload.</span>
+                        </div>
                       
                       <div className="flex gap-2">
                         {/* Download Template button */}
@@ -1661,9 +1693,9 @@ export default function AcademicsHub() {
                       </div>
                     </div>
 
-                    {/* Student scores rows */}
-                    <div className="border-t border-outline-variant/10 pt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
-                      <label className="font-bold text-[10px] uppercase text-outline mb-1 block">Student Marks Roster</label>
+                      {/* Student scores rows */}
+                      <div className="border-t border-outline-variant/10 pt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
+                        <label className="font-bold text-[10px] uppercase text-outline mb-1 block">Student Scoreboard Sheet</label>
                       {studentsList.length === 0 ? (
                         <p className="text-center py-4 text-outline font-semibold">No students found in Class {filterClass}.</p>
                       ) : (
@@ -1699,10 +1731,10 @@ export default function AcademicsHub() {
                       <button
                         type="submit"
                         disabled={submittingMarks}
-                        className="py-2.5 px-6 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-md disabled:opacity-50 cursor-pointer select-none border-none"
-                      >
-                        {submittingMarks ? 'Recording...' : 'Submit Score Roster'}
-                      </button>
+                          className="py-2.5 px-6 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-md disabled:opacity-50 cursor-pointer select-none border-none"
+                        >
+                          {submittingMarks ? 'Recording...' : 'Publish Student Scores'}
+                        </button>
                     </div>
                   </form>
                 )}
@@ -2404,9 +2436,7 @@ export default function AcademicsHub() {
               {/* Header */}
               <div className="p-4 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low text-left">
                 <div>
-                  <span className="px-2 py-0.5 bg-primary-fixed text-primary text-[8px] font-black uppercase rounded-md">
-                    {viewingMaterial.subject}
-                  </span>
+                  {getSubjectBadge(viewingMaterial.subject)}
                   <h3 className="font-bold text-xs text-on-surface mt-1 truncate max-w-[250px] sm:max-w-md">
                     {viewingMaterial.title}
                   </h3>

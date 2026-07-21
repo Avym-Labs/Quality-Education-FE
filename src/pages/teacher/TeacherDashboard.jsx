@@ -111,6 +111,13 @@ export default function TeacherDashboard() {
     year: 'numeric',
   })
 
+  const getGreeting = () => {
+    const hrs = new Date().getHours()
+    if (hrs >= 5 && hrs < 12) return 'Good Morning'
+    if (hrs >= 12 && hrs < 18) return 'Good Afternoon'
+    return 'Good Evening'
+  }
+
   // Mock schedule
   const todayClasses = [
     { time: '09:00 AM', grade: '10-A', subject: 'Mathematics', room: 'Room 302' },
@@ -120,196 +127,273 @@ export default function TeacherDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-stack-lg mt-stack-md pb-24">
+      <div className="flex flex-col gap-4 mt-stack-md lg:h-[calc(100vh-100px)] lg:overflow-hidden pb-4 text-left">
         
-
-
-
-        {/* Stats Bento Grid */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
-          {/* Total Students handled */}
-          <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-default hover:bg-surface-container-low transition-colors duration-200">
-            <span className="material-symbols-outlined text-primary text-3xl">groups</span>
+        {/* Welcome Greeting Banner Widget */}
+        <section className="bg-gradient-to-br from-[#6351E0] to-[#8F43F2] p-5 rounded-[24px] text-white shadow-lg relative overflow-hidden flex flex-col justify-between select-none animate-fadeIn flex-shrink-0">
+          {/* Decorative glowing background circles */}
+          <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute -left-12 -bottom-12 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 z-10 text-left">
             <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">42</div>
-              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Total Students</div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight leading-tight">
+                {getGreeting()}, {user?.full_name?.split(' ')[0] || 'Teacher'}! 👋
+              </h2>
             </div>
-          </div>
-
-          {/* Present Students */}
-          <div 
-            onClick={() => navigate('/teacher/attendance')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
-          >
-            <span className="material-symbols-outlined text-emerald-600 text-3xl">check_circle</span>
-            <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">{presentCount}</div>
-              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Present Students</div>
-            </div>
-          </div>
-
-          {/* Absent Students */}
-          <div 
-            onClick={() => navigate('/teacher/attendance')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
-          >
-            <span className="material-symbols-outlined text-error text-3xl">cancel</span>
-            <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">{absentCount}</div>
-              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Absent Students</div>
-            </div>
-          </div>
-
-          {/* Homeworks */}
-          <div 
-            onClick={() => navigate('/teacher/homework')}
-            className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
-          >
-            <span className="material-symbols-outlined text-secondary text-3xl">assignment</span>
-            <div>
-              <div className="font-numeric-bold text-headline-lg text-on-surface font-bold leading-none">{homeworkCount}</div>
-              <div className="font-label-md text-[10px] sm:text-xs font-semibold text-on-surface-variant uppercase tracking-wider mt-1.5 min-h-[32px] flex items-start">Homework Assigned</div>
-            </div>
+            <button 
+              onClick={() => setShowSwitchModal(true)}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 w-fit border-none cursor-pointer self-start sm:self-center"
+            >
+              <span className="material-symbols-outlined text-sm">swap_horiz</span>
+              <span>Switch Profile</span>
+            </button>
           </div>
         </section>
 
-
-        {/* Main Content Bento */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
+        {/* 2-Column Responsive Dashboard Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 lg:min-h-0 lg:items-stretch">
           
-          {/* Consolidated Graphs Carousel */}
-          <div className="lg:col-span-8 bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col justify-between h-[360px]">
-            <div className="flex justify-between items-center gap-2 mb-4 w-full">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <h3 className="font-title-lg text-base text-on-surface font-bold truncate">
-                  {activeChart === 'performance' ? 'Class Performance Overview' : 'Weekly Class Attendance'}
-                </h3>
-                <span className="px-2 py-0.5 bg-primary-container text-on-primary-container rounded-full text-[9px] font-bold shrink-0">Grade 10-A</span>
+          {/* Left Column - Main Stats & Graphs */}
+          <div className="lg:col-span-8 flex flex-col gap-4 lg:h-full lg:min-h-0">
+            
+            {/* Stats Bento Grid */}
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
+              {/* Total Students handled */}
+              <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 border-l-4 border-l-[#6351E0] flex flex-col justify-between h-32 cursor-default hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 text-left">
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-[#6351E0] shrink-0">
+                    <span className="material-symbols-outlined text-base">groups</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Students</span>
+                </div>
+                <div className="mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">42</h3>
+                </div>
               </div>
-              <select
-                value={activeChart}
-                onChange={(e) => setActiveChart(e.target.value)}
-                className="w-fit px-2 py-0.5 rounded-lg border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface shrink-0"
+
+              {/* Present Today */}
+              <div 
+                onClick={() => navigate('/teacher/attendance')}
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 border-l-4 border-l-emerald-500 flex flex-col justify-between h-32 cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 text-left"
               >
-                <option value="performance">Academics Performance</option>
-                <option value="attendance">Weekly Attendance</option>
-              </select>
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                    <span className="material-symbols-outlined text-base">check_circle</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Present Today</span>
+                </div>
+                <div className="mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">38</h3>
+                </div>
+              </div>
+
+              {/* Average Attendance */}
+              <div 
+                onClick={() => navigate('/teacher/attendance')}
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 border-l-4 border-l-amber-500 flex flex-col justify-between h-32 cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 text-left"
+              >
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
+                    <span className="material-symbols-outlined text-base">analytics</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Average Attd.</span>
+                </div>
+                <div className="mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">92.5%</h3>
+                </div>
+              </div>
+
+              {/* Leave Requests */}
+              <div 
+                onClick={() => navigate('/teacher/leave')}
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 border-l-4 border-l-purple-500 flex flex-col justify-between h-32 cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 text-left"
+              >
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+                    <span className="material-symbols-outlined text-base">sick</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Leave Requests</span>
+                </div>
+                <div className="mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{pendingLeaveCount}</h3>
+                </div>
+              </div>
+            </section>
+
+            {/* Consolidated Graphs Carousel */}
+            <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col justify-between lg:flex-1 lg:min-h-0">
+              <div className="flex justify-between items-center gap-2 mb-2 w-full">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <h3 className="font-title-lg text-sm text-on-surface font-bold truncate">
+                    {activeChart === 'performance' ? 'Class Performance Overview' : 'Weekly Class Attendance'}
+                  </h3>
+                  <span className="px-2 py-0.5 bg-[#e2dfff] text-[#3323cc] rounded-full text-[9px] font-bold shrink-0">Grade 10-A</span>
+                </div>
+                <select
+                  value={activeChart}
+                  onChange={(e) => setActiveChart(e.target.value)}
+                  className="w-fit px-2 py-0.5 rounded-lg border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface shrink-0"
+                >
+                  <option value="performance">Academics Performance</option>
+                  <option value="attendance">Weekly Attendance</option>
+                </select>
+              </div>
+
+              <div className="flex-1 transition-all duration-300 lg:min-h-0">
+                {activeChart === 'performance' ? (
+                  <div className="animate-fadeIn h-full flex flex-col justify-between">
+                    {/* Custom Bar Graph */}
+                    <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-4 min-h-0">
+                      {[60, 75, 94, 70, 50].map((val, idx) => (
+                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group" name={`bar-group-${idx}`}>
+                          <div className="relative w-full h-full flex items-end justify-center">
+                            <div 
+                              className={`w-full max-w-[40px] rounded-t-lg transition-all duration-500 hover:opacity-90 ${
+                                idx === 2 ? 'bg-[#6351E0]' : 'bg-[#e2dfff]'
+                              }`}
+                              style={{ height: `${val}%` }}
+                            ></div>
+                            <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
+                              {val}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
+                      {['Algebra', 'Geometry', 'Trig', 'Calculus', 'Stats'].map((subj, idx) => (
+                        <span key={idx} className="flex-1 text-center truncate">{subj}</span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="animate-fadeIn h-full flex flex-col justify-between">
+                    {/* Weekly Attendance Bars */}
+                    <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-4 min-h-0">
+                      {[92, 95, 88, 96, 91].map((val, idx) => (
+                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                          <div className="relative w-full h-full flex items-end justify-center">
+                            <div 
+                              className="w-full max-w-[40px] rounded-t-lg bg-emerald-500 transition-all duration-500 hover:opacity-90"
+                              style={{ height: `${val}%` }}
+                            ></div>
+                            <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
+                              {val}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, idx) => (
+                        <span key={idx} className="flex-1 text-center truncate">{day}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="flex-1 transition-all duration-300">
-              {activeChart === 'performance' ? (
-                <div className="animate-fadeIn h-full flex flex-col justify-between">
-                  {/* Custom Bar Graph */}
-                  <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-6 h-[180px]">
-                    {[60, 75, 94, 70, 50].map((val, idx) => (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group" name={`bar-group-${idx}`}>
-                        <div className="relative w-full h-full flex items-end justify-center">
-                          <div 
-                            className={`w-full max-w-[40px] rounded-t-lg transition-all duration-500 hover:opacity-90 ${
-                              idx === 2 ? 'bg-primary' : 'bg-primary-fixed-dim'
-                            }`}
-                            style={{ height: `${val}%` }}
-                          ></div>
-                          <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
-                            {val}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                    {['Algebra', 'Geometry', 'Trig', 'Calculus', 'Stats'].map((subj, idx) => (
-                      <span key={idx} className="flex-1 text-center truncate">{subj}</span>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="animate-fadeIn h-full flex flex-col justify-between">
-                  {/* Weekly Attendance Bars */}
-                  <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-6 h-[180px]">
-                    {[92, 95, 88, 96, 91].map((val, idx) => (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                        <div className="relative w-full h-full flex items-end justify-center">
-                          <div 
-                            className="w-full max-w-[40px] rounded-t-lg bg-emerald-500 transition-all duration-500 hover:opacity-90"
-                            style={{ height: `${val}%` }}
-                          ></div>
-                          <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
-                            {val}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, idx) => (
-                      <span key={idx} className="flex-1 text-center truncate">{day}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Today's Schedule */}
-          <div className="lg:col-span-4 bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col justify-between">
-            <div>
-              <h3 className="font-title-lg text-base text-on-surface font-bold mb-4">Today's Class Schedule</h3>
-              <div className="space-y-3">
+          {/* Right Column - Side Schedule, Actions & Alerts */}
+          <div className="lg:col-span-4 flex flex-col gap-4 lg:h-full lg:min-h-0">
+            
+            {/* Today's Schedule */}
+            <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col lg:flex-1 lg:min-h-0 space-y-3">
+              <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Today's Class Schedule</h3>
+              <div className="space-y-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
                 {todayClasses.map((cls, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-outline-variant/20 shadow-sm">
-                    <div className="w-10 h-10 rounded-full bg-primary-fixed flex flex-col items-center justify-center font-bold text-primary text-[10px] uppercase shrink-0">
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F2]/40 border border-outline-variant/20 hover:border-primary/30 transition-all duration-200 shadow-xs">
+                    <div className="w-10 h-10 rounded-full bg-[#e2dfff] flex flex-col items-center justify-center font-bold text-primary text-[10px] uppercase shrink-0">
                       <span>{cls.grade}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-left">
                       <p className="font-bold text-xs text-on-surface truncate">{cls.subject}</p>
-                      <p className="text-[10px] text-on-surface-variant font-semibold mt-0.5">{cls.time} • {cls.room}</p>
+                      <p className="text-[10px] text-on-surface-variant font-semibold mt-0.5">{cls.time} &bull; {cls.room}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
 
-        </div>
-
-        {/* Attendance Alerts */}
-        <div className="bg-surface-container-lowest p-stack-lg rounded-[28px] shadow-sm border border-outline-variant/35">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-title-lg text-base text-on-surface font-bold">Low Attendance</h3>
-            <span 
-              onClick={() => navigate('/teacher/attendance')}
-              className="text-primary font-bold text-xs cursor-pointer hover:underline"
-            >
-              View History
-            </span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-2.5 bg-error-container/10 border border-error/10 rounded-2xl">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center text-xs font-bold shrink-0">
-                  LH
+            {/* Quick Actions Bento Grid */}
+            <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 space-y-3 flex-shrink-0">
+              <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Quick Actions</h3>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div 
+                  onClick={() => navigate('/teacher/attendance')}
+                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
+                >
+                  <span className="material-symbols-outlined text-[#6351E0] text-lg group-hover:scale-105 transition-transform">co_present</span>
+                  <span className="text-[9px] font-bold text-on-surface">Mark Attendance</span>
                 </div>
-                <div>
-                  <h4 className="font-bold text-xs text-on-surface">Leo Harrison</h4>
-                  <p className="text-[10px] text-on-surface-variant font-medium">68% Overall Attendance</p>
+                <div 
+                  onClick={() => navigate('/teacher/homework')}
+                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
+                >
+                  <span className="material-symbols-outlined text-[#DD62F2] text-lg group-hover:scale-105 transition-transform">add_task</span>
+                  <span className="text-[9px] font-bold text-on-surface">Assign Homework</span>
+                </div>
+                <div 
+                  onClick={() => navigate('/teacher/results')}
+                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
+                >
+                  <span className="material-symbols-outlined text-emerald-600 text-lg group-hover:scale-105 transition-transform">grade</span>
+                  <span className="text-[9px] font-bold text-on-surface">Upload Grades</span>
+                </div>
+                <div 
+                  onClick={() => navigate('/teacher/leave')}
+                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
+                >
+                  <span className="material-symbols-outlined text-orange-500 text-lg group-hover:scale-105 transition-transform">sick</span>
+                  <span className="text-[9px] font-bold text-on-surface">Leave Request</span>
                 </div>
               </div>
-              <div className="text-error font-bold text-xs uppercase tracking-wider">Critical</div>
             </div>
-            <div className="flex items-center justify-between p-2.5 bg-orange-50 border border-orange-100 rounded-2xl">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-800 flex items-center justify-center text-xs font-bold shrink-0">
-                  MT
+
+            {/* Attendance Alerts */}
+            <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col lg:flex-1 lg:min-h-0 space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">Low Attendance</h3>
+                <span 
+                  onClick={() => navigate('/teacher/attendance')}
+                  className="text-primary font-bold text-xs cursor-pointer hover:underline"
+                >
+                  View History
+                </span>
+              </div>
+              <div className="space-y-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
+                <div className="flex items-center justify-between p-2.5 bg-error-container/10 border border-error/15 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center text-xs font-bold shrink-0">
+                      LH
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-xs text-on-surface">Leo Harrison</h4>
+                      <p className="text-[10px] text-on-surface-variant font-medium">68% Overall Attendance</p>
+                    </div>
+                  </div>
+                  <div className="text-error font-bold text-xs uppercase tracking-wider">Critical</div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-xs text-on-surface">Mia Thompson</h4>
-                  <p className="text-[10px] text-on-surface-variant font-medium">74% Overall Attendance</p>
+                <div className="flex items-center justify-between p-2.5 bg-orange-50 border border-orange-100 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-800 flex items-center justify-center text-xs font-bold shrink-0">
+                      MT
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-xs text-on-surface">Mia Thompson</h4>
+                      <p className="text-[10px] text-on-surface-variant font-medium">74% Overall Attendance</p>
+                    </div>
+                  </div>
+                  <div className="text-orange-500 font-bold text-xs uppercase tracking-wider">Warning</div>
                 </div>
               </div>
-              <div className="text-orange-500 font-bold text-xs uppercase tracking-wider">Warning</div>
             </div>
+
           </div>
+
         </div>
 
       </div>

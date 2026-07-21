@@ -34,10 +34,38 @@ export default function SchedulePage({ embed = false }) {
   const [formRoom, setFormRoom] = useState('')
   const [submittingForm, setSubmittingForm] = useState(false)
 
+  // Desktop CRM-style calendar (Teacher/Admin only)
+  const [viewMode, setViewMode] = useState('day') // 'month' | 'week' | 'day'
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all') // 'upcoming' | 'past' | 'all'
+
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
+
+  const DAY_START_HOUR = 8
+  const DAY_END_HOUR = 18
+  const HOUR_PX = 60
+
+  const SUBJECT_COLORS = {
+    mathematics: { bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-700' },
+    physics: { bg: 'bg-sky-50', border: 'border-sky-300', text: 'text-sky-700' },
+    chemistry: { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700' },
+    biology: { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-700' },
+    english: { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700' },
+    'computer science': { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700' },
+  }
+  const getSubjectColors = (subject) =>
+    SUBJECT_COLORS[(subject || '').toLowerCase()] || { bg: 'bg-[#6351E0]/5', border: 'border-[#6351E0]/25', text: 'text-[#6351E0]' }
+
+  const addDays = (date, n) => {
+    const d = new Date(date)
+    d.setDate(d.getDate() + n)
+    return d
+  }
+  const isSameDay = (a, b) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 
   const loadSchedules = async () => {
     setLoading(true)
@@ -65,6 +93,14 @@ export default function SchedulePage({ embed = false }) {
     }
   }, [user, classFilter])
 
+  // Keep the month grid/mini-calendar in sync when the selected day is navigated (Day/Week views)
+  useEffect(() => {
+    if (selectedDate.getMonth() !== currentDate.getMonth() || selectedDate.getFullYear() !== currentDate.getFullYear()) {
+      setCurrentDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate])
+
   // Calendar calculations
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -82,6 +118,23 @@ export default function SchedulePage({ embed = false }) {
 
   const handleDayClick = (day) => {
     setSelectedDate(new Date(year, month, day))
+  }
+
+  // Toolbar navigation for the desktop CRM-style calendar (Month/Week/Day aware)
+  const handleToolbarPrev = () => {
+    if (viewMode === 'day') setSelectedDate(d => addDays(d, -1))
+    else if (viewMode === 'week') setSelectedDate(d => addDays(d, -7))
+    else handlePrevMonth()
+  }
+  const handleToolbarNext = () => {
+    if (viewMode === 'day') setSelectedDate(d => addDays(d, 1))
+    else if (viewMode === 'week') setSelectedDate(d => addDays(d, 7))
+    else handleNextMonth()
+  }
+  const handleToday = () => {
+    const t = new Date()
+    setSelectedDate(t)
+    setCurrentDate(new Date(t.getFullYear(), t.getMonth(), 1))
   }
 
   // Check if a day has events
@@ -192,6 +245,48 @@ export default function SchedulePage({ embed = false }) {
     }
   }
 
+  const isTeacherOrAdmin = role === 'teacher' || role === 'admin'
+
+  // ----------------------------------------------------
+  // DESKTOP CRM-STYLE CALENDAR (Teacher/Admin only)
+  // ----------------------------------------------------
+  const now = new Date()
+  const searchedSchedules = schedules.filter(ev => {
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase()
+    return (ev.title || '').toLowerCase().includes(q) ||
+      (ev.subject || '').toLowerCase().includes(q) ||
+      (ev.teacher_name || '').toLowerCase().includes(q)
+  })
+  const visibleSchedules = searchedSchedules.filter(ev => {
+    if (statusFilter === 'all') return true
+    const isPast = new Date(ev.end_time) < now
+    return statusFilter === 'past' ? isPast : !isPast
+  })
+
+  const dayViewEvents = visibleSchedules.filter(ev => isSameDay(new Date(ev.start_time), selectedDate))
+
+  const weekStart = addDays(selectedDate, -selectedDate.getDay())
+  const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i))
+
+  const toolbarLabel = viewMode === 'month'
+    ? `${monthNames[month]} ${year}`
+    : viewMode === 'week'
+      ? (weekStart.getMonth() === weekDays[6].getMonth()
+          ? `${monthNames[weekStart.getMonth()]} ${weekStart.getDate()} - ${weekDays[6].getDate()}, ${weekDays[6].getFullYear()}`
+          : `${monthNames[weekStart.getMonth()].slice(0, 3)} ${weekStart.getDate()} - ${monthNames[weekDays[6].getMonth()].slice(0, 3)} ${weekDays[6].getDate()}, ${weekDays[6].getFullYear()}`)
+      : selectedDate.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+
+  const getEventBlockStyle = (ev) => {
+    const s = new Date(ev.start_time)
+    const e = new Date(ev.end_time)
+    const startMins = Math.max(0, (s.getHours() - DAY_START_HOUR) * 60 + s.getMinutes())
+    const endMins = Math.min((DAY_END_HOUR - DAY_START_HOUR) * 60, (e.getHours() - DAY_START_HOUR) * 60 + e.getMinutes())
+    const top = (startMins / 60) * HOUR_PX
+    const height = Math.max(((endMins - startMins) / 60) * HOUR_PX, 34)
+    return { top: `${top}px`, height: `${height}px` }
+  }
+
   const content = (
     <div className="space-y-stack-md mt-stack-sm pb-24 text-left">
       
@@ -244,8 +339,8 @@ export default function SchedulePage({ embed = false }) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:hidden">
+
           {/* LEFT: Monthly Grid Calendar */}
           <div className="lg:col-span-7 bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-4">
             
@@ -291,26 +386,29 @@ export default function SchedulePage({ embed = false }) {
                 const dayEvents = getEventsForDay(dNum)
                 const isSelected = selectedDate.getDate() === dNum && selectedDate.getMonth() === month && selectedDate.getFullYear() === year
                 
+                const hasEvents = dayEvents.length > 0
                 return (
                   <div 
                     key={dNum}
                     onClick={() => handleDayClick(dNum)}
-                    className={`p-2.5 rounded-xl flex flex-col items-center justify-between cursor-pointer select-none active:scale-95 duration-100 min-h-[50px] relative transition-colors ${
+                    className={`p-2.5 rounded-2xl flex flex-col items-center justify-between cursor-pointer select-none active:scale-95 duration-200 min-h-[52px] relative transition-all border ${
                       isSelected 
-                        ? 'bg-primary text-on-primary font-bold shadow-xs' 
-                        : 'bg-surface-container-low/20 hover:bg-surface-container hover:text-on-surface text-on-surface-variant'
+                        ? 'bg-gradient-to-br from-[#6351E0] to-[#8F43F2] text-white shadow-md ring-4 ring-[#6351E0]/20 transform scale-105 font-black border-transparent' 
+                        : hasEvents
+                          ? 'bg-[#6351E0]/5 text-[#6351E0] border-[#6351E0]/20 font-bold hover:bg-[#6351E0]/10 hover:-translate-y-0.5 hover:shadow-xs'
+                          : 'bg-slate-50 text-on-surface border-transparent hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-xs'
                     }`}
                   >
                     <span className="text-[10px]">{dNum}</span>
                     
                     {/* Event indicators */}
-                    {dayEvents.length > 0 && (
-                      <div className="flex gap-0.5 justify-center mt-1 w-full flex-wrap max-w-full">
+                    {hasEvents && (
+                      <div className="flex gap-0.5 justify-center mt-1 w-full flex-wrap max-w-full pointer-events-none">
                         {dayEvents.slice(0, 3).map((_, idx) => (
                           <span 
                             key={idx} 
-                            className={`w-1 h-1 rounded-full ${
-                              isSelected ? 'bg-on-primary' : 'bg-primary'
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isSelected ? 'bg-white' : 'bg-[#6351E0]'
                             }`}
                           />
                         ))}
@@ -326,7 +424,7 @@ export default function SchedulePage({ embed = false }) {
           {/* RIGHT: Scheduled Lectures detail Roster */}
           <div className="lg:col-span-5 bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/35 shadow-sm flex flex-col justify-between min-h-[350px]">
             <div>
-              <div className="flex items-centerfy-between border-b border-outline-variant/15 pb-2.5 mb-4">
+              <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2.5 mb-4">
                 <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
                   Schedules for {selectedDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}
                 </h3>
@@ -401,6 +499,304 @@ export default function SchedulePage({ embed = false }) {
             </div>
           </div>
         </div>
+
+        {/* ----------------------------------------------------
+            DESKTOP CRM-STYLE LECTURE CALENDAR (all roles; Students are read-only)
+            ---------------------------------------------------- */}
+        <div className="hidden lg:block space-y-4">
+
+            {/* Toolbar */}
+            <div className="flex flex-col gap-3 pb-1">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleToday}
+                    className="px-3.5 py-2 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-xs font-bold border-none cursor-pointer"
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={handleToolbarPrev}
+                    className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_left</span>
+                  </button>
+                  <button
+                    onClick={handleToolbarNext}
+                    className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_right</span>
+                  </button>
+                  <h3 className="text-sm font-black text-on-surface ml-1">{toolbarLabel}</h3>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <span className="material-symbols-outlined text-outline text-sm absolute left-3 top-1/2 -translate-y-1/2">search</span>
+                    <input
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Search lectures..."
+                      className="pl-9 pr-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary w-56"
+                    />
+                  </div>
+                  {isTeacherOrAdmin && (
+                    <button
+                      onClick={handleOpenCreateModal}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm">add</span>
+                      <span>Create New Record</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <div className="flex items-center bg-surface-container-low rounded-xl p-1 gap-1">
+                  {['month', 'week', 'day'].map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setViewMode(v)}
+                      className={`px-3.5 py-1.5 rounded-lg text-[11px] font-bold capitalize border-none cursor-pointer transition-all ${
+                        viewMode === v ? 'bg-white shadow-xs text-primary' : 'bg-transparent text-on-surface-variant hover:text-on-surface'
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-12 gap-4">
+
+              {/* Main calendar surface */}
+              <div className="col-span-8 bg-white p-5 rounded-[24px] border border-outline-variant/30 shadow-sm">
+
+                {/* DAY VIEW */}
+                {viewMode === 'day' && (
+                  <div className="relative">
+                    {Array.from({ length: DAY_END_HOUR - DAY_START_HOUR + 1 }).map((_, i) => {
+                      const hour = DAY_START_HOUR + i
+                      const label = hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`
+                      return (
+                        <div key={hour} className="flex" style={{ height: `${HOUR_PX}px` }}>
+                          <div className="w-14 shrink-0 text-right pr-2 pt-1 text-[9px] font-bold text-outline uppercase border-r border-outline-variant/15">
+                            {label}
+                          </div>
+                          <div className="flex-1 border-b border-outline-variant/10"></div>
+                        </div>
+                      )
+                    })}
+
+                    <div className="absolute top-0 left-14 right-0 bottom-0">
+                      {dayViewEvents.length === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center text-outline text-xs font-semibold">
+                          No lectures scheduled for this day.
+                        </div>
+                      )}
+                      {dayViewEvents.map(ev => {
+                        const colors = getSubjectColors(ev.subject)
+                        return (
+                          <div
+                            key={ev.id}
+                            onClick={isTeacherOrAdmin ? () => handleOpenEditModal(ev) : undefined}
+                            style={getEventBlockStyle(ev)}
+                            className={`absolute left-1 right-1 rounded-xl border px-2.5 py-1.5 overflow-hidden shadow-xs transition-all ${colors.bg} ${colors.border} ${
+                              isTeacherOrAdmin ? 'cursor-pointer hover:shadow-md' : 'cursor-default'
+                            }`}
+                          >
+                            <p className={`text-[9px] font-black uppercase truncate ${colors.text}`}>
+                              {formatEventTime(ev.start_time)} - {formatEventTime(ev.end_time)}
+                            </p>
+                            <p className="text-[10px] font-bold text-on-surface truncate">{ev.title}</p>
+                            {ev.room && <p className="text-[8px] text-outline font-semibold truncate">Room {ev.room}</p>}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* WEEK VIEW */}
+                {viewMode === 'week' && (
+                  <div className="grid grid-cols-7 gap-2">
+                    {weekDays.map(d => {
+                      const dayEvents = visibleSchedules.filter(ev => isSameDay(new Date(ev.start_time), d))
+                      const isToday = isSameDay(d, new Date())
+                      const isSelected = isSameDay(d, selectedDate)
+                      return (
+                        <div
+                          key={d.toISOString()}
+                          onClick={() => { setSelectedDate(d); setViewMode('day') }}
+                          className={`rounded-2xl border p-2 min-h-[240px] flex flex-col gap-1.5 cursor-pointer transition-all ${
+                            isSelected ? 'border-primary bg-primary-fixed/10' : 'border-outline-variant/20 bg-white hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="text-center pb-1.5 border-b border-outline-variant/10">
+                            <p className="text-[8px] font-bold text-outline uppercase">{d.toLocaleDateString([], { weekday: 'short' })}</p>
+                            <p className={`text-sm font-black ${isToday ? 'text-primary' : 'text-on-surface'}`}>{d.getDate()}</p>
+                          </div>
+                          <div className="flex-1 space-y-1 overflow-y-auto">
+                            {dayEvents.map(ev => {
+                              const colors = getSubjectColors(ev.subject)
+                              return (
+                                <div key={ev.id} className={`px-1.5 py-1 rounded-lg border text-[8px] font-bold truncate ${colors.bg} ${colors.border} ${colors.text}`}>
+                                  {formatEventTime(ev.start_time)} {ev.title}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* MONTH VIEW */}
+                {viewMode === 'month' && (
+                  <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
+                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                      <div key={d} className="font-bold text-[10px] text-outline uppercase py-1.5 border-b border-outline-variant/10">{d}</div>
+                    ))}
+                    {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                      <div key={`pad-${i}`} className="opacity-0" />
+                    ))}
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                      const dNum = i + 1
+                      const cellDate = new Date(year, month, dNum)
+                      const dayEvents = visibleSchedules.filter(ev => isSameDay(new Date(ev.start_time), cellDate))
+                      const isSelected = isSameDay(cellDate, selectedDate)
+                      const isToday = isSameDay(cellDate, new Date())
+                      return (
+                        <div
+                          key={dNum}
+                          onClick={() => { setSelectedDate(cellDate); setViewMode('day') }}
+                          className={`min-h-[76px] p-2 rounded-xl border cursor-pointer flex flex-col items-start gap-1 transition-all ${
+                            isSelected
+                              ? 'bg-gradient-to-br from-[#6351E0] to-[#8F43F2] text-white border-transparent shadow-md'
+                              : isToday
+                                ? 'border-primary/40 bg-primary-fixed/10'
+                                : 'border-outline-variant/15 bg-white hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className={`text-[10px] font-bold ${isSelected ? 'text-white' : 'text-on-surface'}`}>{dNum}</span>
+                          <div className="flex flex-col gap-0.5 w-full">
+                            {dayEvents.slice(0, 2).map(ev => {
+                              const colors = getSubjectColors(ev.subject)
+                              return (
+                                <span
+                                  key={ev.id}
+                                  className={`text-[7px] px-1 py-0.5 rounded truncate font-bold ${isSelected ? 'bg-white/20 text-white' : `${colors.bg} ${colors.text}`}`}
+                                >
+                                  {ev.title}
+                                </span>
+                              )
+                            })}
+                            {dayEvents.length > 2 && (
+                              <span className={`text-[7px] font-bold ${isSelected ? 'text-white/80' : 'text-outline'}`}>+{dayEvents.length - 2} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Right rail: mini calendar + filters */}
+              <div className="col-span-4 bg-white p-5 rounded-[24px] border border-outline-variant/30 shadow-sm space-y-5">
+
+                {/* Mini month calendar */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={handlePrevMonth}
+                      className="w-7 h-7 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
+                    >
+                      <span className="material-symbols-outlined text-xs">chevron_left</span>
+                    </button>
+                    <h4 className="text-[11px] font-black uppercase text-on-surface">{monthNames[month]} {year}</h4>
+                    <button
+                      onClick={handleNextMonth}
+                      className="w-7 h-7 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
+                    >
+                      <span className="material-symbols-outlined text-xs">chevron_right</span>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1 text-center">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, idx) => (
+                      <div key={idx} className="text-[8px] font-bold text-outline">{d}</div>
+                    ))}
+                    {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`mp-${i}`} />)}
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                      const dNum = i + 1
+                      const cellDate = new Date(year, month, dNum)
+                      const hasEvents = visibleSchedules.some(ev => isSameDay(new Date(ev.start_time), cellDate))
+                      const isSelected = isSameDay(cellDate, selectedDate)
+                      const isToday = isSameDay(cellDate, new Date())
+                      return (
+                        <button
+                          key={dNum}
+                          type="button"
+                          onClick={() => { setSelectedDate(cellDate); setViewMode('day') }}
+                          className={`w-7 h-7 mx-auto rounded-full text-[9px] font-bold flex items-center justify-center relative border-none cursor-pointer ${
+                            isSelected ? 'bg-primary text-white' : isToday ? 'bg-primary-fixed/30 text-primary' : 'bg-transparent text-on-surface hover:bg-slate-100'
+                          }`}
+                        >
+                          {dNum}
+                          {hasEvents && !isSelected && <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-primary"></span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Filters */}
+                <div className="space-y-4 pt-4 border-t border-outline-variant/15">
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black uppercase text-outline tracking-wider">Class</h4>
+                    {isTeacherOrAdmin ? (
+                      <select
+                        value={classFilter}
+                        onChange={e => setClassFilter(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary cursor-pointer"
+                      >
+                        {['9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A'].map(cls => (
+                          <option key={cls} value={cls}>Class {cls}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="px-3 py-2 rounded-xl border border-outline-variant/40 bg-surface-container-low text-xs font-semibold text-on-surface-variant">
+                        Class {user?.grade}-{user?.section}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black uppercase text-outline tracking-wider">Status</h4>
+                    {[
+                      { v: 'upcoming', l: 'Upcoming Lectures' },
+                      { v: 'past', l: 'Past Lectures' },
+                      { v: 'all', l: 'All Lectures' },
+                    ].map(opt => (
+                      <label key={opt.v} className="flex items-center gap-2 text-xs font-semibold text-on-surface cursor-pointer">
+                        <input
+                          type="radio"
+                          name="scheduleStatusFilter"
+                          checked={statusFilter === opt.v}
+                          onChange={() => setStatusFilter(opt.v)}
+                          className="accent-primary w-3.5 h-3.5 cursor-pointer"
+                        />
+                        {opt.l}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
         {/* Create / Edit Form Modal (Teachers & Admins Only) */}
         {modalOpen && (

@@ -40,7 +40,7 @@ export default function SuperAdminDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-stack-lg mt-stack-md">
+      <div className="flex flex-col gap-4 mt-stack-md lg:h-[calc(100vh-100px)] lg:overflow-hidden pb-4">
         
         {/* Welcome Section */}
         <section className="flex flex-col gap-1 pb-4 border-b border-outline-variant/20">

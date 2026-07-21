@@ -114,7 +114,7 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout hideTopBar={false}>
-      <div className="space-y-stack-lg mt-stack-md pb-24">
+      <div className="flex flex-col gap-4 mt-stack-md lg:h-[calc(100vh-100px)] lg:overflow-hidden pb-4">
         
         {/* Dashboard Welcome Header */}
         <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
@@ -196,64 +196,76 @@ export default function AdminDashboard() {
             )}
 
             {/* KPI Bento Grid */}
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Total Students */}
               <div 
                 onClick={() => navigate('/admin/students')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-all duration-300 text-left"
               >
-                <span className="material-symbols-outlined text-primary text-3xl">groups</span>
-                <div>
-                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{totalStudents.toLocaleString()}</div>
-                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Students</div>
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-primary shrink-0">
+                    <span className="material-symbols-outlined text-base">groups</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Students</span>
+                </div>
+                <div className="mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{totalStudents.toLocaleString()}</h3>
                 </div>
               </div>
 
               {/* Total Teachers */}
               <div 
                 onClick={() => navigate('/admin/teachers')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-all duration-300 text-left"
               >
-                <span className="material-symbols-outlined text-secondary text-3xl">person_celebrate</span>
-                <div>
-                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{totalTeachers}</div>
-                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Teachers</div>
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-secondary shrink-0">
+                    <span className="material-symbols-outlined text-base">person_celebrate</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Teachers</span>
+                </div>
+                <div className="mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{totalTeachers}</h3>
                 </div>
               </div>
 
               {/* Attendance Rate */}
               <div 
                 onClick={() => navigate('/admin/reports')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-all duration-300 text-left"
               >
-                <div className="flex justify-between items-start">
-                  <span className="material-symbols-outlined text-error text-3xl">how_to_reg</span>
-                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold gap-0.5 print:hidden">
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-error shrink-0">
+                    <span className="material-symbols-outlined text-base">how_to_reg</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Attendance Rate</span>
+                </div>
+                <div className="flex items-baseline justify-between mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{attendanceRate}%</h3>
+                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[9px] font-bold gap-0.5 print:hidden shrink-0">
                     <span className="material-symbols-outlined text-[12px]">trending_up</span>
                     2.1%
                   </div>
-                </div>
-                <div>
-                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{attendanceRate}%</div>
-                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Attendance Rate</div>
                 </div>
               </div>
 
               {/* Avg. Results */}
               <div 
                 onClick={() => navigate('/admin/reports')}
-                className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-pointer hover:bg-surface-container-low transition-colors duration-200"
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-all duration-300 text-left"
               >
-                <div className="flex justify-between items-start">
-                  <span className="material-symbols-outlined text-tertiary text-3xl">insights</span>
-                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold gap-0.5 print:hidden">
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-tertiary shrink-0">
+                    <span className="material-symbols-outlined text-base">insights</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Avg. Results</span>
+                </div>
+                <div className="flex items-baseline justify-between mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{avgResults}%</h3>
+                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[9px] font-bold gap-0.5 print:hidden shrink-0">
                     <span className="material-symbols-outlined text-[12px]">trending_up</span>
                     1.5%
                   </div>
-                </div>
-                <div>
-                  <div className="font-numeric-bold text-headline-lg text-on-surface font-bold">{avgResults}%</div>
-                  <div className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Avg. Results</div>
                 </div>
               </div>
             </section>
@@ -263,7 +275,7 @@ export default function AdminDashboard() {
               <button 
                 type="button"
                 onClick={() => navigate('/admin/chat-logs')}
-                className="flex items-center gap-2 px-4.5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">visibility</span>
                 <span>Audit Chat Logs</span>
@@ -271,7 +283,7 @@ export default function AdminDashboard() {
               <button 
                 type="button"
                 onClick={() => navigate('/admin/sms-logs')}
-                className="flex items-center gap-2 px-4.5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">sms</span>
                 <span>Audit SMS Logs</span>
@@ -295,16 +307,16 @@ export default function AdminDashboard() {
             </section>
 
             {/* Main Analytics Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 lg:min-h-0 lg:items-stretch">
               
               {/* Left: Charting Sections (Column 1-8) */}
-              <div className="lg:col-span-8 flex flex-col gap-stack-lg">
+              <div className="lg:col-span-8 flex flex-col gap-4 lg:h-full lg:min-h-0">
                 
                 {/* Trend Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:flex-1 lg:min-h-0">
                   
                   {/* Attendance Trend */}
-                  <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 h-[320px] flex flex-col justify-between">
+                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 lg:h-full flex flex-col justify-between">
                     <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold">
                       <span className="material-symbols-outlined text-primary">calendar_month</span>
                       Attendance Trend
@@ -329,7 +341,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Academic Grade Trend */}
-                  <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 h-[320px] flex flex-col justify-between">
+                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 lg:h-full flex flex-col justify-between">
                     <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold">
                       <span className="material-symbols-outlined text-secondary">show_chart</span>
                       Academic Grade Trend
@@ -357,15 +369,15 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Comparison Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:flex-1 lg:min-h-0">
                   
                   {/* Subject-wise */}
-                  <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between">
+                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between lg:h-full">
                     <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
                       <span className="material-symbols-outlined text-tertiary">bar_chart</span>
                       Subject Performance
                     </h3>
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
                       {subjectPerformance.map((subj, idx) => (
                         <div key={idx} className="space-y-1">
                           <div className="flex justify-between text-xs font-bold">
@@ -384,7 +396,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Section-wise */}
-                  <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between">
+                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between lg:h-full">
                     <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
                       <span className="material-symbols-outlined text-secondary">leaderboard</span>
                       Section Comparison
@@ -433,14 +445,14 @@ export default function AdminDashboard() {
               </div>
 
               {/* Right: Lists & Spotlight (Column 9-12) */}
-              <div className="lg:col-span-4 flex flex-col gap-stack-lg">
+              <div className="lg:col-span-4 flex flex-col gap-4 lg:h-full lg:min-h-0">
                 
                 {/* Faculty Spotlight Card */}
-                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden">
-                  <div className="p-stack-md bg-surface-container-low border-b border-outline-variant/20">
-                    <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Faculty Spotlight</h3>
+                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col lg:flex-1 lg:min-h-0">
+                  <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 flex-shrink-0">
+                    <h3 className="font-title-lg text-sm text-on-surface font-bold">Faculty Spotlight</h3>
                   </div>
-                  <div className="divide-y divide-outline-variant/10">
+                  <div className="divide-y divide-outline-variant/10 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
                     {facultySpotlight.map((fac, idx) => (
                       <div key={idx} className="p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors duration-200">
                         <img 
@@ -462,11 +474,11 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Students Spotlight */}
-                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden">
-                  <div className="p-stack-md bg-surface-container-low border-b border-outline-variant/20">
-                    <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Student Spotlight</h3>
+                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col lg:flex-1 lg:min-h-0">
+                  <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 flex-shrink-0">
+                    <h3 className="font-title-lg text-sm text-on-surface font-bold">Student Spotlight</h3>
                   </div>
-                  <div className="p-stack-md">
+                  <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
                     
                     {/* High Performers */}
                     <p className="text-[10px] font-bold text-on-surface-variant mb-3 uppercase tracking-wider">High Performers</p>

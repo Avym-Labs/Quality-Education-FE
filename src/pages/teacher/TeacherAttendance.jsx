@@ -383,13 +383,6 @@ export default function TeacherAttendance() {
             >
               <span className="material-symbols-outlined text-[20px]">tune</span>
             </button>
-            
-            {/* Search Toggle Button */}
-            <button 
-              className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors border-none cursor-pointer active:scale-95 duration-100"
-            >
-              <span className="material-symbols-outlined text-[20px]">search</span>
-            </button>
           </div>
         </section>
 
@@ -421,217 +414,242 @@ export default function TeacherAttendance() {
             RENDER VIEW 1: STUDENT ATTENDANCE
             ========================================================================= */}
         {viewMode === 'students' && (
-          <div className="space-y-4 animate-fadeIn">
-            {/* Weekly sliding calendar selector strip (mockup matching layout) */}
-            <section className="py-4 max-w-xl mx-auto flex items-center justify-between gap-1 border-b border-outline-variant/10 animate-fadeIn bg-white rounded-3xl px-4 shadow-xs border border-outline-variant/20">
-              <button 
-                onClick={() => handleShiftWeek(-7)}
-                className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
-              >
-                chevron_left
-              </button>
-              
-              <div className="flex justify-between items-center flex-1 px-1 overflow-x-auto overflow-y-hidden hide-scrollbar py-1">
-                {getWeekDays(markingDate).map((dayDate, idx) => {
-                  const dayDateStr = dayDate.toISOString().split('T')[0]
-                  const isSelected = dayDateStr === markingDate
-                  const dayNum = dayDate.getDate().toString().padStart(2, '0')
-                  const dayName = dayDate.toLocaleString('en-US', { weekday: 'short' })
-                  const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
+          <div className="flex flex-col lg:flex-row gap-6 items-start animate-fadeIn">
+            {/* Left Control Panel Column (Calendar & Info) */}
+            <div className="w-full lg:w-80 space-y-4 shrink-0 lg:sticky lg:top-20">
+              {/* Weekly sliding calendar selector strip */}
+              <section className="py-4 w-full flex items-center justify-between gap-1 bg-white rounded-3xl px-3.5 shadow-sm border border-outline-variant/20">
+                <button 
+                  onClick={() => handleShiftWeek(-7)}
+                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
+                >
+                  chevron_left
+                </button>
+                
+                <div className="flex justify-between items-center flex-1 px-1 overflow-x-auto overflow-y-hidden hide-scrollbar py-1">
+                  {getWeekDays(markingDate).map((dayDate, idx) => {
+                    const dayDateStr = dayDate.toISOString().split('T')[0]
+                    const isSelected = dayDateStr === markingDate
+                    const dayNum = dayDate.getDate().toString().padStart(2, '0')
+                    const dayName = dayDate.toLocaleString('en-US', { weekday: 'short' })
+                    const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
 
-                  return (
-                    <div 
-                      key={idx}
-                      onClick={() => {
-                        const yyyy = dayDate.getFullYear()
-                        const mm = String(dayDate.getMonth() + 1).padStart(2, '0')
-                        const dd = String(dayDate.getDate()).padStart(2, '0')
-                        setMarkingDate(`${yyyy}-${mm}-${dd}`)
-                      }}
-                      className={`flex flex-col items-center justify-between py-2 px-2.5 rounded-full cursor-pointer transition-all select-none w-11 aspect-[2/3] ${
-                        isSelected 
-                          ? 'bg-[#6351E0] text-white shadow-md transform scale-105 font-bold' 
-                          : isWeekend 
-                            ? 'text-outline-variant/80' 
-                            : 'text-on-surface'
-                      }`}
-                    >
-                      <span className="text-sm font-bold leading-none">{dayNum}</span>
-                      <span className={`text-[9px] uppercase tracking-wider mt-1 ${isSelected ? 'text-white/80' : 'text-outline'}`}>{dayName}</span>
-                    </div>
-                  )
-                })}
+                    return (
+                      <div 
+                        key={idx}
+                        onClick={() => {
+                          const yyyy = dayDate.getFullYear()
+                          const mm = String(dayDate.getMonth() + 1).padStart(2, '0')
+                          const dd = String(dayDate.getDate()).padStart(2, '0')
+                          setMarkingDate(`${yyyy}-${mm}-${dd}`)
+                        }}
+                        className={`flex flex-col items-center justify-between py-2 px-2.5 rounded-full cursor-pointer transition-all select-none w-11 aspect-[2/3] ${
+                          isSelected 
+                            ? 'bg-gradient-to-b from-[#6351E0] to-[#8F43F2] text-white shadow-md ring-4 ring-[#6351E0]/20 transform scale-105 font-black' 
+                            : isWeekend 
+                              ? 'text-outline-variant/80 hover:bg-slate-50 transition-all duration-200' 
+                              : 'text-on-surface hover:bg-slate-50 transition-all duration-200'
+                        }`}
+                      >
+                        <span className="text-sm font-bold leading-none">{dayNum}</span>
+                        <span className={`text-[9px] uppercase tracking-wider mt-1 ${isSelected ? 'text-white/80' : 'text-outline'}`}>{dayName}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <button 
+                  onClick={() => handleShiftWeek(7)}
+                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
+                >
+                  chevron_right
+                </button>
+              </section>
+
+              {/* Active target Selection Bento Card Widget */}
+              <div className="bg-gradient-to-br from-[#6351E0] to-[#9B51E0] p-5 rounded-[24px] text-white shadow-lg relative overflow-hidden flex flex-col justify-between h-32 select-none hover:shadow-xl transition-all duration-300">
+                {/* Decorative glowing background blur circles */}
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                <div className="absolute -left-6 -bottom-6 w-20 h-20 bg-white/10 rounded-full blur-lg pointer-events-none"></div>
+                
+                <div className="flex items-center justify-between z-10">
+                  <span className="text-[10px] uppercase tracking-widest font-black text-white/85">Attendance Target</span>
+                  <span className="material-symbols-outlined text-[18px] text-white/90 animate-pulse">radio_button_checked</span>
+                </div>
+                
+                <div className="z-10 text-left">
+                  <h3 className="text-lg font-black tracking-tight leading-none">Class {selectedClass}</h3>
+                  <p className="text-xs font-semibold text-white/80 mt-1">{selectedSubject}</p>
+                </div>
               </div>
-
-              <button 
-                onClick={() => handleShiftWeek(7)}
-                className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
-              >
-                chevron_right
-              </button>
-            </section>
-
-            {/* Active target Selection Sub-header */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-white rounded-3xl border border-outline-variant/20 text-xs font-semibold text-on-surface-variant max-w-lg mx-auto shadow-xs">
-              <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-primary">school</span>
-                <span>Class: <strong className="text-on-surface">Class {selectedClass}</strong></span>
-              </span>
-              <span className="w-px h-4 bg-outline-variant/30"></span>
-              <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-[#DD62F2]">book</span>
-                <span>Subject: <strong className="text-on-surface">{selectedSubject}</strong></span>
-              </span>
             </div>
 
-            {/* Status Messages */}
-            {markingMessage && (
-              <div className={`p-3 rounded-xl text-center text-xs font-bold ${
-                markingMessage.includes('successfully') 
-                  ? 'bg-green-50 text-green-800 border border-green-200' 
-                  : 'bg-primary-container/20 text-primary border border-primary/20'
-              }`}>
-                {markingMessage}
+            {/* Right Main Content Column (Search & Student List Grid) */}
+            <div className="flex-1 w-full space-y-4">
+              {/* Status Messages */}
+              {markingMessage && (
+                <div className={`p-3 rounded-xl text-center text-xs font-bold ${
+                  markingMessage.includes('successfully') 
+                    ? 'bg-green-50 text-green-800 border border-green-200' 
+                    : 'bg-primary-container/20 text-primary border border-primary/20'
+                }`}>
+                  {markingMessage}
+                </div>
+              )}
+
+              {/* Search filter */}
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">
+                  search
+                </span>
+                <input 
+                  type="text"
+                  placeholder="Search student name or roll number..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none text-xs font-semibold"
+                />
               </div>
-            )}
 
-            {/* Search filter */}
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">
-                search
-              </span>
-              <input 
-                type="text"
-                placeholder="Search student name or roll number..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none text-xs font-semibold"
-              />
-            </div>
+              {/* Student List */}
+              {markingLoading ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-2">
+                  <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+                  <span className="text-xs text-on-surface-variant font-bold">Fetching student list...</span>
+                </div>
+              ) : filteredStudents.length === 0 ? (
+                <div className="bg-surface-container-lowest p-8 text-center rounded-2xl border border-outline-variant/30">
+                  <span className="material-symbols-outlined text-4xl text-on-surface-variant">person_off</span>
+                  <p className="text-xs text-on-surface-variant font-bold mt-2">No students found matching filters.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredStudents.map((student, idx) => {
+                    const status = attendanceStates[student.user_id] || 'present'
+                    const rate = attendanceRates[student.user_id] ?? 100
+                    const isLowAttendance = rate < 75
 
-            {/* Student List */}
-            {markingLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-2">
-                <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
-                <span className="text-xs text-on-surface-variant font-bold">Fetching student list...</span>
-              </div>
-            ) : filteredStudents.length === 0 ? (
-              <div className="bg-surface-container-lowest p-8 text-center rounded-2xl border border-outline-variant/30">
-                <span className="material-symbols-outlined text-4xl text-on-surface-variant">person_off</span>
-                <p className="text-xs text-on-surface-variant font-bold mt-2">No students found matching filters.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredStudents.map((student, idx) => {
-                  const status = attendanceStates[student.user_id] || 'present'
-                  const rate = attendanceRates[student.user_id] ?? 100
-                  const isLowAttendance = rate < 75
+                    const isOnLeave = leavesList.some(l => 
+                      l.user_id === student.user_id && 
+                      markingDate >= l.start_date && 
+                      markingDate <= l.end_date
+                    )
 
-                  const isOnLeave = leavesList.some(l => 
-                    l.user_id === student.user_id && 
-                    markingDate >= l.start_date && 
-                    markingDate <= l.end_date
-                  )
+                    return (
+                      <div 
+                        key={student.id} 
+                        className={`flex items-center justify-between bg-white rounded-3xl p-4 shadow-xs border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 relative overflow-hidden ${
+                          status === 'present' 
+                            ? 'border-emerald-200/60 bg-gradient-to-r from-emerald-50/20 to-white' 
+                            : status === 'absent' 
+                              ? 'border-red-200/60 bg-gradient-to-r from-red-50/20 to-white' 
+                              : 'border-outline-variant/30'
+                        }`}
+                      >
+                        {/* Visual Left Color indicator edge */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-3xl transition-colors duration-300 ${
+                          status === 'present' 
+                            ? 'bg-[#2ecc71]' 
+                            : status === 'absent' 
+                              ? 'bg-[#e74c3c]' 
+                              : 'bg-outline-variant/30'
+                        }`} />
 
-                  return (
-                    <div 
-                      key={student.id} 
-                      className="flex items-center justify-between bg-white rounded-3xl p-4 shadow-xs border border-outline-variant/30 hover:shadow-sm transition-all duration-300 animate-fadeIn"
-                    >
-                      <div className="flex items-center gap-3.5">
-                        {/* Avatar colored initial circle */}
-                        {(() => {
-                          const initial = student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S'
-                          const colors = getAvatarColors(idx)
-                          return (
-                            <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-base shadow-xs ${colors.bg} ${colors.text} shrink-0`}>
-                              {initial}
-                            </div>
-                          )
-                        })()}
-                        
-                        {/* Info */}
-                        <div className="text-left">
-                          <h4 
-                            onClick={() => handleOpenProfile(student)}
-                            className={`text-sm font-bold leading-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-1.5 flex-wrap ${
-                              isLowAttendance ? 'text-error' : 'text-[#1E1E1E]'
+                        <div className="flex items-center gap-3.5 pl-1.5">
+                          {/* Avatar colored initial circle */}
+                          {(() => {
+                            const initial = student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S'
+                            const colors = getAvatarColors(idx)
+                            return (
+                              <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-base shadow-xs ${colors.bg} ${colors.text} shrink-0`}>
+                                {initial}
+                              </div>
+                            )
+                          })()}
+                          
+                          {/* Info */}
+                          <div className="text-left">
+                            <h4 
+                              onClick={() => handleOpenProfile(student)}
+                              className={`text-sm font-bold leading-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-1.5 flex-wrap ${
+                                isLowAttendance ? 'text-error' : 'text-[#1E1E1E]'
+                              }`}
+                            >
+                              <span>{student.full_name}</span>
+                              {isLowAttendance && (
+                                <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
+                                  {rate}% Att.
+                                </span>
+                              )}
+                              {isOnLeave && (
+                                <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
+                                  <span className="material-symbols-outlined text-[10px]">sick</span>
+                                  <span>Ab (Leave)</span>
+                                </span>
+                              )}
+                            </h4>
+                            <span className="text-[10px] text-outline font-semibold mt-0.5 block">
+                              {student.roll_number || String(idx + 1).padStart(2, '0')}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
+                            disabled={isOnLeave}
+                            className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
+                              status === 'present' 
+                                ? 'bg-[#2ecc71] text-white border-none shadow-sm font-black' 
+                                : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
                             }`}
                           >
-                            <span>{student.full_name}</span>
-                            {isLowAttendance && (
-                              <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
-                                {rate}% Att.
-                              </span>
-                            )}
-                            {isOnLeave && (
-                              <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
-                                <span className="material-symbols-outlined text-[10px]">sick</span>
-                                <span>Ab (Leave)</span>
-                              </span>
-                            )}
-                          </h4>
-                          <span className="text-[10px] text-outline font-semibold mt-0.5 block">
-                            {student.roll_number || String(idx + 1).padStart(2, '0')}
-                          </span>
+                            P
+                          </button>
+                          <button 
+                            onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
+                            disabled={isOnLeave}
+                            className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
+                              status === 'absent' 
+                                ? 'bg-[#e74c3c] text-white border-none shadow-sm font-black' 
+                                : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
+                            }`}
+                          >
+                            A
+                          </button>
                         </div>
                       </div>
+                    )
+                  })}
+                </div>
+              )}
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
-                          disabled={isOnLeave}
-                          className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
-                            status === 'present' 
-                              ? 'bg-[#2ecc71] text-white border-none shadow-sm font-black' 
-                              : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
-                          }`}
-                        >
-                          P
-                        </button>
-                        <button 
-                          onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
-                          disabled={isOnLeave}
-                          className={`w-9 h-9 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
-                            status === 'absent' 
-                              ? 'bg-[#e74c3c] text-white border-none shadow-sm font-black' 
-                              : 'bg-white border border-[#D9D9D9] text-[#1E1E1E] hover:bg-slate-50'
-                          }`}
-                        >
-                          A
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
+              {/* Floating Live Counter Footer */}
+              <div className="fixed bottom-16 md:bottom-0 left-0 md:left-64 w-full md:w-[calc(100%-16rem)] z-45 bg-surface-container-lowest/95 backdrop-blur-md px-container-padding-mobile md:px-8 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex items-center justify-between gap-4 border-t border-outline-variant/30">
+                <div className="flex items-center gap-4 text-left">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Present</span>
+                    <span className="text-sm font-numeric-bold text-emerald-600">{presentCount}</span>
+                  </div>
+                  <div className="w-px h-6 bg-outline-variant/30"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Absent</span>
+                    <span className="text-sm font-numeric-bold text-error">{absentCount}</span>
+                  </div>
+                  <div className="w-px h-6 bg-outline-variant/30"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Late</span>
+                    <span className="text-sm font-numeric-bold text-amber-500">{lateCount}</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleSubmitAttendance}
+                  className="flex-1 bg-primary text-on-primary py-2.5 rounded-xl font-bold text-xs shadow-md active:scale-95 transition-transform max-w-[180px] border-none cursor-pointer"
+                >
+                  Submit Attendance
+                </button>
               </div>
-            )}
-
-            {/* Floating Live Counter Footer */}
-            <div className="fixed bottom-16 left-0 w-full z-45 bg-surface-container-lowest/95 backdrop-blur-md px-container-padding-mobile py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex items-center justify-between gap-4 border-t border-outline-variant/30">
-              <div className="flex items-center gap-4 text-left">
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Present</span>
-                  <span className="text-sm font-numeric-bold text-emerald-600">{presentCount}</span>
-                </div>
-                <div className="w-px h-6 bg-outline-variant/30"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Absent</span>
-                  <span className="text-sm font-numeric-bold text-error">{absentCount}</span>
-                </div>
-                <div className="w-px h-6 bg-outline-variant/30"></div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Late</span>
-                  <span className="text-sm font-numeric-bold text-amber-500">{lateCount}</span>
-                </div>
-              </div>
-              <button 
-                onClick={handleSubmitAttendance}
-                className="flex-1 bg-primary text-on-primary py-2.5 rounded-xl font-bold text-xs shadow-md active:scale-95 transition-transform max-w-[180px] border-none cursor-pointer"
-              >
-                Submit Attendance
-              </button>
             </div>
           </div>
         )}
@@ -809,7 +827,7 @@ export default function TeacherAttendance() {
               className="fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300"
               onClick={() => setSheetOpen(false)}
             />
-            <div className="fixed bottom-0 left-0 w-full h-[85vh] bg-surface rounded-t-[32px] z-[70] overflow-y-auto px-6 pt-6 pb-20 shadow-2xl transition-all duration-300 flex flex-col text-left">
+            <div className="fixed bottom-0 md:top-0 left-0 md:left-auto right-0 w-full md:w-96 h-[85vh] md:h-screen bg-white rounded-t-[32px] md:rounded-t-none md:rounded-l-[32px] z-[70] overflow-y-auto px-6 pt-6 pb-20 shadow-2xl transition-all duration-300 flex flex-col text-left">
               <div 
                 className="w-12 h-1.5 bg-outline-variant/60 rounded-full mx-auto mb-6 cursor-pointer hover:bg-outline-variant"
                 onClick={() => setSheetOpen(false)}

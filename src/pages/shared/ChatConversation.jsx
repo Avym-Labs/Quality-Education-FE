@@ -483,17 +483,17 @@ export default function ChatConversation() {
   const isOnline = recipient ? recipient.id.charCodeAt(recipient.id.length - 1) % 2 === 0 : false
 
   return (
-    <DashboardLayout fixedHeight={true}>
-      <div className="flex flex-1 rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-1 bg-surface-container-lowest h-full min-h-0">
-        
+    <DashboardLayout fixedHeight={true} noPadding={true}>
+      <div className="flex flex-1 overflow-hidden h-full min-h-0">
+
         {/* Left Pane: Hide on mobile, show on desktop */}
         <div className="hidden md:block w-80 lg:w-96 shrink-0 h-full">
           <ConversationSidebar activeConversationId={conversationId} />
         </div>
 
         {/* Right Pane: Active Message Feed Workspace */}
-        <div className="flex-1 flex flex-col h-full bg-surface-container-low/10">
-          
+        <div className="flex-1 flex flex-col h-full bg-[#F5F3FB]">
+
           {/* Header */}
           <div className="p-4 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-lowest shadow-sm">
             <div className="flex items-center gap-3">
@@ -532,7 +532,7 @@ export default function ChatConversation() {
           </div>
 
           {/* Messages Stream list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 bg-surface-container-lowest/20">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0">
             {renderMessageGroups()}
             <div ref={messagesEndRef} />
           </div>

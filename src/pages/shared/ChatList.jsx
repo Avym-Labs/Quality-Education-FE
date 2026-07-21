@@ -12,16 +12,16 @@ export default function ChatList() {
   }, [])
 
   return (
-    <DashboardLayout fixedHeight={true}>
-      <div className="flex flex-1 rounded-3xl overflow-hidden border border-outline-variant/35 shadow-sm mt-1 bg-surface-container-lowest h-full min-h-0">
-        
+    <DashboardLayout fixedHeight={true} noPadding={true}>
+      <div className="flex flex-1 overflow-hidden h-full min-h-0">
+
         {/* Left Pane: Scrollable conversations list (visible everywhere on /chat route) */}
         <div className="w-full md:w-80 lg:w-96 shrink-0 h-full">
           <ConversationSidebar activeConversationId={null} />
         </div>
 
         {/* Right Pane: Conversation active room placeholder (hidden on mobile, visible on desktop) */}
-        <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 bg-surface-container-low/20 text-outline space-y-3.5">
+        <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 bg-[#F5F3FB] text-outline space-y-3.5">
           <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center text-primary shadow-inner">
             <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 0" }}>forum</span>
           </div>
