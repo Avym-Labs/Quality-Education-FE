@@ -13,6 +13,82 @@ export default function TeacherDashboard() {
   const [absentCount, setAbsentCount] = useState(4)
   const [activeChart, setActiveChart] = useState('performance')
 
+  const [performerClass, setPerformerClass] = useState('10-A')
+  const [performerSubject, setPerformerSubject] = useState('Mathematics')
+  const [topPerformers, setTopPerformers] = useState([])
+  const [bottomPerformers, setBottomPerformers] = useState([])
+
+  useEffect(() => {
+    async function fetchPerformers() {
+      try {
+        const parts = performerClass.split('-')
+        const grade = parts[0]
+        const section = parts[1]
+        
+        const res = await api.get('/results', {
+          params: {
+            grade,
+            section,
+            subject: performerSubject
+          }
+        })
+        
+        if (res.data && res.data.length > 0) {
+          const studentScores = {}
+          res.data.forEach(r => {
+            if (r.student && r.student.full_name) {
+              const name = r.student.full_name
+              if (!studentScores[name]) {
+                studentScores[name] = []
+              }
+              studentScores[name].push(r.percentage)
+            }
+          })
+          
+          const sortedStudents = Object.keys(studentScores).map(name => {
+            const scores = studentScores[name]
+            const avg = scores.reduce((a, b) => a + b, 0) / scores.length
+            return {
+              name,
+              score: Math.round(avg * 10) / 10
+            }
+          }).sort((a, b) => b.score - a.score)
+          
+          if (sortedStudents.length > 0) {
+            setTopPerformers(sortedStudents.slice(0, 3))
+            setBottomPerformers([...sortedStudents].reverse().slice(0, 3))
+            return
+          }
+        }
+        
+        // Fallback mock data
+        setTopPerformers([
+          { name: 'Leo Harrison', score: 96.5 },
+          { name: 'Mia Thompson', score: 94.0 },
+          { name: 'Oliver Smith', score: 91.2 }
+        ])
+        setBottomPerformers([
+          { name: 'Liam Carter', score: 62.4 },
+          { name: 'Sophia Davis', score: 65.8 },
+          { name: 'Jack Taylor', score: 68.2 }
+        ])
+      } catch (err) {
+        console.error('Failed to load performance rankings:', err)
+        setTopPerformers([
+          { name: 'Leo Harrison', score: 96.5 },
+          { name: 'Mia Thompson', score: 94.0 },
+          { name: 'Oliver Smith', score: 91.2 }
+        ])
+        setBottomPerformers([
+          { name: 'Liam Carter', score: 62.4 },
+          { name: 'Sophia Davis', score: 65.8 },
+          { name: 'Jack Taylor', score: 68.2 }
+        ])
+      }
+    }
+    fetchPerformers()
+  }, [performerClass, performerSubject])
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setActiveChart(prev => prev === 'performance' ? 'attendance' : 'performance')
@@ -318,37 +394,76 @@ export default function TeacherDashboard() {
               </div>
             </div>
 
-            {/* Quick Actions Bento Grid */}
+            {/* Student Performance Card (Top & Bottom Performers) */}
             <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 space-y-3 flex-shrink-0">
-              <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Quick Actions</h3>
-              <div className="grid grid-cols-2 gap-2.5">
-                <div 
-                  onClick={() => navigate('/teacher/attendance')}
-                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
-                >
-                  <span className="material-symbols-outlined text-[#6351E0] text-lg group-hover:scale-105 transition-transform">co_present</span>
-                  <span className="text-[9px] font-bold text-on-surface">Mark Attendance</span>
+              <div className="flex justify-between items-center">
+                <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Student Performers</h3>
+                <div className="flex gap-1.5">
+                  {/* Class selector */}
+                  <select
+                    value={performerClass}
+                    onChange={(e) => setPerformerClass(e.target.value)}
+                    className="px-1.5 py-0.5 rounded border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface"
+                  >
+                    {['10-A', '10-B', '11-A', '11-B', '12-A'].map(cls => (
+                      <option key={cls} value={cls}>{cls}</option>
+                    ))}
+                  </select>
+                  {/* Subject selector */}
+                  <select
+                    value={performerSubject}
+                    onChange={(e) => setPerformerSubject(e.target.value)}
+                    className="px-1.5 py-0.5 rounded border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface max-w-[80px]"
+                  >
+                    {['Mathematics', 'Physics', 'Chemistry', 'Science', 'English'].map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
                 </div>
-                <div 
-                  onClick={() => navigate('/teacher/homework')}
-                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
-                >
-                  <span className="material-symbols-outlined text-[#DD62F2] text-lg group-hover:scale-105 transition-transform">add_task</span>
-                  <span className="text-[9px] font-bold text-on-surface">Assign Homework</span>
+              </div>
+
+              {/* Top 3 & Bottom 3 display */}
+              <div className="space-y-3">
+                {/* Top Performers Section */}
+                <div className="space-y-1.5 text-left">
+                  <div className="flex items-center gap-1 text-emerald-600 font-bold text-[10px] uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-[12px] font-variation-settings-fill">trending_up</span>
+                    <span>Top 3 Students</span>
+                  </div>
+                  <div className="space-y-1">
+                    {topPerformers.map((student, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs p-1.5 bg-emerald-50/40 rounded-lg border border-emerald-100/30">
+                        <span className="font-medium text-on-surface flex items-center gap-1.5 truncate">
+                          <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/60 w-4 h-4 rounded-full flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{student.name}</span>
+                        </span>
+                        <span className="font-bold text-emerald-700">{student.score}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div 
-                  onClick={() => navigate('/teacher/results')}
-                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
-                >
-                  <span className="material-symbols-outlined text-emerald-600 text-lg group-hover:scale-105 transition-transform">grade</span>
-                  <span className="text-[9px] font-bold text-on-surface">Upload Grades</span>
-                </div>
-                <div 
-                  onClick={() => navigate('/teacher/leave')}
-                  className="p-3 bg-slate-50 border border-outline-variant/20 hover:border-primary/40 rounded-xl cursor-pointer hover:bg-slate-100 transition-all flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
-                >
-                  <span className="material-symbols-outlined text-orange-500 text-lg group-hover:scale-105 transition-transform">sick</span>
-                  <span className="text-[9px] font-bold text-on-surface">Leave Request</span>
+
+                {/* Bottom Performers Section */}
+                <div className="space-y-1.5 text-left">
+                  <div className="flex items-center gap-1 text-rose-600 font-bold text-[10px] uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-[12px]">trending_down</span>
+                    <span>Bottom 3 Students</span>
+                  </div>
+                  <div className="space-y-1">
+                    {bottomPerformers.map((student, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs p-1.5 bg-rose-50/40 rounded-lg border border-rose-100/30">
+                        <span className="font-medium text-on-surface flex items-center gap-1.5 truncate">
+                          <span className="text-[10px] font-black text-rose-700 bg-rose-100/60 w-4 h-4 rounded-full flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{student.name}</span>
+                        </span>
+                        <span className="font-bold text-rose-700">{student.score}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

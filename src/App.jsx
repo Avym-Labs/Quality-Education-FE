@@ -15,6 +15,7 @@ import StudentAttendanceReport from './pages/student/StudentAttendanceReport'
 import StudentResultReport from './pages/student/StudentResultReport'
 import StudentHomework from './pages/student/StudentHomework'
 import StudentReports from './pages/student/StudentReports'
+import StudentLeaveRequest from './pages/student/StudentLeaveRequest'
 
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import TeacherProfileDashboard from './pages/teacher/TeacherProfileDashboard'
@@ -70,6 +71,7 @@ function App() {
             <Route path="results" element={<AcademicsHub />} />
             <Route path="homework" element={<StudentHomework />} />
             <Route path="reports" element={<AcademicsHub />} />
+            <Route path="leave" element={<StudentLeaveRequest />} />
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
             <Route path="notifications" element={<NotificationCenter />} />

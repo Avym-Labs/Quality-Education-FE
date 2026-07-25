@@ -426,53 +426,137 @@ export default function TeacherAttendance() {
           <div className="flex flex-col lg:flex-row gap-6 items-start animate-fadeIn">
             {/* Left Control Panel Column (Calendar & Info) */}
             <div className="w-full lg:w-80 space-y-4 shrink-0 lg:sticky lg:top-20">
-              {/* Weekly sliding calendar selector strip */}
-              <section className="py-4 w-full flex items-center justify-between gap-1 bg-white rounded-3xl px-3.5 shadow-sm border border-outline-variant/20">
-                <button 
-                  onClick={() => handleShiftWeek(-7)}
-                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
-                >
-                  chevron_left
-                </button>
-                
-                <div className="flex justify-between items-center flex-1 px-1 overflow-x-auto overflow-y-hidden hide-scrollbar py-1">
-                  {getWeekDays(markingDate).map((dayDate, idx) => {
-                    const dayDateStr = dayDate.toISOString().split('T')[0]
-                    const isSelected = dayDateStr === markingDate
-                    const dayNum = dayDate.getDate().toString().padStart(2, '0')
-                    const dayName = dayDate.toLocaleString('en-US', { weekday: 'short' })
-                    const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6
+              {/* Week Strip Calendar View (Mobile / Tablet) */}
+              <section className="lg:hidden p-4 w-full bg-white rounded-[24px] shadow-sm border border-outline-variant/35 space-y-3">
+                <div className="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-on-surface">
+                    {(() => {
+                      const week = getWeekDays(markingDate)
+                      const start = week[0]
+                      const end = week[6]
+                      return start.getMonth() === end.getMonth()
+                        ? `${monthNames[start.getMonth()].slice(0, 3)} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`
+                        : `${monthNames[start.getMonth()].slice(0, 3)} ${start.getDate()} - ${monthNames[end.getMonth()].slice(0, 3)} ${end.getDate()}, ${end.getFullYear()}`
+                    })()}
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleShiftWeek(-7)}
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                    >
+                      chevron_left
+                    </button>
+                    <button
+                      onClick={() => handleShiftWeek(7)}
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                    >
+                      chevron_right
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1">
+                  {getWeekDays(markingDate).map((d) => {
+                    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+                    const isSelected = dateStr === markingDate
+                    const status = getDayAttendanceStatus(d)
+                    const isWeekend = status === 'weekend'
+
+                    return (
+                      <button
+                        key={dateStr}
+                        type="button"
+                        onClick={() => setMarkingDate(dateStr)}
+                        className={`h-14 rounded-xl flex flex-col items-center justify-center gap-0.5 font-numeric-bold text-xs cursor-pointer transition-all select-none relative border-none ${
+                          isSelected
+                            ? 'bg-gradient-to-b from-[#6351E0] to-[#8F43F2] text-white shadow-md ring-2 ring-[#6351E0]/30 scale-105 font-black z-10'
+                            : isWeekend
+                              ? 'bg-transparent text-outline-variant/70 hover:bg-slate-100'
+                              : 'bg-transparent text-on-surface hover:bg-slate-100 font-bold'
+                        }`}
+                      >
+                        <span className="text-[8px] uppercase opacity-70">{['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]}</span>
+                        <span className="leading-none text-sm">{d.getDate()}</span>
+                        {!isSelected && status === 'present' && (
+                          <span className="w-1 h-1 rounded-full bg-emerald-500 mt-0.5"></span>
+                        )}
+                        {!isSelected && status === 'late' && (
+                          <span className="w-1 h-1 rounded-full bg-amber-500 mt-0.5"></span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              {/* Full Month Grid Calendar View (Desktop) */}
+              <section className="hidden lg:block p-4 w-full bg-white rounded-[24px] shadow-sm border border-outline-variant/35 space-y-3">
+                <div className="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-on-surface">
+                    {monthNames[currentMonth]} {currentYear}
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={handlePrevMonth}
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                    >
+                      chevron_left
+                    </button>
+                    <button 
+                      onClick={handleNextMonth}
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                    >
+                      chevron_right
+                    </button>
+                  </div>
+                </div>
+
+                {/* Day Names Header */}
+                <div className="grid grid-cols-7 gap-1 text-center text-[9px] uppercase font-bold tracking-wider text-on-surface-variant">
+                  <span>Sun</span>
+                  <span>Mon</span>
+                  <span>Tue</span>
+                  <span>Wed</span>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
+                </div>
+
+                {/* Days Grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: firstDayIndex }).map((_, i) => (
+                    <div key={`m-off-${i}`} className="h-8"></div>
+                  ))}
+                  
+                  {Array.from({ length: daysInMonth }).map((_, i) => {
+                    const dayNum = i + 1
+                    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+                    const isSelected = dateStr === markingDate
+                    const dayOfWeek = new Date(currentYear, currentMonth, dayNum).getDay()
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+                    const hasRecord = classHistory.some(r => r.date && r.date.split('T')[0] === dateStr && r.subject === selectedSubject)
 
                     return (
                       <div 
-                        key={idx}
-                        onClick={() => {
-                          const yyyy = dayDate.getFullYear()
-                          const mm = String(dayDate.getMonth() + 1).padStart(2, '0')
-                          const dd = String(dayDate.getDate()).padStart(2, '0')
-                          setMarkingDate(`${yyyy}-${mm}-${dd}`)
-                        }}
-                        className={`flex flex-col items-center justify-between py-2 px-2.5 rounded-full cursor-pointer transition-all select-none w-11 aspect-[2/3] ${
+                        key={`m-day-${dayNum}`}
+                        onClick={() => setMarkingDate(dateStr)}
+                        className={`h-8 rounded-xl flex flex-col items-center justify-center font-numeric-bold text-xs font-bold cursor-pointer transition-all select-none relative ${
                           isSelected 
-                            ? 'bg-gradient-to-b from-[#6351E0] to-[#8F43F2] text-white shadow-md ring-4 ring-[#6351E0]/20 transform scale-105 font-black' 
+                            ? 'bg-gradient-to-b from-[#6351E0] to-[#8F43F2] text-white shadow-md ring-2 ring-[#6351E0]/30 transform scale-105 font-black z-10' 
                             : isWeekend 
-                              ? 'text-outline-variant/80 hover:bg-slate-50 transition-all duration-200' 
-                              : 'text-on-surface hover:bg-slate-50 transition-all duration-200'
+                              ? 'text-outline-variant/70 hover:bg-slate-100' 
+                              : 'text-on-surface hover:bg-slate-100'
                         }`}
                       >
-                        <span className="text-sm font-bold leading-none">{dayNum}</span>
-                        <span className={`text-[9px] uppercase tracking-wider mt-1 ${isSelected ? 'text-white/80' : 'text-outline'}`}>{dayName}</span>
+                        <span className="leading-none">{dayNum}</span>
+                        {hasRecord && !isSelected && (
+                          <span className="w-1 h-1 rounded-full bg-primary mt-0.5"></span>
+                        )}
                       </div>
                     )
                   })}
                 </div>
-
-                <button 
-                  onClick={() => handleShiftWeek(7)}
-                  className="material-symbols-outlined text-outline hover:text-primary transition-colors border-none bg-transparent cursor-pointer font-bold select-none"
-                >
-                  chevron_right
-                </button>
               </section>
 
               {/* Active target Selection Bento Card Widget */}
@@ -559,49 +643,147 @@ export default function TeacherAttendance() {
                             <h3 className="text-base font-black text-on-surface text-left pl-1 tracking-wider uppercase">
                               {letter}
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            {/* Mobile: compact list rows */}
+                            <div className="space-y-2 sm:hidden">
                               {groupList.map((student, idx) => {
                                 const status = attendanceStates[student.user_id] || 'present'
                                 const rate = attendanceRates[student.user_id] ?? 100
                                 const isLowAttendance = rate < 75
 
-                                const isOnLeave = leavesList.some(l => 
-                                  l.user_id === student.user_id && 
-                                  markingDate >= l.start_date && 
+                                const isOnLeave = leavesList.some(l =>
+                                  l.user_id === student.user_id &&
+                                  markingDate >= l.start_date &&
                                   markingDate <= l.end_date
                                 )
 
                                 return (
-                                  <div 
-                                    key={student.id} 
+                                  <div
+                                    key={student.id}
+                                    className={`flex items-center gap-3 bg-white rounded-2xl p-3 shadow-xs border transition-all ${
+                                      status === 'present'
+                                        ? 'border-emerald-200/60'
+                                        : status === 'absent'
+                                          ? 'border-red-200/60'
+                                          : 'border-outline-variant/30'
+                                    }`}
+                                  >
+                                    {student.avatar ? (
+                                      <img
+                                        src={student.avatar}
+                                        alt={student.full_name}
+                                        className="w-11 h-11 rounded-full object-cover shrink-0 border border-outline-variant/20"
+                                      />
+                                    ) : (
+                                      (() => {
+                                        const initial = student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S'
+                                        const colors = getAvatarColors(idx)
+                                        return (
+                                          <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${colors.bg} ${colors.text}`}>
+                                            {initial}
+                                          </div>
+                                        )
+                                      })()
+                                    )}
+
+                                    <div
+                                      onClick={() => handleOpenProfile(student)}
+                                      className="flex-1 min-w-0 cursor-pointer"
+                                    >
+                                      <h4 className={`text-xs font-bold truncate hover:text-primary transition-colors ${
+                                        isLowAttendance ? 'text-error' : 'text-[#1E1E1E]'
+                                      }`}>
+                                        {student.full_name}
+                                      </h4>
+                                      {(isLowAttendance || isOnLeave) && (
+                                        <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                          {isLowAttendance && (
+                                            <span className="px-1.5 py-0.5 bg-error-container text-error text-[8px] font-black uppercase rounded-md">
+                                              {rate}% Att.
+                                            </span>
+                                          )}
+                                          {isOnLeave && (
+                                            <span className="px-1.5 py-0.5 bg-red-100 text-error text-[8px] font-black uppercase rounded-md flex items-center gap-0.5">
+                                              <span className="material-symbols-outlined text-[9px]">sick</span>
+                                              <span>Leave</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
+                                        disabled={isOnLeave}
+                                        title="Mark Present"
+                                        className={`w-9 h-9 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                          status === 'present'
+                                            ? 'bg-[#00D284] text-white border-none shadow-sm font-black'
+                                            : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        P
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
+                                        disabled={isOnLeave}
+                                        title="Mark Absent"
+                                        className={`w-9 h-9 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                          status === 'absent'
+                                            ? 'bg-[#FF3B6B] text-white border-none shadow-sm font-black'
+                                            : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        A
+                                      </button>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+
+                            {/* Tablet & up: original card grid */}
+                            <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                              {groupList.map((student, idx) => {
+                                const status = attendanceStates[student.user_id] || 'present'
+                                const rate = attendanceRates[student.user_id] ?? 100
+                                const isLowAttendance = rate < 75
+
+                                const isOnLeave = leavesList.some(l =>
+                                  l.user_id === student.user_id &&
+                                  markingDate >= l.start_date &&
+                                  markingDate <= l.end_date
+                                )
+
+                                return (
+                                  <div
+                                    key={student.id}
                                     className={`flex flex-col items-center justify-between bg-white rounded-[24px] p-5 shadow-xs border transition-all duration-300 hover:shadow-md hover:-translate-y-1 relative overflow-hidden text-center min-h-[210px] ${
-                                      status === 'present' 
-                                        ? 'border-emerald-200/60' 
-                                        : status === 'absent' 
-                                          ? 'border-red-200/60' 
-                                          : status === 'late'
-                                            ? 'border-amber-200/60'
-                                            : 'border-outline-variant/30'
+                                      status === 'present'
+                                        ? 'border-emerald-200/60'
+                                        : status === 'absent'
+                                          ? 'border-red-200/60'
+                                          : 'border-outline-variant/30'
                                     }`}
                                   >
                                     {/* Top Indicator Accent Bar */}
                                     <div className={`absolute top-0 left-0 right-0 h-1 transition-colors duration-300 ${
-                                      status === 'present' 
-                                        ? 'bg-[#00D284]' 
-                                        : status === 'absent' 
-                                          ? 'bg-[#FF3B6B]' 
-                                          : status === 'late'
-                                            ? 'bg-[#FFB020]'
-                                            : 'bg-transparent'
+                                      status === 'present'
+                                        ? 'bg-[#00D284]'
+                                        : status === 'absent'
+                                          ? 'bg-[#FF3B6B]'
+                                          : 'bg-transparent'
                                     }`} />
 
                                     {/* Top / Center Avatar & Name Container */}
                                     <div className="flex flex-col items-center w-full">
                                       {student.avatar ? (
-                                        <img 
-                                          src={student.avatar} 
-                                          alt={student.full_name} 
-                                          className="w-16 h-16 rounded-full object-cover shadow-sm mb-3 border border-outline-variant/20" 
+                                        <img
+                                          src={student.avatar}
+                                          alt={student.full_name}
+                                          className="w-16 h-16 rounded-full object-cover shadow-sm mb-3 border border-outline-variant/20"
                                         />
                                       ) : (
                                         (() => {
@@ -616,7 +798,7 @@ export default function TeacherAttendance() {
                                       )}
 
                                       {/* Student Name */}
-                                      <h4 
+                                      <h4
                                         onClick={() => handleOpenProfile(student)}
                                         className={`text-sm font-bold leading-snug cursor-pointer hover:text-primary transition-colors text-center line-clamp-2 px-1 ${
                                           isLowAttendance ? 'text-error' : 'text-[#1E1E1E]'
@@ -641,46 +823,33 @@ export default function TeacherAttendance() {
                                       </div>
                                     </div>
 
-                                    {/* P, A, L Action Buttons Row */}
+                                    {/* P, A Action Buttons Row */}
                                     <div className="flex items-center justify-center gap-2 mt-4 pt-1 w-full">
-                                      <button 
+                                      <button
                                         type="button"
                                         onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
                                         disabled={isOnLeave}
                                         title="Mark Present"
-                                        className={`w-9 h-9 rounded-full font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
-                                          status === 'present' 
-                                            ? 'bg-[#00D284] text-white border-none shadow-sm font-black' 
+                                        className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                          status === 'present'
+                                            ? 'bg-[#00D284] text-white border-none shadow-sm font-black'
                                             : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
                                         }`}
                                       >
                                         P
                                       </button>
-                                      <button 
+                                      <button
                                         type="button"
                                         onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
                                         disabled={isOnLeave}
                                         title="Mark Absent"
-                                        className={`w-9 h-9 rounded-full font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
-                                          status === 'absent' 
-                                            ? 'bg-[#FF3B6B] text-white border-none shadow-sm font-black' 
+                                        className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                          status === 'absent'
+                                            ? 'bg-[#FF3B6B] text-white border-none shadow-sm font-black'
                                             : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
                                         }`}
                                       >
                                         A
-                                      </button>
-                                      <button 
-                                        type="button"
-                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'late')}
-                                        disabled={isOnLeave}
-                                        title="Mark Late / Leave"
-                                        className={`w-9 h-9 rounded-full font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
-                                          status === 'late' 
-                                            ? 'bg-[#FFB020] text-white border-none shadow-sm font-black' 
-                                            : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
-                                        }`}
-                                      >
-                                        L
                                       </button>
                                     </div>
                                   </div>
@@ -707,11 +876,7 @@ export default function TeacherAttendance() {
                     <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Absent</span>
                     <span className="text-sm font-numeric-bold text-error">{absentCount}</span>
                   </div>
-                  <div className="w-px h-6 bg-outline-variant/30"></div>
-                  <div className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Late</span>
-                    <span className="text-sm font-numeric-bold text-amber-500">{lateCount}</span>
-                  </div>
+
                 </div>
                 <button 
                   onClick={handleSubmitAttendance}
@@ -728,68 +893,68 @@ export default function TeacherAttendance() {
             RENDER VIEW 2: MY ATTENDANCE
             ========================================================================= */}
         {viewMode === 'teacher' && (
-          <div className="space-y-3.5 animate-fadeIn">
+          <div className="space-y-5 animate-fadeIn">
             {/* Stats Bento Grid */}
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
-                <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Attendance Rate</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-numeric-bold text-xl text-primary font-black">{personalStats.rate}%</span>
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default shadow-xs">
+                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Attendance Rate</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="font-numeric-bold text-2xl text-primary font-black">{personalStats.rate}%</span>
                 </div>
-                <p className="text-[9px] text-emerald-600 font-bold">Top 5% of Faculty</p>
+                <p className="text-[10px] text-emerald-600 font-bold mt-1">Top 5% of Faculty</p>
               </div>
 
-              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
-                <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Days Checked-In</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-numeric-bold text-xl text-on-surface font-black">{personalStats.present} Days</span>
+              <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-xs border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
+                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Days Checked-In</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="font-numeric-bold text-2xl text-on-surface font-black">{personalStats.present} Days</span>
                 </div>
-                <p className="text-[9px] text-on-surface-variant font-medium">This Semester</p>
+                <p className="text-[10px] text-on-surface-variant font-medium mt-1">This Semester</p>
               </div>
 
-              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
-                <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Late Arrivals</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-numeric-bold text-xl text-amber-500 font-black">{personalStats.late} Day</span>
+              <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-xs border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
+                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Late Arrivals</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="font-numeric-bold text-2xl text-amber-500 font-black">{personalStats.late} Day</span>
                 </div>
-                <p className="text-[9px] text-on-surface-variant font-medium">After 09:00 AM</p>
+                <p className="text-[10px] text-on-surface-variant font-medium mt-1">Checked in after 09:00 AM</p>
               </div>
 
-              <div className="bg-surface-container-lowest p-3.5 rounded-[20px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-20 cursor-default">
-                <span className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Approved Leaves</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-numeric-bold text-xl text-secondary font-black">{personalStats.approvedLeaves} Days</span>
+              <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-xs border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
+                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Approved Leaves</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="font-numeric-bold text-2xl text-secondary font-black">{personalStats.approvedLeaves} Days</span>
                 </div>
-                <p className="text-[9px] text-on-surface-variant font-medium">Excused absences</p>
+                <p className="text-[10px] text-on-surface-variant font-medium mt-1">Excused absences</p>
               </div>
             </section>
 
             {/* Calendar and List Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               
               {/* Calendar View */}
-              <div className="lg:col-span-8 bg-surface-container-lowest p-4 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-3">
-                <div className="flex justify-between items-center border-b border-outline-variant/20 pb-2">
-                  <h3 className="font-title-lg text-xs text-on-surface font-bold">
+              <div className="lg:col-span-8 bg-surface-container-lowest p-5 rounded-[28px] border border-outline-variant/35 shadow-sm space-y-4">
+                <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                  <h3 className="font-title-lg text-sm text-on-surface font-bold">
                     {monthNames[currentMonth]} {currentYear}
                   </h3>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <button 
                       onClick={handlePrevMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm"
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-xl transition-all border-none bg-transparent cursor-pointer text-base"
                     >
                       chevron_left
                     </button>
                     <button 
                       onClick={handleNextMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm"
+                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-xl transition-all border-none bg-transparent cursor-pointer text-base"
                     >
                       chevron_right
                     </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1.5 text-center text-[9px] uppercase font-bold tracking-wider text-on-surface-variant">
+                <div className="grid grid-cols-7 gap-2 text-center text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">
                   <span>Sun</span>
                   <span>Mon</span>
                   <span>Tue</span>
@@ -799,9 +964,9 @@ export default function TeacherAttendance() {
                   <span>Sat</span>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1.5">
+                <div className="grid grid-cols-7 gap-2">
                   {Array.from({ length: firstDayIndex }).map((_, i) => (
-                    <div key={`offset-${i}`} className="h-8"></div>
+                    <div key={`offset-${i}`} className="h-11 sm:h-12"></div>
                   ))}
                   
                   {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -820,69 +985,71 @@ export default function TeacherAttendance() {
                       <div 
                         key={`day-${dayNum}`}
                         title={dayObj.label}
-                        className={`h-8 rounded-lg border flex flex-col items-center justify-center p-0.5 font-numeric-bold text-xs font-bold cursor-default hover:opacity-90 active:scale-95 transition-all ${colorClass}`}
+                        className={`h-11 sm:h-12 rounded-xl border flex flex-col items-center justify-center p-1 font-numeric-bold text-xs font-bold cursor-default hover:opacity-90 active:scale-95 transition-all ${colorClass}`}
                       >
-                        <span className="leading-none">{dayNum}</span>
-                        {dayObj.status === 'present' && <span className="w-1 h-1 rounded-full bg-emerald-500 mt-0.5"></span>}
-                        {dayObj.status === 'leave' && <span className="w-1 h-1 rounded-full bg-orange-500 mt-0.5"></span>}
-                        {dayObj.status === 'pending_request' && <span className="w-1 h-1 rounded-full bg-amber-400 mt-0.5"></span>}
-                        {dayObj.status === 'late' && <span className="w-1 h-1 rounded-full bg-yellow-500 mt-0.5"></span>}
+                        <span className="leading-none text-sm">{dayNum}</span>
+                        {dayObj.status === 'present' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1"></span>}
+                        {dayObj.status === 'leave' && <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1"></span>}
+                        {dayObj.status === 'pending_request' && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1"></span>}
+                        {dayObj.status === 'late' && <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-1"></span>}
                       </div>
                     )
                   })}
                 </div>
 
-                <div className="flex flex-wrap gap-2.5 pt-2 border-t border-outline-variant/15 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Present</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Late</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Leave</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Pending</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Weekend</span>
+                <div className="flex flex-wrap gap-3 pt-3 border-t border-outline-variant/15 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Present</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500"></span> Late</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500"></span> Leave</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400"></span> Pending</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-300"></span> Weekend</span>
                 </div>
               </div>
 
               {/* Leave Allocation Guidelines */}
-              <div className="lg:col-span-4 bg-surface-container-lowest p-4 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-3">
-                <h3 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider">Leave Allocation</h3>
-                
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold text-on-surface-variant">
-                      <span>Casual Leaves</span>
-                      <span>10 / 12 Remaining</span>
+              <div className="lg:col-span-4 bg-surface-container-lowest p-5 rounded-[28px] border border-outline-variant/35 shadow-sm space-y-4 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider mb-4">Leave Allocation</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-bold text-on-surface-variant">
+                        <span>Casual Leaves</span>
+                        <span>10 / 12 Remaining</span>
+                      </div>
+                      <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+                        <div className="bg-primary h-full rounded-full" style={{ width: '83%' }}></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full rounded-full" style={{ width: '83%' }}></div>
-                    </div>
-                  </div>
 
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold text-on-surface-variant">
-                      <span>Sick Leaves</span>
-                      <span>7 / 10 Remaining</span>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-bold text-on-surface-variant">
+                        <span>Sick Leaves</span>
+                        <span>7 / 10 Remaining</span>
+                      </div>
+                      <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+                        <div className="bg-secondary h-full rounded-full" style={{ width: '70%' }}></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-secondary h-full rounded-full" style={{ width: '70%' }}></div>
-                    </div>
-                  </div>
 
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold text-on-surface-variant">
-                      <span>Maternity/Paternity</span>
-                      <span>30 / 30 Remaining</span>
-                    </div>
-                    <div className="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-amber-500 h-full rounded-full" style={{ width: '100%' }}></div>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-bold text-on-surface-variant">
+                        <span>Maternity/Paternity Leaves</span>
+                        <span>30 / 30 Remaining</span>
+                      </div>
+                      <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+                        <div className="bg-amber-500 h-full rounded-full" style={{ width: '100%' }}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-2.5 border-t border-outline-variant/20 space-y-1">
-                  <h4 className="text-[9px] uppercase font-bold text-on-surface-variant">Quick Guidelines</h4>
-                  <p className="text-[10px] text-on-surface-variant leading-normal font-semibold">
+                <div className="pt-4 border-t border-outline-variant/20 space-y-2 mt-auto">
+                  <h4 className="text-[10px] uppercase font-bold text-on-surface-variant">Quick Guidelines</h4>
+                  <p className="text-[11px] text-on-surface-variant leading-relaxed font-semibold">
                     - Leave requests must be submitted 24 hours in advance.<br />
                     - Late check-ins are logged automatically via biometric gateway.<br />
-                    - Unexcused absences affect rating metrics.
+                    - Unexcused absences can affect performance rating metrics.
                   </p>
                 </div>
               </div>

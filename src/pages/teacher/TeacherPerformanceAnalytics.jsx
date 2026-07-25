@@ -15,24 +15,16 @@ export default function TeacherPerformanceAnalytics() {
   const [selectedSubject, setSelectedSubject] = useState(subjects[0] || 'Mathematics')
 
   const [loading, setLoading] = useState(false)
-  const [stats, setStats] = useState({
-    classAverage: 78.4,
-    passRate: 94,
-    highest: 98,
-    lowest: 32,
-    distribution: { bin1: 2, bin2: 6, bin3: 18, bin4: 12 },
-    insights: [
-      { name: 'Arjun Harshvardhan', initial: 'AH', current: 94, previous: 88, change: 6, up: true },
-      { name: 'Sarah Mitchell', initial: 'SM', current: 82, previous: 85, change: -3, up: false },
-      { name: 'James Wu', initial: 'JW', current: 54, previous: 52, change: 2, up: true }
-    ],
-    trends: [72, 75, 74, 77, 78.4]
-  })
+  const [error, setError] = useState('')
+  // null means "no results recorded yet for this class/subject" - rendered as an honest empty state
+  // rather than silently showing made-up numbers.
+  const [stats, setStats] = useState(null)
 
   useEffect(() => {
     async function loadPerformanceStats() {
       if (!selectedClass) return
       setLoading(true)
+      setError('')
       try {
         const [grade, section] = selectedClass.split('-')
         const res = await api.get('/results', {
@@ -40,7 +32,9 @@ export default function TeacherPerformanceAnalytics() {
         })
         const results = res.data || []
 
-        if (results.length > 0) {
+        if (results.length === 0) {
+          setStats(null)
+        } else {
           const marksPctList = results.map(r => r.percentage)
           const highest = Math.max(...marksPctList)
           const lowest = Math.min(...marksPctList)
@@ -56,39 +50,54 @@ export default function TeacherPerformanceAnalytics() {
             else distribution.bin4++
           })
 
-          // Calculate average trend by grouping by test_title
+          // Calculate average trend by grouping by test_title, ordered chronologically
           const testGroups = {}
-          results.forEach(r => {
-            if (!testGroups[r.test_title]) {
-              testGroups[r.test_title] = []
-            }
-            testGroups[r.test_title].push(r.percentage)
-          })
+          const testOrder = []
+          results
+            .slice()
+            .sort((a, b) => new Date(a.test_date || a.created_at) - new Date(b.test_date || b.created_at))
+            .forEach(r => {
+              if (!testGroups[r.test_title]) {
+                testGroups[r.test_title] = []
+                testOrder.push(r.test_title)
+              }
+              testGroups[r.test_title].push(r.percentage)
+            })
 
-          const trends = Object.keys(testGroups).map(title => {
+          const trends = testOrder.map(title => {
             const list = testGroups[title]
             return roundTo1(list.reduce((a, b) => a + b, 0) / list.length)
           }).slice(-5)
 
-          // Make student insights
-          const insights = results.map(r => {
-            const initials = r.student_name ? r.student_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'ST'
+          // Build each student's real chronological score history for this class/subject,
+          // then compare their most recent test against the one before it.
+          const byStudent = {}
+          results.forEach(r => {
+            const key = r.student_id || r.student_name || 'unknown'
+            if (!byStudent[key]) byStudent[key] = []
+            byStudent[key].push(r)
+          })
+
+          const insights = Object.values(byStudent).map(studentResults => {
+            const sorted = studentResults
+              .slice()
+              .sort((a, b) => new Date(a.test_date || a.created_at) - new Date(b.test_date || b.created_at))
+            const latest = sorted[sorted.length - 1]
+            const prior = sorted.length > 1 ? sorted[sorted.length - 2] : null
+            const name = latest.student_name || latest.student?.full_name || 'Student'
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+            const current = Math.round(latest.percentage)
+            const previous = prior ? Math.round(prior.percentage) : null
+            const diff = previous !== null ? current - previous : null
             return {
-              name: r.student_name || 'Student',
-              initial: initials.slice(0, 2),
-              current: Math.round(r.percentage),
-              previous: Math.max(40, Math.round(r.percentage - (Math.random() * 10 - 4))),
-              change: 0,
-              up: true
+              name,
+              initial: initials || 'ST',
+              current,
+              previous,
+              change: diff !== null ? Math.abs(diff) : null,
+              up: diff !== null ? diff >= 0 : null
             }
-          }).map(ins => {
-            const diff = ins.current - ins.previous
-            return {
-              ...ins,
-              change: Math.abs(diff),
-              up: diff >= 0
-            }
-          }).slice(0, 5)
+          }).sort((a, b) => b.current - a.current).slice(0, 5)
 
           setStats({
             classAverage,
@@ -97,11 +106,13 @@ export default function TeacherPerformanceAnalytics() {
             lowest,
             distribution,
             insights,
-            trends: trends.length > 0 ? trends : [70, 72, 75, 76, classAverage]
+            trends: trends.length > 0 ? trends : [classAverage]
           })
         }
       } catch (err) {
-        console.error('Failed to load performance analytics from DB, using defaults:', err)
+        console.error('Failed to load performance analytics:', err)
+        setError('Failed to load performance analytics.')
+        setStats(null)
       } finally {
         setLoading(false)
       }
@@ -109,9 +120,16 @@ export default function TeacherPerformanceAnalytics() {
     loadPerformanceStats()
   }, [selectedClass, selectedSubject])
 
+  // Real target line (not a fabricated "target achieved" claim) - a class is considered
+  // healthy once at least 3 in 4 students are passing.
+  const PASS_RATE_TARGET = 75
+
   function roundTo1(num) {
     return Math.round(num * 10) / 10
   }
+
+  const trendDelta = stats && stats.trends.length > 1 ? roundTo1(stats.trends[stats.trends.length - 1] - stats.trends[0]) : null
+  const targetMet = stats ? stats.passRate >= PASS_RATE_TARGET : false
 
   return (
     <DashboardLayout>
@@ -159,9 +177,20 @@ export default function TeacherPerformanceAnalytics() {
             <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
             <span className="text-xs text-on-surface-variant font-bold">Recalculating analytics...</span>
           </div>
+        ) : error ? (
+          <div className="p-4 bg-error-container rounded-xl text-error text-sm font-semibold">
+            {error}
+          </div>
+        ) : !stats ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-2 bg-surface-container-lowest rounded-[24px] border border-outline-variant/30">
+            <span className="material-symbols-outlined text-4xl text-on-surface-variant">query_stats</span>
+            <p className="text-sm font-bold text-on-surface">No test results recorded yet</p>
+            <p className="text-xs text-on-surface-variant max-w-xs">
+              Record marks for Class {selectedClass} in {selectedSubject} to see performance analytics here.
+            </p>
+          </div>
         ) : (
           <>
-            {/* Summary Bento Cards */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Class Average */}
               <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
@@ -170,10 +199,14 @@ export default function TeacherPerformanceAnalytics() {
                   <span className="font-numeric-bold text-3xl text-primary font-bold">{stats.classAverage}</span>
                   <span className="text-xs font-semibold text-primary">%</span>
                 </div>
-                <div className="mt-2 flex items-center gap-1 text-emerald-600 text-[10px] font-bold">
-                  <span className="material-symbols-outlined text-xs">trending_up</span>
-                  <span>+4.2% vs last term</span>
-                </div>
+                {trendDelta !== null ? (
+                  <div className={`mt-2 flex items-center gap-1 text-[10px] font-bold ${trendDelta >= 0 ? 'text-emerald-600' : 'text-error'}`}>
+                    <span className="material-symbols-outlined text-xs">{trendDelta >= 0 ? 'trending_up' : 'trending_down'}</span>
+                    <span>{trendDelta >= 0 ? '+' : ''}{trendDelta}% since first recorded test</span>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-on-surface-variant font-bold mt-2">Only one test recorded so far</p>
+                )}
               </div>
 
               {/* Pass percentage */}
@@ -183,9 +216,9 @@ export default function TeacherPerformanceAnalytics() {
                   <span className="font-numeric-bold text-3xl text-secondary font-bold">{stats.passRate}</span>
                   <span className="text-xs font-semibold text-secondary">%</span>
                 </div>
-                <div className="mt-2 flex items-center gap-1 text-emerald-600 text-[10px] font-bold">
-                  <span className="material-symbols-outlined text-xs">check_circle</span>
-                  <span>Target achieved</span>
+                <div className={`mt-2 flex items-center gap-1 text-[10px] font-bold ${targetMet ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  <span className="material-symbols-outlined text-xs">{targetMet ? 'check_circle' : 'warning'}</span>
+                  <span>{targetMet ? `Above ${PASS_RATE_TARGET}% target` : `Below ${PASS_RATE_TARGET}% target`}</span>
                 </div>
               </div>
 
@@ -220,10 +253,14 @@ export default function TeacherPerformanceAnalytics() {
               <div className="lg:col-span-8 bg-surface-container-lowest p-5 rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col justify-between h-64">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider">Last 5 Tests Trend</h4>
-                  <span className="px-2.5 py-0.5 bg-primary/10 text-primary rounded-full text-[10px] font-bold flex items-center gap-1">
-                    <span className="material-symbols-outlined text-xs">auto_graph</span>
-                    <span>Continuous growth</span>
-                  </span>
+                  {trendDelta !== null && (
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                      trendDelta >= 0 ? 'bg-primary/10 text-primary' : 'bg-error-container text-error'
+                    }`}>
+                      <span className="material-symbols-outlined text-xs">{trendDelta >= 0 ? 'auto_graph' : 'trending_down'}</span>
+                      <span>{trendDelta >= 0 ? 'Trending up' : 'Trending down'}</span>
+                    </span>
+                  )}
                 </div>
                 
                 {/* Horizontal bar heights */}
@@ -290,7 +327,6 @@ export default function TeacherPerformanceAnalytics() {
                         <th className="px-5 py-3 text-center">Current Score</th>
                         <th className="px-5 py-3 text-center">Previous Score</th>
                         <th className="px-5 py-3 text-center">Delta Progress</th>
-                        <th className="px-5 py-3 text-right">Profile</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant/15">
@@ -308,25 +344,21 @@ export default function TeacherPerformanceAnalytics() {
                             {ins.current}%
                           </td>
                           <td className="px-5 py-3.5 text-center text-xs font-semibold text-on-surface-variant">
-                            {ins.previous}%
+                            {ins.previous !== null ? `${ins.previous}%` : '—'}
                           </td>
                           <td className="px-5 py-3.5 text-center">
-                            <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${
-                              ins.up ? 'text-emerald-600' : 'text-error'
-                            }`}>
-                              <span className="material-symbols-outlined text-[14px]">
-                                {ins.up ? 'arrow_upward' : 'arrow_downward'}
+                            {ins.change !== null ? (
+                              <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${
+                                ins.up ? 'text-emerald-600' : 'text-error'
+                              }`}>
+                                <span className="material-symbols-outlined text-[14px]">
+                                  {ins.up ? 'arrow_upward' : 'arrow_downward'}
+                                </span>
+                                <span>{ins.change}%</span>
                               </span>
-                              <span>{ins.change}%</span>
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-right">
-                            <button 
-                              onClick={() => navigate('/teacher/attendance/mark')}
-                              className="p-1.5 hover:bg-surface-container-high rounded-xl transition-all active:scale-95 flex items-center justify-center ml-auto border border-outline-variant/20 shadow-sm"
-                            >
-                              <span className="material-symbols-outlined text-primary text-[18px]">visibility</span>
-                            </button>
+                            ) : (
+                              <span className="text-[10px] font-bold text-on-surface-variant uppercase bg-surface-container-low px-2 py-0.5 rounded-full">New</span>
+                            )}
                           </td>
                         </tr>
                       ))}

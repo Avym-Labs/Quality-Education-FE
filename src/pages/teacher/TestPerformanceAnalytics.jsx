@@ -34,6 +34,10 @@ export default function TestPerformanceAnalytics() {
   const [remarkStudent, setRemarkStudent] = useState(null)
   const [tempRemark, setTempRemark] = useState('')
 
+  // Drafts are saved per teacher + class + subject, so switching away and back
+  // (or reloading the page) restores exactly where marks entry was left off.
+  const draftKey = user?.id ? `results_draft_${user.id}_${selectedClass}_${selectedSubject}` : null
+
   // Load students for selected class
   useEffect(() => {
     async function loadStudents() {
@@ -48,11 +52,32 @@ export default function TestPerformanceAnalytics() {
         const studentList = res.data || []
         setStudents(studentList)
 
-        // Initialize marks data
+        // Initialize marks data, restoring a saved draft for this class/subject if one exists
         const initialMarks = {}
         studentList.forEach(s => {
           initialMarks[s.user_id] = { marks: '', remarks: '', status: 'unsaved' }
         })
+
+        const savedDraft = draftKey ? localStorage.getItem(draftKey) : null
+        if (savedDraft) {
+          try {
+            const parsed = JSON.parse(savedDraft)
+            if (parsed.testTitle) setTestTitle(parsed.testTitle)
+            if (parsed.testType) setTestType(parsed.testType)
+            if (parsed.totalMarks) setTotalMarks(parsed.totalMarks)
+            if (parsed.testDate) setTestDate(parsed.testDate)
+            Object.keys(parsed.marksData || {}).forEach(userId => {
+              if (initialMarks[userId]) {
+                initialMarks[userId] = { ...parsed.marksData[userId], status: 'unsaved' }
+              }
+            })
+            setMessage('Restored your saved draft for this class and subject.')
+            setTimeout(() => setMessage(''), 4000)
+          } catch (err) {
+            console.error('Failed to parse saved draft:', err)
+          }
+        }
+
         setMarksData(initialMarks)
       } catch (err) {
         console.error('Failed to load students for marks upload:', err)
@@ -62,7 +87,8 @@ export default function TestPerformanceAnalytics() {
       }
     }
     loadStudents()
-  }, [selectedClass])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClass, selectedSubject])
 
   // Handle individual student marks input
   const handleMarksChange = (userId, val) => {
@@ -170,6 +196,9 @@ export default function TestPerformanceAnalytics() {
         })
         return updated
       })
+
+      // Published results are no longer a draft
+      if (draftKey) localStorage.removeItem(draftKey)
 
       setMessage('Results published successfully!')
       setTimeout(() => setMessage(''), 4000)
@@ -412,9 +441,11 @@ export default function TestPerformanceAnalytics() {
         {/* Sticky bottom upload actions */}
         <div className="fixed bottom-16 left-0 w-full px-container-padding-mobile pb-4 pt-4 bg-gradient-to-t from-background via-background/90 to-transparent z-45">
           <div className="flex gap-4 max-w-5xl mx-auto">
-            <button 
+            <button
               onClick={() => {
-                setMessage('Draft saved locally.')
+                if (!draftKey) return
+                localStorage.setItem(draftKey, JSON.stringify({ testTitle, testType, totalMarks, testDate, marksData }))
+                setMessage('Draft saved. It will be restored next time you open this class and subject.')
                 setTimeout(() => setMessage(''), 3000)
               }}
               className="flex-1 py-3 rounded-2xl border border-primary text-primary font-bold text-xs active:bg-primary/10 transition-all hover:bg-surface-container-low"

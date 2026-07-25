@@ -327,10 +327,10 @@ export default function AttendanceMarking() {
                   </div>
 
                   {/* Attendance toggle buttons */}
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-2">
                     <button 
                       onClick={() => toggleStatus(student.user_id, 'present')}
-                      className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 ${
+                      className={`px-4 py-2 rounded-lg border font-bold text-xs transition-all active:scale-95 ${
                         status === 'present' 
                           ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
                           : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
@@ -340,23 +340,13 @@ export default function AttendanceMarking() {
                     </button>
                     <button 
                       onClick={() => toggleStatus(student.user_id, 'absent')}
-                      className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 ${
+                      className={`px-4 py-2 rounded-lg border font-bold text-xs transition-all active:scale-95 ${
                         status === 'absent' 
                           ? 'bg-error border-error text-white shadow-sm' 
                           : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
                       }`}
                     >
                       A
-                    </button>
-                    <button 
-                      onClick={() => toggleStatus(student.user_id, 'late')}
-                      className={`w-9 h-9 rounded-lg border font-bold text-xs transition-all active:scale-95 ${
-                        status === 'late' 
-                          ? 'bg-amber-500 border-amber-500 text-white shadow-sm' 
-                          : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
-                      }`}
-                    >
-                      L
                     </button>
                   </div>
                 </div>
@@ -377,11 +367,7 @@ export default function AttendanceMarking() {
               <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Absent</span>
               <span className="text-base font-numeric-bold text-error">{absentCount}</span>
             </div>
-            <div className="w-px h-6 bg-outline-variant/30"></div>
-            <div className="flex flex-col">
-              <span className="text-[9px] uppercase tracking-wider text-on-surface-variant font-bold">Late</span>
-              <span className="text-base font-numeric-bold text-amber-500">{lateCount}</span>
-            </div>
+
           </div>
           <button 
             onClick={handleSubmitAttendance}

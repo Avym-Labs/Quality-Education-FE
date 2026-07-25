@@ -18,6 +18,7 @@ const SIDEBAR_ITEMS = {
     { icon: 'home', label: 'Home', path: '/student/dashboard' },
     { icon: 'school', label: 'Academics', path: '/student/academics', children: ACADEMICS_SUBITEMS },
     { icon: 'assignment', label: 'Homework', path: '/student/homework' },
+    { icon: 'event_busy', label: 'Leave', path: '/student/leave' },
     { icon: 'chat', label: 'Chat', path: '/student/chat' },
     { icon: 'person', label: 'Account', path: '/student/settings' },
   ],
@@ -196,9 +197,9 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
         <main className={
           noPadding
             ? 'w-full flex-1 flex flex-col min-h-0 overflow-hidden pb-20 md:pb-0'
-            : `px-container-padding-mobile max-w-5xl md:max-w-7xl lg:max-w-[1440px] w-full mx-auto flex-1 flex flex-col min-h-0 ${
+            : `px-container-padding-mobile md:px-6 w-full flex-1 flex flex-col min-h-0 ${
                 fixedHeight ? 'pb-24 pt-2 overflow-hidden' : 'pb-28 pt-stack-md'
-              } md:pt-8 md:pb-12`
+              } md:pt-4 md:pb-4`
         }>
           {children}
         </main>

@@ -357,7 +357,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Calendar Schedule Action */}
-                <div 
+                <div
                   onClick={() => navigate('/student/schedule')}
                   className="bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-outline-variant/30 flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
                 >
