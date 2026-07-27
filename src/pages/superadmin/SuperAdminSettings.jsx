@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import api from '../../api/axios'
+import Icon from '../../components/common/Icon'
 
 export default function SuperAdminSettings() {
   const navigate = useNavigate()
@@ -133,7 +134,7 @@ export default function SuperAdminSettings() {
             onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-low transition-colors active:scale-95 duration-150"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <Icon name="arrow_back" />
           </button>
           <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">System Settings</h2>
         </section>
@@ -147,7 +148,7 @@ export default function SuperAdminSettings() {
                 onClick={() => setIsEditingSelf(true)}
                 className="flex items-center gap-1 text-primary font-bold text-xs hover:underline cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[16px]">edit</span>
+                <Icon name="edit" className="text-[16px]" />
                 <span>Edit Profile</span>
               </button>
             )}
@@ -155,14 +156,14 @@ export default function SuperAdminSettings() {
 
           {selfError && (
             <div className="p-3 bg-error-container rounded-xl text-error text-xs font-semibold mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-xs">error</span>
+              <Icon name="error" className="text-xs" />
               <span>{selfError}</span>
             </div>
           )}
 
           {selfSuccess && (
             <div className="p-3 bg-green-50 rounded-xl text-green-700 text-xs font-bold mb-3 flex items-center gap-2 border border-green-200">
-              <span className="material-symbols-outlined text-xs">check_circle</span>
+              <Icon name="check_circle" className="text-xs" />
               <span>{selfSuccess}</span>
             </div>
           )}
@@ -270,14 +271,14 @@ export default function SuperAdminSettings() {
 
           {adminError && (
             <div className="p-3 bg-error-container rounded-xl text-error text-xs font-semibold mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-xs">error</span>
+              <Icon name="error" className="text-xs" />
               <span>{adminError}</span>
             </div>
           )}
 
           {adminSuccess && (
             <div className="p-3 bg-green-50 rounded-xl text-green-700 text-xs font-bold mb-3 flex items-center gap-2 border border-green-200">
-              <span className="material-symbols-outlined text-xs">check_circle</span>
+              <Icon name="check_circle" className="text-xs" />
               <span>{adminSuccess}</span>
             </div>
           )}
@@ -347,7 +348,7 @@ export default function SuperAdminSettings() {
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 bg-error text-on-error py-3.5 rounded-2xl shadow-md hover:bg-opacity-90 transition-all active:scale-95 font-bold text-sm"
           >
-            <span className="material-symbols-outlined text-base">logout</span>
+            <Icon name="logout" className="text-base" />
             <span>Logout Account</span>
           </button>
         </section>

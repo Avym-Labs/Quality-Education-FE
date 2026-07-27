@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function TeacherPerformanceAnalytics() {
   const { user } = useAuth()
@@ -140,9 +141,9 @@ export default function TeacherPerformanceAnalytics() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/teacher/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -183,7 +184,7 @@ export default function TeacherPerformanceAnalytics() {
           </div>
         ) : !stats ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2 bg-surface-container-lowest rounded-[24px] border border-outline-variant/30">
-            <span className="material-symbols-outlined text-4xl text-on-surface-variant">query_stats</span>
+            <Icon name="query_stats" className="text-4xl text-on-surface-variant" />
             <p className="text-sm font-bold text-on-surface">No test results recorded yet</p>
             <p className="text-xs text-on-surface-variant max-w-xs">
               Record marks for Class {selectedClass} in {selectedSubject} to see performance analytics here.
@@ -201,7 +202,7 @@ export default function TeacherPerformanceAnalytics() {
                 </div>
                 {trendDelta !== null ? (
                   <div className={`mt-2 flex items-center gap-1 text-[10px] font-bold ${trendDelta >= 0 ? 'text-emerald-600' : 'text-error'}`}>
-                    <span className="material-symbols-outlined text-xs">{trendDelta >= 0 ? 'trending_up' : 'trending_down'}</span>
+                    <Icon name={trendDelta >= 0 ? 'trending_up' : 'trending_down'} className="text-xs" />
                     <span>{trendDelta >= 0 ? '+' : ''}{trendDelta}% since first recorded test</span>
                   </div>
                 ) : (
@@ -217,7 +218,7 @@ export default function TeacherPerformanceAnalytics() {
                   <span className="text-xs font-semibold text-secondary">%</span>
                 </div>
                 <div className={`mt-2 flex items-center gap-1 text-[10px] font-bold ${targetMet ? 'text-emerald-600' : 'text-amber-600'}`}>
-                  <span className="material-symbols-outlined text-xs">{targetMet ? 'check_circle' : 'warning'}</span>
+                  <Icon name={targetMet ? 'check_circle' : 'warning'} className="text-xs" />
                   <span>{targetMet ? `Above ${PASS_RATE_TARGET}% target` : `Below ${PASS_RATE_TARGET}% target`}</span>
                 </div>
               </div>
@@ -240,7 +241,7 @@ export default function TeacherPerformanceAnalytics() {
                   <span className="text-xs font-semibold text-on-surface-variant">%</span>
                 </div>
                 <div className="mt-2 flex items-center gap-1 text-error text-[10px] font-bold">
-                  <span className="material-symbols-outlined text-xs">warning</span>
+                  <Icon name="warning" className="text-xs" />
                   <span>Needs attention</span>
                 </div>
               </div>
@@ -257,7 +258,7 @@ export default function TeacherPerformanceAnalytics() {
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
                       trendDelta >= 0 ? 'bg-primary/10 text-primary' : 'bg-error-container text-error'
                     }`}>
-                      <span className="material-symbols-outlined text-xs">{trendDelta >= 0 ? 'auto_graph' : 'trending_down'}</span>
+                      <Icon name={trendDelta >= 0 ? 'auto_graph' : 'trending_down'} className="text-xs" />
                       <span>{trendDelta >= 0 ? 'Trending up' : 'Trending down'}</span>
                     </span>
                   )}
@@ -351,9 +352,7 @@ export default function TeacherPerformanceAnalytics() {
                               <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${
                                 ins.up ? 'text-emerald-600' : 'text-error'
                               }`}>
-                                <span className="material-symbols-outlined text-[14px]">
-                                  {ins.up ? 'arrow_upward' : 'arrow_downward'}
-                                </span>
+                                <Icon name={ins.up ? 'arrow_upward' : 'arrow_downward'} className="text-[14px]" />
                                 <span>{ins.change}%</span>
                               </span>
                             ) : (

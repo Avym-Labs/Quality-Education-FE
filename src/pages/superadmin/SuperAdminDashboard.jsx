@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import api from '../../api/axios'
+import Icon from '../../components/common/Icon'
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate()
@@ -32,7 +33,7 @@ export default function SuperAdminDashboard() {
     return (
       <DashboardLayout>
         <div className="min-h-[50vh] flex items-center justify-center">
-          <span className="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+          <Icon name="progress_activity" className="animate-spin text-primary text-4xl" />
         </div>
       </DashboardLayout>
     )
@@ -49,7 +50,7 @@ export default function SuperAdminDashboard() {
 
         {error && (
           <div className="flex items-center gap-2 p-4 bg-error-container rounded-xl text-error text-sm font-semibold">
-            <span className="material-symbols-outlined text-sm">error</span>
+            <Icon name="error" className="text-sm" />
             <span>{error}</span>
           </div>
         )}
@@ -64,9 +65,9 @@ export default function SuperAdminDashboard() {
           >
             <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 bg-primary-fixed text-primary rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">shield</span>
+                <Icon name="shield" className="text-2xl group-hover:scale-110 transition-transform" />
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              <Icon name="arrow_forward" className="text-outline group-hover:translate-x-1 transition-transform" />
             </div>
             <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">System Administrators</p>
             <h3 className="text-3xl font-extrabold text-on-surface mt-1">{stats.total_admins}</h3>
@@ -76,7 +77,7 @@ export default function SuperAdminDashboard() {
           <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/35 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 bg-secondary-container text-on-secondary-container rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-2xl">school</span>
+                <Icon name="school" className="text-2xl" />
               </div>
             </div>
             <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Active Teachers</p>
@@ -87,7 +88,7 @@ export default function SuperAdminDashboard() {
           <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/35 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 bg-tertiary-container text-on-tertiary-container rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-2xl">group</span>
+                <Icon name="group" className="text-2xl" />
               </div>
             </div>
             <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Registered Students</p>
@@ -107,13 +108,13 @@ export default function SuperAdminDashboard() {
               className="flex items-center gap-4 p-4 bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/30 rounded-2xl text-left transition-colors cursor-pointer group"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <span className="material-symbols-outlined text-lg">person_add</span>
+                <Icon name="person_add" className="text-lg" />
               </div>
               <div>
                 <p className="text-sm font-bold text-on-surface">Manage Administrators</p>
                 <p className="text-[10px] text-on-surface-variant font-semibold">Create, search, or edit system admin accounts</p>
               </div>
-              <span className="material-symbols-outlined text-outline ml-auto group-hover:translate-x-1 transition-transform">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline ml-auto group-hover:translate-x-1 transition-transform" />
             </button>
 
             {/* Action 2 */}
@@ -122,13 +123,13 @@ export default function SuperAdminDashboard() {
               className="flex items-center gap-4 p-4 bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/30 rounded-2xl text-left transition-colors cursor-pointer group"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <span className="material-symbols-outlined text-lg">credit_card</span>
+                <Icon name="credit_card" className="text-lg" />
               </div>
               <div>
                 <p className="text-sm font-bold text-on-surface">View Payments Ledger</p>
                 <p className="text-[10px] text-on-surface-variant font-semibold">Track tuition fees and invoice states</p>
               </div>
-              <span className="material-symbols-outlined text-outline ml-auto group-hover:translate-x-1 transition-transform">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline ml-auto group-hover:translate-x-1 transition-transform" />
             </button>
 
           </div>

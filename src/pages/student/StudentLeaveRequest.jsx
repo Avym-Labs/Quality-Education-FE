@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function StudentLeaveRequest() {
   const { user } = useAuth()
@@ -114,9 +115,9 @@ export default function StudentLeaveRequest() {
         <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
           <button
             onClick={() => navigate('/student/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
-            arrow_back
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -221,7 +222,7 @@ export default function StudentLeaveRequest() {
                   className="w-full py-3.5 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <span>{submitting ? 'Submitting...' : 'Submit Leave Request'}</span>
-                  <span className="material-symbols-outlined text-sm">send</span>
+                  <Icon name="send" className="text-sm" />
                 </button>
               </form>
             </div>
@@ -285,9 +286,7 @@ export default function StudentLeaveRequest() {
                               isApproved ? 'bg-emerald-100 text-emerald-800' :
                               'bg-error-container text-on-error-container'
                             }`}>
-                              <span className="material-symbols-outlined text-[9px]">
-                                {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
-                              </span>
+                              <Icon name={isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'} className="text-[9px]" />
                               <span>{item.status}</span>
                             </span>
                           </div>

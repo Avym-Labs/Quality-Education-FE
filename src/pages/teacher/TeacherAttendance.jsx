@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function TeacherAttendance() {
   const { user } = useAuth()
@@ -276,18 +277,12 @@ export default function TeacherAttendance() {
   })
 
   // =========================================================================
-  // VIEW MODE 2: MY ATTENDANCE (Personal stats & calendar states)
+  // VIEW MODE 2: LEAVE REQUESTS (teacher's own leave history)
   // =========================================================================
   const [leaves, setLeaves] = useState([])
   const [personalLoading, setPersonalLoading] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
-  const [personalStats, setPersonalStats] = useState({
-    rate: 98,
-    present: 21,
-    late: 1,
-    approvedLeaves: 2
-  })
 
   useEffect(() => {
     async function loadLeaves() {
@@ -295,15 +290,7 @@ export default function TeacherAttendance() {
       setPersonalLoading(true)
       try {
         const res = await api.get('/leave', { params: { user_id: user.id } })
-        const leaveRecords = res.data || []
-        setLeaves(leaveRecords)
-
-        const approvedCount = leaveRecords.filter(l => l.status === 'approved').length
-        setPersonalStats(prev => ({
-          ...prev,
-          approvedLeaves: approvedCount,
-          rate: Math.max(90, 100 - (approvedCount * 1.5))
-        }))
+        setLeaves(res.data || [])
       } catch (err) {
         console.error('Failed to load leaves history:', err)
       } finally {
@@ -312,6 +299,12 @@ export default function TeacherAttendance() {
     }
     loadLeaves()
   }, [user, viewMode])
+
+  // Leave Requests tab: partition the teacher's own leave history into
+  // current (pending), approved, and past (rejected) requests.
+  const currentLeaveRequests = leaves.filter(l => l.status === 'pending')
+  const approvedLeaveRequests = leaves.filter(l => l.status === 'approved')
+  const pastLeaveRequests = leaves.filter(l => l.status === 'rejected')
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -339,35 +332,6 @@ export default function TeacherAttendance() {
     }
   }
 
-  const getDayStatus = (day) => {
-    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    const dayOfWeek = new Date(currentYear, currentMonth, day).getDay()
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      return { status: 'weekend', label: 'Weekend' }
-    }
-
-    const matchedLeave = leaves.find(l => dateStr >= l.start_date && dateStr <= l.end_date)
-    if (matchedLeave) {
-      if (matchedLeave.status === 'approved') {
-        return { status: 'leave', label: `Approved Leave: ${matchedLeave.leave_type}` }
-      }
-      if (matchedLeave.status === 'pending') {
-        return { status: 'pending_request', label: 'Pending Leave Request' }
-      }
-    }
-
-    if (day === 4 || day === 18) {
-      return { status: 'late', label: 'Present - Checked in late (09:12 AM)' }
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0]
-    if (dateStr > todayStr) {
-      return { status: 'future', label: 'Scheduled Workday' }
-    }
-
-    return { status: 'present', label: 'Present - Checked in (08:24 AM)' }
-  }
-
   return (
     <DashboardLayout>
       <div className="space-y-stack-md mt-stack-sm pb-36 text-left">
@@ -375,12 +339,11 @@ export default function TeacherAttendance() {
         {/* Header Block matching mockup */}
         <section className="flex items-center justify-between pb-3.5 border-b border-outline-variant/10">
           <div className="flex items-center gap-3">
-            <span 
-              className="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform font-bold" 
+            <Icon
+              name="arrow_back"
+              className="text-primary cursor-pointer active:scale-95 transition-transform font-bold"
               onClick={() => navigate('/teacher/dashboard')}
-            >
-              arrow_back
-            </span>
+            />
             <h1 className="text-[22px] font-bold text-on-surface">Attendance</h1>
           </div>
           
@@ -390,7 +353,7 @@ export default function TeacherAttendance() {
               onClick={() => setFilterSheetOpen(true)}
               className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors border-none cursor-pointer active:scale-95 duration-100"
             >
-              <span className="material-symbols-outlined text-[20px]">tune</span>
+              <Icon name="tune" className="text-[20px]" />
             </button>
           </div>
         </section>
@@ -407,15 +370,15 @@ export default function TeacherAttendance() {
           >
             Student Attendance
           </div>
-          <div 
+          <div
             onClick={() => setViewMode('teacher')}
             className={`flex-1 text-center py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer select-none ${
-              viewMode === 'teacher' 
-                ? 'bg-gradient-to-r from-[#6351E0] to-[#DD62F2] text-white shadow-sm font-black' 
+              viewMode === 'teacher'
+                ? 'bg-gradient-to-r from-[#6351E0] to-[#DD62F2] text-white shadow-sm font-black'
                 : 'text-on-surface-variant hover:bg-surface-container-low font-semibold'
             }`}
           >
-            My Attendance
+            Leave Requests
           </div>
         </div>
 
@@ -442,15 +405,15 @@ export default function TeacherAttendance() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleShiftWeek(-7)}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                      className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
                     >
-                      chevron_left
+                      <Icon name="chevron_left" />
                     </button>
                     <button
                       onClick={() => handleShiftWeek(7)}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                      className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
                     >
-                      chevron_right
+                      <Icon name="chevron_right" />
                     </button>
                   </div>
                 </div>
@@ -496,17 +459,17 @@ export default function TeacherAttendance() {
                     {monthNames[currentMonth]} {currentYear}
                   </h3>
                   <div className="flex items-center gap-1">
-                    <button 
+                    <button
                       onClick={handlePrevMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                      className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
                     >
-                      chevron_left
+                      <Icon name="chevron_left" />
                     </button>
-                    <button 
+                    <button
                       onClick={handleNextMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
+                      className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-lg transition-all border-none bg-transparent cursor-pointer text-sm font-bold"
                     >
-                      chevron_right
+                      <Icon name="chevron_right" />
                     </button>
                   </div>
                 </div>
@@ -567,7 +530,7 @@ export default function TeacherAttendance() {
                 
                 <div className="flex items-center justify-between z-10">
                   <span className="text-[10px] uppercase tracking-widest font-black text-white/85">Attendance of</span>
-                  <span className="material-symbols-outlined text-[18px] text-white/90 animate-pulse">radio_button_checked</span>
+                  <Icon name="radio_button_checked" className="text-[18px] text-white/90 animate-pulse" />
                 </div>
                 
                 <div className="z-10 text-left">
@@ -592,9 +555,7 @@ export default function TeacherAttendance() {
 
               {/* Search filter */}
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">
-                  search
-                </span>
+                <Icon name="search" className="absolute left-3 top-2.5 text-on-surface-variant text-[20px]" />
                 <input 
                   type="text"
                   placeholder="Search student name or roll number..."
@@ -612,7 +573,7 @@ export default function TeacherAttendance() {
                 </div>
               ) : filteredStudents.length === 0 ? (
                 <div className="bg-surface-container-lowest p-8 text-center rounded-2xl border border-outline-variant/30">
-                  <span className="material-symbols-outlined text-4xl text-on-surface-variant">person_off</span>
+                  <Icon name="person_off" className="text-4xl text-on-surface-variant" />
                   <p className="text-xs text-on-surface-variant font-bold mt-2">No students found matching filters.</p>
                 </div>
               ) : (
@@ -703,7 +664,7 @@ export default function TeacherAttendance() {
                                           )}
                                           {isOnLeave && (
                                             <span className="px-1.5 py-0.5 bg-red-100 text-error text-[8px] font-black uppercase rounded-md flex items-center gap-0.5">
-                                              <span className="material-symbols-outlined text-[9px]">sick</span>
+                                              <Icon name="sick" className="text-[9px]" />
                                               <span>Leave</span>
                                             </span>
                                           )}
@@ -816,7 +777,7 @@ export default function TeacherAttendance() {
                                         )}
                                         {isOnLeave && (
                                           <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
-                                            <span className="material-symbols-outlined text-[10px]">sick</span>
+                                            <Icon name="sick" className="text-[10px]" />
                                             <span>Leave</span>
                                           </span>
                                         )}
@@ -890,170 +851,107 @@ export default function TeacherAttendance() {
         )}
 
         {/* =========================================================================
-            RENDER VIEW 2: MY ATTENDANCE
+            RENDER VIEW 2: LEAVE REQUESTS
             ========================================================================= */}
         {viewMode === 'teacher' && (
-          <div className="space-y-5 animate-fadeIn">
-            {/* Stats Bento Grid */}
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default shadow-xs">
-                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Attendance Rate</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-primary font-black">{personalStats.rate}%</span>
-                </div>
-                <p className="text-[10px] text-emerald-600 font-bold mt-1">Top 5% of Faculty</p>
+          <div className="space-y-5 animate-fadeIn max-w-2xl mx-auto w-full">
+            {personalLoading ? (
+              <div className="flex justify-center items-center py-16">
+                <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
               </div>
-
-              <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-xs border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
-                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Days Checked-In</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-on-surface font-black">{personalStats.present} Days</span>
-                </div>
-                <p className="text-[10px] text-on-surface-variant font-medium mt-1">This Semester</p>
-              </div>
-
-              <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-xs border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
-                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Late Arrivals</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-amber-500 font-black">{personalStats.late} Day</span>
-                </div>
-                <p className="text-[10px] text-on-surface-variant font-medium mt-1">Checked in after 09:00 AM</p>
-              </div>
-
-              <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-xs border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
-                <span className="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Approved Leaves</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="font-numeric-bold text-2xl text-secondary font-black">{personalStats.approvedLeaves} Days</span>
-                </div>
-                <p className="text-[10px] text-on-surface-variant font-medium mt-1">Excused absences</p>
-              </div>
-            </section>
-
-            {/* Calendar and List Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              
-              {/* Calendar View */}
-              <div className="lg:col-span-8 bg-surface-container-lowest p-5 rounded-[28px] border border-outline-variant/35 shadow-sm space-y-4">
-                <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold">
-                    {monthNames[currentMonth]} {currentYear}
-                  </h3>
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      onClick={handlePrevMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-xl transition-all border-none bg-transparent cursor-pointer text-base"
-                    >
-                      chevron_left
-                    </button>
-                    <button 
-                      onClick={handleNextMonth}
-                      className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-xl transition-all border-none bg-transparent cursor-pointer text-base"
-                    >
-                      chevron_right
-                    </button>
+            ) : (
+              <>
+                {/* Current Requests */}
+                <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-5 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon name="pending" className="text-base text-primary" />
+                      <h3 className="font-title-lg text-sm text-on-surface font-bold">Current Requests</h3>
+                    </div>
+                    <span className="text-[10px] font-bold text-primary bg-primary-container/20 px-2 py-0.5 rounded-full">{currentLeaveRequests.length}</span>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-7 gap-2 text-center text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">
-                  <span>Sun</span>
-                  <span>Mon</span>
-                  <span>Tue</span>
-                  <span>Wed</span>
-                  <span>Thu</span>
-                  <span>Fri</span>
-                  <span>Sat</span>
-                </div>
-
-                <div className="grid grid-cols-7 gap-2">
-                  {Array.from({ length: firstDayIndex }).map((_, i) => (
-                    <div key={`offset-${i}`} className="h-11 sm:h-12"></div>
-                  ))}
-                  
-                  {Array.from({ length: daysInMonth }).map((_, i) => {
-                    const dayNum = i + 1
-                    const dayObj = getDayStatus(dayNum)
-                    
-                    let colorClass = ''
-                    if (dayObj.status === 'present') colorClass = 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                    else if (dayObj.status === 'leave') colorClass = 'bg-orange-50 text-orange-800 border-orange-200'
-                    else if (dayObj.status === 'pending_request') colorClass = 'bg-amber-50 text-amber-800 border-amber-200 animate-pulse'
-                    else if (dayObj.status === 'late') colorClass = 'bg-yellow-50 text-yellow-800 border-yellow-200'
-                    else if (dayObj.status === 'weekend') colorClass = 'bg-surface-container-low text-on-surface-variant/40 border-outline-variant/10'
-                    else colorClass = 'bg-surface-container-lowest text-on-surface-variant/70 border-outline-variant/20'
-
-                    return (
-                      <div 
-                        key={`day-${dayNum}`}
-                        title={dayObj.label}
-                        className={`h-11 sm:h-12 rounded-xl border flex flex-col items-center justify-center p-1 font-numeric-bold text-xs font-bold cursor-default hover:opacity-90 active:scale-95 transition-all ${colorClass}`}
-                      >
-                        <span className="leading-none text-sm">{dayNum}</span>
-                        {dayObj.status === 'present' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1"></span>}
-                        {dayObj.status === 'leave' && <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1"></span>}
-                        {dayObj.status === 'pending_request' && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1"></span>}
-                        {dayObj.status === 'late' && <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-1"></span>}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="flex flex-wrap gap-3 pt-3 border-t border-outline-variant/15 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Present</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500"></span> Late</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500"></span> Leave</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400"></span> Pending</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-300"></span> Weekend</span>
-                </div>
-              </div>
-
-              {/* Leave Allocation Guidelines */}
-              <div className="lg:col-span-4 bg-surface-container-lowest p-5 rounded-[28px] border border-outline-variant/35 shadow-sm space-y-4 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider mb-4">Leave Allocation</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold text-on-surface-variant">
-                        <span>Casual Leaves</span>
-                        <span>10 / 12 Remaining</span>
-                      </div>
-                      <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
-                        <div className="bg-primary h-full rounded-full" style={{ width: '83%' }}></div>
-                      </div>
+                  {currentLeaveRequests.length === 0 ? (
+                    <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
+                      No pending leave requests.
                     </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold text-on-surface-variant">
-                        <span>Sick Leaves</span>
-                        <span>7 / 10 Remaining</span>
-                      </div>
-                      <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
-                        <div className="bg-secondary h-full rounded-full" style={{ width: '70%' }}></div>
-                      </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {currentLeaveRequests.map(item => (
+                        <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
+                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                              {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
+                            </span>
+                          </div>
+                          <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                        </div>
+                      ))}
                     </div>
+                  )}
+                </section>
 
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold text-on-surface-variant">
-                        <span>Maternity/Paternity Leaves</span>
-                        <span>30 / 30 Remaining</span>
-                      </div>
-                      <div className="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
-                        <div className="bg-amber-500 h-full rounded-full" style={{ width: '100%' }}></div>
-                      </div>
+                {/* Approved Requests */}
+                <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-5 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon name="check_circle" className="text-base text-emerald-600" />
+                      <h3 className="font-title-lg text-sm text-on-surface font-bold">Approved Requests</h3>
                     </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">{approvedLeaveRequests.length}</span>
                   </div>
-                </div>
+                  {approvedLeaveRequests.length === 0 ? (
+                    <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
+                      No approved leave requests.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {approvedLeaveRequests.map(item => (
+                        <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
+                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                              {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
+                            </span>
+                          </div>
+                          <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
 
-                <div className="pt-4 border-t border-outline-variant/20 space-y-2 mt-auto">
-                  <h4 className="text-[10px] uppercase font-bold text-on-surface-variant">Quick Guidelines</h4>
-                  <p className="text-[11px] text-on-surface-variant leading-relaxed font-semibold">
-                    - Leave requests must be submitted 24 hours in advance.<br />
-                    - Late check-ins are logged automatically via biometric gateway.<br />
-                    - Unexcused absences can affect performance rating metrics.
-                  </p>
-                </div>
-              </div>
-            </div>
+                {/* Past Requests */}
+                <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-5 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon name="history" className="text-base text-on-surface-variant" />
+                      <h3 className="font-title-lg text-sm text-on-surface font-bold">Past Requests</h3>
+                    </div>
+                    <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded-full">{pastLeaveRequests.length}</span>
+                  </div>
+                  {pastLeaveRequests.length === 0 ? (
+                    <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
+                      No past leave requests.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {pastLeaveRequests.map(item => (
+                        <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
+                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                              {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
+                            </span>
+                          </div>
+                          <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
           </div>
         )}
 
@@ -1079,7 +977,7 @@ export default function TeacherAttendance() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="material-symbols-outlined text-4xl text-primary/40">face</span>
+                    <Icon name="face" className="text-4xl text-primary/40" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1095,13 +993,13 @@ export default function TeacherAttendance() {
                       href={`tel:${selectedStudent.phone || '9999999999'}`}
                       className="bg-primary-container text-on-primary-container p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
                     >
-                      <span className="material-symbols-outlined text-[16px]">call</span>
+                      <Icon name="call" className="text-[16px]" />
                     </a>
                     <button 
                       onClick={handleStartChat}
                       className="bg-emerald-100 text-emerald-700 p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center border-none cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-[16px]">chat</span>
+                      <Icon name="chat" className="text-[16px]" />
                     </button>
                   </div>
                 </div>
@@ -1186,11 +1084,11 @@ export default function TeacherAttendance() {
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10">
                 <h3 className="text-base font-black text-on-surface">Filter</h3>
-                <button 
+                <button
                   onClick={() => setFilterSheetOpen(false)}
-                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-1.5 rounded-full border-none bg-transparent cursor-pointer active:scale-95"
+                  className="text-on-surface-variant hover:bg-surface-container-low p-1.5 rounded-full border-none bg-transparent cursor-pointer active:scale-95"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 

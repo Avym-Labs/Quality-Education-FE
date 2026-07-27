@@ -1,12 +1,15 @@
+import Icon from './Icon'
+
 export default function Input({ label, icon, type = 'text', placeholder, value, onChange, error, className = '', ...props }) {
   return (
     <div className={`space-y-base ${className}`}>
       {label && <label className="text-label-md text-on-surface-variant ml-1 block">{label}</label>}
       <div className="relative group">
         {icon && (
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">
-            {icon}
-          </span>
+          <Icon
+            name={icon}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
+          />
         )}
         <input
           type={type}

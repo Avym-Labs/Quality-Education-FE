@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function StudentResultReport() {
   const { user } = useAuth()
@@ -58,16 +59,15 @@ export default function StudentResultReport() {
       <header className="bg-surface shadow-sm w-full sticky top-0 z-40 -mx-container-padding-mobile px-container-padding-mobile">
         <div className="flex items-center justify-between h-16 w-full max-w-5xl mx-auto">
           <div className="flex items-center gap-4">
-            <span 
-              className="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform" 
+            <Icon
+              name="arrow_back"
+              className="text-primary cursor-pointer active:scale-95 transition-transform"
               onClick={() => navigate('/student/dashboard')}
-            >
-              arrow_back
-            </span>
+            />
             <h1 className="font-title-lg text-title-lg text-primary font-bold">Student Performance</h1>
           </div>
-          <button className="material-symbols-outlined text-primary p-2 hover:bg-surface-container rounded-full transition-colors">
-            more_vert
+          <button className="text-primary p-2 hover:bg-surface-container rounded-full transition-colors">
+            <Icon name="more_vert" />
           </button>
         </div>
       </header>
@@ -77,7 +77,7 @@ export default function StudentResultReport() {
         {/* Search Bar */}
         <section className="w-full">
           <div className="relative group">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+            <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
             <input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -161,28 +161,28 @@ export default function StudentResultReport() {
             {/* Summary Cards Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
-                <span className="material-symbols-outlined text-primary mb-2">analytics</span>
+                <Icon name="analytics" className="text-primary mb-2" />
                 <p className="text-on-surface-variant text-xs font-semibold">Avg Marks</p>
                 <h3 className="font-bold text-lg">{avgMarks}%</h3>
                 <p className="text-green-600 text-[10px] font-bold">+2.4% vs last mo</p>
               </div>
 
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
-                <span className="material-symbols-outlined text-primary mb-2">military_tech</span>
+                <Icon name="military_tech" className="text-primary mb-2" />
                 <p className="text-on-surface-variant text-xs font-semibold">Highest</p>
                 <h3 className="font-bold text-lg">{highestScore}%</h3>
                 <p className="text-on-surface-variant text-[10px]">Recent High</p>
               </div>
 
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
-                <span className="material-symbols-outlined text-primary mb-2">leaderboard</span>
+                <Icon name="leaderboard" className="text-primary mb-2" />
                 <p className="text-on-surface-variant text-xs font-semibold">Rank</p>
                 <h3 className="font-bold text-lg">{currentRank}</h3>
                 <p className="text-on-surface-variant text-[10px]">{rankPercentile}</p>
               </div>
 
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
-                <span className="material-symbols-outlined text-primary mb-2">history_edu</span>
+                <Icon name="history_edu" className="text-primary mb-2" />
                 <p className="text-on-surface-variant text-xs font-semibold">Total Tests</p>
                 <h3 className="font-bold text-lg">{totalTests || 12}</h3>
                 <p className="text-on-surface-variant text-[10px]">Academic Year 2026</p>
@@ -268,7 +268,7 @@ export default function StudentResultReport() {
             
             <div className="bg-primary-fixed p-4 rounded-xl mt-4 border border-primary-container">
               <div className="flex gap-2">
-                <span className="material-symbols-outlined text-primary">insights</span>
+                <Icon name="insights" className="text-primary" />
                 <p className="text-[12px] font-semibold text-on-primary-fixed-variant leading-tight">
                   You excel in conceptual calculations but show a slight plateau in geometric spatial reasoning. Focus on geometric proofs.
                 </p>
@@ -279,9 +279,7 @@ export default function StudentResultReport() {
           {/* Topper Section Highlight */}
           <div className="lg:col-span-1 bg-gradient-to-br from-primary to-secondary rounded-[24px] p-6 shadow-lg text-on-primary relative overflow-hidden flex flex-col justify-between">
             <div className="absolute -right-4 -top-4 opacity-20">
-              <span className="material-symbols-outlined text-[120px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                workspace_premium
-              </span>
+              <Icon name="workspace_premium" className="text-[120px]" filled />
             </div>
             <div className="relative z-10 space-y-4">
               <div>
@@ -298,7 +296,7 @@ export default function StudentResultReport() {
               </div>
             </div>
             <div className="inline-flex items-center gap-2 bg-on-primary/20 backdrop-blur-md rounded-full px-4 py-1 self-start mt-4 relative z-10">
-              <span className="material-symbols-outlined text-sm">stars</span>
+              <Icon name="stars" className="text-sm" />
               <span className="text-xs font-bold uppercase tracking-wider">RANK #1</span>
             </div>
           </div>
@@ -390,14 +388,14 @@ export default function StudentResultReport() {
             onClick={() => window.print()}
             className="flex items-center justify-center gap-2 bg-surface-container-highest text-on-surface px-6 py-3 rounded-full font-semibold text-sm hover:bg-surface-dim transition-all active:scale-95 cursor-pointer"
           >
-            <span className="material-symbols-outlined">file_download</span>
+            <Icon name="file_download" />
             Download Excel
           </button>
           <button 
             onClick={() => window.print()}
             className="flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-3 rounded-full font-semibold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 cursor-pointer"
           >
-            <span className="material-symbols-outlined">picture_as_pdf</span>
+            <Icon name="picture_as_pdf" />
             Download PDF Report
           </button>
         </section>

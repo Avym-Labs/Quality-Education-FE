@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import { useAuth } from '../../context/AuthContext'
+import Icon from '../common/Icon'
 
 // Shared submenu shown under "Academics" for every role, mirrors the tabs inside AcademicsHub
 const ACADEMICS_SUBITEMS = [
@@ -13,11 +14,17 @@ const ACADEMICS_SUBITEMS = [
   { icon: 'calendar_today', label: 'Lecture Calendar', tab: 'schedules' },
 ]
 
+// Student/teacher also get Homework as an Academics tab; admin never had a
+// standalone Homework nav item so keeps the plain submenu above.
+const ACADEMICS_SUBITEMS_WITH_HOMEWORK = [
+  ...ACADEMICS_SUBITEMS,
+  { icon: 'assignment', label: 'Homework', tab: 'homework' },
+]
+
 const SIDEBAR_ITEMS = {
   student: [
     { icon: 'home', label: 'Home', path: '/student/dashboard' },
-    { icon: 'school', label: 'Academics', path: '/student/academics', children: ACADEMICS_SUBITEMS },
-    { icon: 'assignment', label: 'Homework', path: '/student/homework' },
+    { icon: 'school', label: 'Academics', path: '/student/academics', children: ACADEMICS_SUBITEMS_WITH_HOMEWORK },
     { icon: 'event_busy', label: 'Leave', path: '/student/leave' },
     { icon: 'chat', label: 'Chat', path: '/student/chat' },
     { icon: 'person', label: 'Account', path: '/student/settings' },
@@ -25,8 +32,7 @@ const SIDEBAR_ITEMS = {
   teacher: [
     { icon: 'home', label: 'Home', path: '/teacher/dashboard' },
     { icon: 'calendar_today', label: 'Attendance', path: '/teacher/attendance' },
-    { icon: 'assignment', label: 'Homework', path: '/teacher/homework' },
-    { icon: 'school', label: 'Academics', path: '/teacher/academics', children: ACADEMICS_SUBITEMS },
+    { icon: 'school', label: 'Academics', path: '/teacher/academics', children: ACADEMICS_SUBITEMS_WITH_HOMEWORK },
     { icon: 'chat', label: 'Chat', path: '/teacher/chat' },
     { icon: 'person', label: 'Account', path: '/teacher/settings' },
   ],
@@ -76,7 +82,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
           {/* Logo / Header */}
           <div className="flex items-center gap-3 px-2 py-1 cursor-pointer" onClick={() => navigate(`/${role}/dashboard`)}>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6351E0] to-[#DD62F2] flex items-center justify-center text-white shadow-md">
-              <span className="material-symbols-outlined text-[20px] font-black">school</span>
+              <Icon name="school" className="text-[20px]" />
             </div>
             <div className="text-left">
               <h2 className="text-base font-black text-on-surface tracking-tight">Educore</h2>
@@ -101,7 +107,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
                         : 'text-on-surface-variant hover:bg-surface-container-low font-semibold'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                    <Icon name={icon} className="text-[18px]" />
                     <span>{label}</span>
                   </NavLink>
                 )
@@ -119,13 +125,12 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
                         : 'bg-transparent text-on-surface-variant hover:bg-surface-container-low font-semibold'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                    <Icon name={icon} className="text-[18px]" />
                     <span className="flex-1 text-left">{label}</span>
-                    <span
-                      className={`material-symbols-outlined text-[16px] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                    >
-                      expand_more
-                    </span>
+                    <Icon
+                      name="expand_more"
+                      className={`text-[16px] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                    />
                   </button>
 
                   {isExpanded && (
@@ -142,7 +147,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
                                 : 'text-on-surface-variant hover:bg-surface-container-low font-semibold'
                             }`}
                           >
-                            <span className="material-symbols-outlined text-[15px]">{child.icon}</span>
+                            <Icon name={child.icon} className="text-[15px]" />
                             <span>{child.label}</span>
                           </NavLink>
                         )
@@ -181,7 +186,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
             onClick={logout}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-error/10 hover:bg-error/15 text-error font-bold text-xs border-none cursor-pointer active:scale-95 transition-all"
           >
-            <span className="material-symbols-outlined text-[16px]">logout</span>
+            <Icon name="logout" className="text-[16px]" />
             <span>Sign Out</span>
           </button>
         </div>

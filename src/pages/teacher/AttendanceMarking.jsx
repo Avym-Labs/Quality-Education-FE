@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function AttendanceMarking() {
   const { user } = useAuth()
@@ -185,9 +186,9 @@ export default function AttendanceMarking() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/teacher/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -275,9 +276,7 @@ export default function AttendanceMarking() {
         {/* Search Bar */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">
-              search
-            </span>
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" />
             <input 
               type="text"
               placeholder="Search student name or roll number..."
@@ -296,7 +295,7 @@ export default function AttendanceMarking() {
           </div>
         ) : filteredStudents.length === 0 ? (
           <div className="bg-surface-container-lowest p-8 text-center rounded-2xl border border-outline-variant/30">
-            <span className="material-symbols-outlined text-4xl text-on-surface-variant">person_off</span>
+            <Icon name="person_off" className="text-4xl text-on-surface-variant" />
             <p className="text-xs text-on-surface-variant font-bold mt-2">No students found matching filters.</p>
           </div>
         ) : (
@@ -404,12 +403,12 @@ export default function AttendanceMarking() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="material-symbols-outlined text-4xl text-primary/40">face</span>
+                    <Icon name="face" className="text-4xl text-primary/40" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="inline-flex items-center gap-1 bg-error-container text-on-error-container px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase mb-1.5">
-                    <span className="material-symbols-outlined text-[10px]">warning</span>
+                    <Icon name="warning" className="text-[10px]" />
                     <span>Needs Attention</span>
                   </div>
                   <h3 className="font-headline-lg-mobile text-base text-on-surface font-bold truncate">
@@ -425,13 +424,13 @@ export default function AttendanceMarking() {
                       href={`tel:${selectedStudent.phone || '9999999999'}`}
                       className="bg-primary-container text-on-primary-container p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
                     >
-                      <span className="material-symbols-outlined text-[16px]">call</span>
+                      <Icon name="call" className="text-[16px]" />
                     </a>
                     <button 
                       onClick={handleStartChat}
                       className="bg-emerald-100 text-emerald-700 p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
                     >
-                      <span className="material-symbols-outlined text-[16px]">chat</span>
+                      <Icon name="chat" className="text-[16px]" />
                     </button>
                   </div>
                 </div>
@@ -465,7 +464,7 @@ export default function AttendanceMarking() {
                     <span className="text-xl font-numeric-bold text-on-surface font-bold">
                       {studentStats ? studentStats.average_score : 'N/A'}
                     </span>
-                    <span className="material-symbols-outlined text-emerald-500 text-[18px]">trending_up</span>
+                    <Icon name="trending_up" className="text-emerald-500 text-[18px]" />
                   </div>
                   <p className="text-[10px] text-on-surface-variant font-medium mt-2">
                     Tests Uploaded: {studentStats ? studentStats.total_tests : 0}

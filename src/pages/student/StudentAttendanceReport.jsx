@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function StudentAttendanceReport() {
   const { user } = useAuth()
@@ -63,12 +64,11 @@ export default function StudentAttendanceReport() {
       <header className="bg-surface shadow-sm w-full sticky top-0 z-40 -mx-container-padding-mobile px-container-padding-mobile">
         <div className="flex items-center justify-between h-16 w-full max-w-5xl mx-auto">
           <div className="flex items-center gap-4">
-            <span 
-              className="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform"
+            <Icon
+              name="arrow_back"
+              className="text-primary cursor-pointer active:scale-95 transition-transform"
               onClick={() => navigate('/student/attendance')}
-            >
-              arrow_back
-            </span>
+            />
             <h1 className="font-title-lg text-title-lg text-primary font-bold">Reports Center</h1>
           </div>
           <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden">
@@ -131,7 +131,7 @@ export default function StudentAttendanceReport() {
                 onClick={() => window.print()}
                 className="bg-primary text-on-primary px-6 py-3 rounded-full font-semibold text-sm hover:shadow-lg transition-shadow flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-[20px]">download</span> Export Report
+                <Icon name="download" className="text-[20px]" /> Export Report
               </button>
             </div>
           </div>
@@ -159,7 +159,7 @@ export default function StudentAttendanceReport() {
           </div>
 
           <div className="relative w-full">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant" />
             <input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

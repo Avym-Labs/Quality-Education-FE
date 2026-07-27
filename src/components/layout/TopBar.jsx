@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import Icon from '../common/Icon'
 
 export default function TopBar({ onNotificationClick }) {
   const { user, logout } = useAuth()
@@ -84,9 +85,7 @@ export default function TopBar({ onNotificationClick }) {
             </h1>
             {role === 'student' && (
               <div className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm text-[9px] font-bold shrink-0">
-                <span className="material-symbols-outlined text-[10px] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  stars
-                </span>
+                <Icon name="stars" className="text-[10px] animate-pulse" filled />
                 <span>{tier}</span>
               </div>
             )}
@@ -106,9 +105,9 @@ export default function TopBar({ onNotificationClick }) {
         <div className="relative">
           <button
             onClick={() => onNotificationClick ? onNotificationClick() : navigate(`/${role}/notifications`)}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 cursor-pointer"
+            className="text-primary hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 cursor-pointer"
           >
-            notifications
+            <Icon name="notifications" />
           </button>
           
           {unreadCount > 0 && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 const AVAILABLE_CLASSES = ['9-A', '9-B', '9-C', '10-A', '10-B', '10-C', '11-A', '11-B', '11-C', '12-A', '12-B', '12-C']
 const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Literature', 'Biology', 'History']
@@ -262,9 +263,7 @@ export default function TeacherManagement() {
         {/* Header Controls */}
         <section className="flex flex-col md:flex-row md:items-center justify-between gap-gutter">
           <div className="relative flex-1 max-w-2xl group">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">
-              search
-            </span>
+            <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
             <input 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -285,7 +284,7 @@ export default function TeacherManagement() {
               onClick={handleOpenCreateModal}
               className="flex items-center gap-2 px-6 py-3 bg-secondary text-on-secondary rounded-xl font-bold hover:bg-opacity-95 transition-all active:scale-95 duration-200 font-label-md text-label-md"
             >
-              <span className="material-symbols-outlined">add</span>
+              <Icon name="add" />
               <span>Add New Teacher</span>
             </button>
           </div>
@@ -299,7 +298,7 @@ export default function TeacherManagement() {
               <h2 className="font-headline-lg text-display-lg text-on-primary-container mt-1 font-bold">{totalFacultyCount}</h2>
             </div>
             <div className="flex items-center gap-1 text-on-primary-container/70">
-              <span className="material-symbols-outlined text-sm">trending_up</span>
+              <Icon name="trending_up" className="text-sm" />
               <span className="text-[10px] font-semibold">+2 this month</span>
             </div>
           </div>
@@ -368,7 +367,7 @@ export default function TeacherManagement() {
                         onClick={() => setMenuOpenId(menuOpenId === teacher.id ? null : teacher.id)}
                         className="text-outline hover:text-primary transition-colors p-1"
                       >
-                        <span className="material-symbols-outlined">more_vert</span>
+                        <Icon name="more_vert" />
                       </button>
                       {menuOpenId === teacher.id && (
                         <div className="absolute right-0 top-8 w-28 bg-surface-container-lowest shadow-lg rounded-xl border border-outline-variant z-10 py-1.5 animate-fadeIn">
@@ -429,7 +428,7 @@ export default function TeacherManagement() {
                 <div>
                   <div className="flex items-center justify-between py-3 border-t border-outline-variant/20 mt-4">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-outline text-lg">group</span>
+                      <Icon name="group" className="text-outline text-lg" />
                       <span className="font-label-md text-[11px] text-on-surface-variant font-semibold">Student Load</span>
                     </div>
                     <span className="font-numeric-bold text-xs font-bold text-primary">
@@ -442,21 +441,21 @@ export default function TeacherManagement() {
                       onClick={() => handleOpenViewModal(teacher)}
                       className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all text-on-surface-variant"
                     >
-                      <span className="material-symbols-outlined text-base">visibility</span>
+                      <Icon name="visibility" className="text-base" />
                       <span className="text-[8px] font-bold uppercase tracking-wider">View</span>
                     </button>
                     <button 
                       onClick={() => handleOpenEditModal(teacher)}
                       className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all text-on-surface-variant"
                     >
-                      <span className="material-symbols-outlined text-base">edit</span>
+                      <Icon name="edit" className="text-base" />
                       <span className="text-[8px] font-bold uppercase tracking-wider">Edit</span>
                     </button>
                     <button 
                       onClick={() => handleOpenEditModal(teacher)}
                       className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-surface-container-low hover:bg-primary-container hover:text-on-primary-container transition-all text-on-surface-variant"
                     >
-                      <span className="material-symbols-outlined text-base">assignment_ind</span>
+                      <Icon name="assignment_ind" className="text-base" />
                       <span className="text-[8px] font-bold uppercase tracking-wider">Assign</span>
                     </button>
                   </div>
@@ -470,7 +469,7 @@ export default function TeacherManagement() {
               className="border-2 border-dashed border-outline-variant rounded-[24px] flex flex-col items-center justify-center p-stack-lg bg-surface-container-low/50 hover:bg-surface-container-low transition-all group cursor-pointer min-h-[260px]"
             >
               <div className="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined text-primary text-2xl">person_add</span>
+                <Icon name="person_add" className="text-primary text-2xl" />
               </div>
               <h4 className="font-title-lg text-sm text-on-surface font-bold">Expand Faculty</h4>
               <p className="font-body-md text-xs text-on-surface-variant text-center px-4 mt-1">
@@ -496,9 +495,9 @@ export default function TeacherManagement() {
                 </h3>
                 <button 
                   onClick={() => setModalOpen(false)}
-                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
+                  className="text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -683,7 +682,9 @@ export default function TeacherManagement() {
                         {formData.qualifications.map((q, idx) => (
                           <span key={idx} className="bg-surface-container-high px-2.5 py-1 rounded-lg text-xs font-semibold text-on-surface flex items-center gap-1.5">
                             {q}
-                            <button type="button" onClick={() => handleRemoveQualification(idx)} className="material-symbols-outlined text-sm text-error hover:bg-error-container hover:rounded-full">close</button>
+                            <button type="button" onClick={() => handleRemoveQualification(idx)} className="text-sm text-error hover:bg-error-container hover:rounded-full">
+                              <Icon name="close" />
+                            </button>
                           </span>
                         ))}
                       </div>
@@ -772,9 +773,9 @@ export default function TeacherManagement() {
                 </h3>
                 <button 
                   onClick={() => setCredsModalOpen(false)}
-                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
+                  className="text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 

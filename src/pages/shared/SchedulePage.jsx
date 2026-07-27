@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function SchedulePage({ embed = false }) {
   const { user } = useAuth()
@@ -296,9 +297,9 @@ export default function SchedulePage({ embed = false }) {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate(`/${role}/dashboard`)}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -328,13 +329,13 @@ export default function SchedulePage({ embed = false }) {
         {/* Notifications alerts banner */}
         {success && (
           <div className="p-3 bg-green-50 text-green-800 rounded-xl text-xs font-bold flex items-center gap-2 mb-2 animate-fadeIn border border-green-200">
-            <span className="material-symbols-outlined text-xs">check_circle</span>
+            <Icon name="check_circle" className="text-xs" />
             <span>{success}</span>
           </div>
         )}
         {error && (
           <div className="p-3 bg-error-container text-error rounded-xl text-xs font-bold flex items-center gap-2 mb-2 animate-fadeIn border border-error/20">
-            <span className="material-symbols-outlined text-xs">error</span>
+            <Icon name="error" className="text-xs" />
             <span>{error}</span>
           </div>
         )}
@@ -354,13 +355,13 @@ export default function SchedulePage({ embed = false }) {
                   onClick={handlePrevMonth}
                   className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
                 >
-                  <span className="material-symbols-outlined text-sm">chevron_left</span>
+                  <Icon name="chevron_left" className="text-sm" />
                 </button>
                 <button
                   onClick={handleNextMonth}
                   className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
                 >
-                  <span className="material-symbols-outlined text-sm">chevron_right</span>
+                  <Icon name="chevron_right" className="text-sm" />
                 </button>
               </div>
             </div>
@@ -435,7 +436,7 @@ export default function SchedulePage({ embed = false }) {
                     onClick={handleOpenCreateModal}
                     className="flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary rounded-xl text-[10px] font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-xs">add</span>
+                    <Icon name="add" className="text-xs" />
                     <span>Add Event</span>
                   </button>
                 )}
@@ -472,17 +473,17 @@ export default function SchedulePage({ embed = false }) {
                           <div className="flex gap-1 pt-1.5 border-t border-outline-variant/10 w-full justify-end">
                             <button
                               onClick={() => handleOpenEditModal(ev)}
-                              className="material-symbols-outlined text-xs p-1 rounded-md text-outline hover:bg-surface-container hover:text-on-surface cursor-pointer border-none bg-transparent"
+                              className="text-xs p-1 rounded-md text-outline hover:bg-surface-container hover:text-on-surface cursor-pointer border-none bg-transparent"
                               title="Edit Event"
                             >
-                              edit
+                              <Icon name="edit" />
                             </button>
                             <button
                               onClick={() => handleDelete(ev.id)}
-                              className="material-symbols-outlined text-xs p-1 rounded-md text-error hover:bg-red-50 cursor-pointer border-none bg-transparent"
+                              className="text-xs p-1 rounded-md text-error hover:bg-red-50 cursor-pointer border-none bg-transparent"
                               title="Delete Event"
                             >
-                              delete
+                              <Icon name="delete" />
                             </button>
                           </div>
                         )}
@@ -494,7 +495,7 @@ export default function SchedulePage({ embed = false }) {
             </div>
             
             <div className="text-[8px] text-outline font-semibold uppercase tracking-wider text-center border-t border-outline-variant/15 pt-3 mt-4 flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-xs text-primary">calendar_today</span>
+              <Icon name="calendar_today" className="text-xs text-primary" />
               <span>All schedule edits notify the class student list matches to grade subject.</span>
             </div>
           </div>
@@ -519,20 +520,20 @@ export default function SchedulePage({ embed = false }) {
                     onClick={handleToolbarPrev}
                     className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
                   >
-                    <span className="material-symbols-outlined text-sm">chevron_left</span>
+                    <Icon name="chevron_left" className="text-sm" />
                   </button>
                   <button
                     onClick={handleToolbarNext}
                     className="w-8 h-8 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
                   >
-                    <span className="material-symbols-outlined text-sm">chevron_right</span>
+                    <Icon name="chevron_right" className="text-sm" />
                   </button>
                   <h3 className="text-sm font-black text-on-surface ml-1">{toolbarLabel}</h3>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    <span className="material-symbols-outlined text-outline text-sm absolute left-3 top-1/2 -translate-y-1/2">search</span>
+                    <Icon name="search" className="text-outline text-sm absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
@@ -545,7 +546,7 @@ export default function SchedulePage({ embed = false }) {
                       onClick={handleOpenCreateModal}
                       className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-sm">add</span>
+                      <Icon name="add" className="text-sm" />
                       <span>Create New Record</span>
                     </button>
                   )}
@@ -715,14 +716,14 @@ export default function SchedulePage({ embed = false }) {
                       onClick={handlePrevMonth}
                       className="w-7 h-7 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
                     >
-                      <span className="material-symbols-outlined text-xs">chevron_left</span>
+                      <Icon name="chevron_left" className="text-xs" />
                     </button>
                     <h4 className="text-[11px] font-black uppercase text-on-surface">{monthNames[month]} {year}</h4>
                     <button
                       onClick={handleNextMonth}
                       className="w-7 h-7 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center border-none cursor-pointer text-on-surface"
                     >
-                      <span className="material-symbols-outlined text-xs">chevron_right</span>
+                      <Icon name="chevron_right" className="text-xs" />
                     </button>
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-center">
@@ -812,7 +813,7 @@ export default function SchedulePage({ embed = false }) {
                   onClick={() => setModalOpen(false)}
                   className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border-none cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-sm">close</span>
+                  <Icon name="close" className="text-sm" />
                 </button>
               </div>
 

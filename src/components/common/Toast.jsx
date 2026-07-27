@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import Icon from './Icon'
 
 const icons = { success: 'check_circle', error: 'error', info: 'info', warning: 'warning' }
 const colors = {
@@ -20,11 +21,11 @@ export default function Toast({ message, type = 'info', onClose, duration = 3000
 
   return (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl border shadow-lg max-w-sm w-full mx-4 ${colors[type]}`}>
-      <span className={`material-symbols-outlined text-xl ${iconColors[type]}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-        {icons[type]}
-      </span>
+      <Icon name={icons[type]} className={`text-xl ${iconColors[type]}`} filled />
       <span className="text-label-md font-medium flex-1">{message}</span>
-      <button onClick={onClose} className="material-symbols-outlined text-base opacity-60 hover:opacity-100">close</button>
+      <button onClick={onClose} className="opacity-60 hover:opacity-100">
+        <Icon name="close" className="text-base" />
+      </button>
     </div>
   )
 }

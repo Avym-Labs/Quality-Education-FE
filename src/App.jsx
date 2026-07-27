@@ -25,6 +25,7 @@ import AttendanceMarking from './pages/teacher/AttendanceMarking'
 import HomeworkAssignment from './pages/teacher/HomeworkAssignment'
 import TestPerformanceAnalytics from './pages/teacher/TestPerformanceAnalytics'
 import LeaveRequest from './pages/teacher/LeaveRequest'
+import ManageStudents from './pages/teacher/ManageStudents'
 import TeacherResults from './pages/teacher/TeacherResults'
 import TeacherReports from './pages/teacher/TeacherReports'
 
@@ -93,6 +94,7 @@ function App() {
             <Route path="results" element={<AcademicsHub />} />
             <Route path="reports" element={<AcademicsHub />} />
             <Route path="leave" element={<LeaveRequest />} />
+            <Route path="manage-students" element={<ManageStudents />} />
             <Route path="chat" element={<ChatList />} />
             <Route path="chat/:conversationId" element={<ChatConversation />} />
             <Route path="notifications" element={<NotificationCenter />} />

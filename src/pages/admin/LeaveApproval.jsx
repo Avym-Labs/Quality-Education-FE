@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function LeaveApproval() {
   const [leaves, setLeaves] = useState([])
@@ -140,7 +141,7 @@ export default function LeaveApproval() {
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Leave Approvals</h2>
           </div>
-          <span className="material-symbols-outlined text-primary text-2xl">pending_actions</span>
+          <Icon name="pending_actions" className="text-primary text-2xl" />
         </section>
 
         {error && (
@@ -282,11 +283,10 @@ export default function LeaveApproval() {
                     ) : (
                       /* Display resolved stamp */
                       <div className="mt-4 flex items-center justify-end gap-1.5 text-xs font-bold">
-                        <span className={`material-symbols-outlined text-sm ${
-                          request.status === 'approved' ? 'text-green-600' : 'text-error'
-                        }`}>
-                          {request.status === 'approved' ? 'check_circle' : 'cancel'}
-                        </span>
+                        <Icon
+                          name={request.status === 'approved' ? 'check_circle' : 'cancel'}
+                          className={`text-sm ${request.status === 'approved' ? 'text-green-600' : 'text-error'}`}
+                        />
                         <span className={request.status === 'approved' ? 'text-green-700' : 'text-error'}>
                           {request.status === 'approved' ? 'Approved' : 'Rejected'}
                         </span>
@@ -298,7 +298,7 @@ export default function LeaveApproval() {
               })
             ) : (
               <div className="bg-surface-container-low border border-outline-variant/20 rounded-3xl p-10 text-center text-on-surface-variant text-sm flex flex-col items-center gap-3">
-                <span className="material-symbols-outlined text-4xl text-outline">inbox</span>
+                <Icon name="inbox" className="text-4xl text-outline" />
                 <p className="font-semibold">No leave requests in this category.</p>
                 <p className="text-xs">All caught up with institutional leave approvals!</p>
               </div>

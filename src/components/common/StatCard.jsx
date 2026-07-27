@@ -1,3 +1,5 @@
+import Icon from './Icon'
+
 export default function StatCard({ icon, label, value, badge, accent = 'primary', filled = false }) {
   const accents = {
     primary: {
@@ -26,9 +28,7 @@ export default function StatCard({ icon, label, value, badge, accent = 'primary'
       <div className={`absolute -right-4 -top-4 w-24 h-24 ${a.blob} opacity-10 rounded-full group-hover:scale-110 transition-transform duration-500`} />
       <div className="flex justify-between items-start mb-4">
         <div className={`w-10 h-10 rounded-xl ${a.iconBg} flex items-center justify-center`}>
-          <span className={`material-symbols-outlined ${a.iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-            {icon}
-          </span>
+          <Icon name={icon} className={a.iconColor} filled />
         </div>
         {badge && (
           <span className={`text-xs font-bold px-2 py-1 rounded ${a.badge}`}>{badge}</span>

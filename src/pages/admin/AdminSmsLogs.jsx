@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function AdminSmsLogs() {
   const navigate = useNavigate()
@@ -73,9 +74,9 @@ export default function AdminSmsLogs() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/admin/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200 border-none bg-transparent cursor-pointer"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200 border-none bg-transparent cursor-pointer"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -92,7 +93,7 @@ export default function AdminSmsLogs() {
             onClick={loadSmsLogs}
             className="flex items-center gap-1.5 px-4 py-2 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-colors shadow-xs active:scale-95 duration-100 cursor-pointer select-none"
           >
-            <span className="material-symbols-outlined text-sm">refresh</span>
+            <Icon name="refresh" className="text-sm" />
             <span>Refresh Logs</span>
           </button>
         </section>
@@ -100,9 +101,7 @@ export default function AdminSmsLogs() {
         {/* Filter Toolbar */}
         <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">
-              search
-            </span>
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" />
             <input 
               type="text"
               placeholder="Search by phone, recipient, content, or sender..."
@@ -138,7 +137,7 @@ export default function AdminSmsLogs() {
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="bg-surface-container-lowest p-12 text-center rounded-2xl border border-outline-variant/30 shadow-xs">
-            <span className="material-symbols-outlined text-4xl text-outline">sms_failed</span>
+            <Icon name="sms_failed" className="text-4xl text-outline" />
             <p className="text-xs text-outline font-bold mt-2">No SMS logs match active search filters.</p>
           </div>
         ) : (

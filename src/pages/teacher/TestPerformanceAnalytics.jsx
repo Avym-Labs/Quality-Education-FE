@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function TestPerformanceAnalytics() {
   const { user } = useAuth()
@@ -221,9 +222,9 @@ export default function TestPerformanceAnalytics() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/teacher/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -386,7 +387,7 @@ export default function TestPerformanceAnalytics() {
                               <p className="font-label-md text-xs font-bold text-on-surface">{student.full_name}</p>
                               {data.status === 'saved' ? (
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
-                                  <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                  <Icon name="check_circle" className="text-[10px]" filled />
                                   <span>Saved</span>
                                 </span>
                               ) : (
@@ -420,12 +421,7 @@ export default function TestPerformanceAnalytics() {
                                 data.remarks ? 'text-primary' : 'text-outline hover:text-primary'
                               }`}
                             >
-                              <span 
-                                className="material-symbols-outlined text-[20px]"
-                                style={{ fontVariationSettings: data.remarks ? "'FILL' 1" : "'FILL' 0" }}
-                              >
-                                chat_bubble
-                              </span>
+                              <Icon name="chat_bubble" className="text-[20px]" filled={!!data.remarks} />
                             </button>
                           </td>
                         </tr>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import loginIllustration from '../../assets/login_illustration.png'
+import Icon from '../../components/common/Icon'
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('')
@@ -60,7 +61,7 @@ export default function LoginPage() {
           <div className="w-full max-w-sm flex flex-col items-center gap-3.5 relative z-10">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-1">
-              <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <Icon name="school" className="text-primary text-5xl" filled />
               <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
             </div>
             
@@ -87,7 +88,7 @@ export default function LoginPage() {
         <div className="p-container-padding-mobile md:p-stack-lg lg:p-16 flex flex-col justify-center">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-stack-lg">
-            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+            <Icon name="school" className="text-primary text-3xl" filled />
             <span className="text-headline-lg-mobile font-bold text-primary tracking-tight">EduCore</span>
           </div>
 
@@ -105,7 +106,7 @@ export default function LoginPage() {
                 Email or Mobile
               </label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
+                <Icon name="person" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
                 <input
                   id="identifier"
                   type="text"
@@ -124,7 +125,7 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                <Icon name="lock" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -139,7 +140,7 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
                 >
-                  <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                  <Icon name={showPassword ? 'visibility_off' : 'visibility'} />
                 </button>
               </div>
             </div>
@@ -167,7 +168,7 @@ export default function LoginPage() {
             {/* Error */}
             {error && (
               <div className="flex items-center gap-2 p-3 bg-error-container rounded-xl">
-                <span className="material-symbols-outlined text-error text-sm">error</span>
+                <Icon name="error" className="text-error text-sm" />
                 <span className="text-label-md text-error">{error}</span>
               </div>
             )}
@@ -179,11 +180,11 @@ export default function LoginPage() {
               className="w-full bg-primary text-on-primary py-4 rounded-xl text-title-lg font-bold shadow-lg hover:bg-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-stack-md disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                <Icon name="progress_activity" className="animate-spin" />
               ) : (
                 <>
                   <span>Login</span>
-                  <span className="material-symbols-outlined">arrow_forward</span>
+                  <Icon name="arrow_forward" />
                 </>
               )}
             </button>

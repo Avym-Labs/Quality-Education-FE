@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import ConversationSidebar from '../../components/chat/ConversationSidebar'
+import Icon from '../../components/common/Icon'
 
 export default function ChatList() {
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function ChatList() {
         {/* Right Pane: Conversation active room placeholder (hidden on mobile, visible on desktop) */}
         <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 bg-[#F5F3FB] text-outline space-y-3.5">
           <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center text-primary shadow-inner">
-            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 0" }}>forum</span>
+            <Icon name="forum" className="text-3xl" />
           </div>
           <div className="text-center max-w-sm space-y-1">
             <h3 className="text-sm font-bold text-on-surface">Your Direct Messages</h3>

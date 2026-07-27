@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function StudentAttendanceDetails() {
   const { user } = useAuth()
@@ -61,16 +62,15 @@ export default function StudentAttendanceDetails() {
       <header className="w-full sticky top-0 bg-surface dark:bg-surface-dim shadow-sm z-40 -mx-container-padding-mobile px-container-padding-mobile">
         <div className="flex items-center justify-between h-16 w-full max-w-5xl mx-auto">
           <div className="flex items-center gap-3">
-            <span 
-              className="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform" 
+            <Icon
+              name="arrow_back"
+              className="text-primary cursor-pointer active:scale-95 transition-transform"
               onClick={() => navigate('/student/dashboard')}
-            >
-              arrow_back
-            </span>
+            />
             <h1 className="font-title-lg text-title-lg text-primary font-bold">Attendance Tracker</h1>
           </div>
-          <button className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95">
-            more_vert
+          <button className="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95">
+            <Icon name="more_vert" />
           </button>
         </div>
       </header>
@@ -85,7 +85,7 @@ export default function StudentAttendanceDetails() {
             <div className="flex items-end justify-between">
               <span className="font-display-lg text-4xl font-bold text-primary">{attendancePct}%</span>
               <span className="text-success flex items-center text-sm font-bold text-green-600">
-                <span className="material-symbols-outlined text-sm">trending_up</span> 1.2%
+                <Icon name="trending_up" className="text-sm" /> 1.2%
               </span>
             </div>
           </div>
@@ -112,19 +112,15 @@ export default function StudentAttendanceDetails() {
         {/* Status Badges Section */}
         <section className="flex flex-wrap gap-stack-sm items-center">
           <div className="bg-tertiary-fixed text-on-tertiary-fixed px-4 py-2 rounded-full flex items-center gap-2 border border-tertiary-container shadow-sm">
-            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
-              workspace_premium
-            </span>
+            <Icon name="workspace_premium" className="text-lg" filled />
             <span className="font-label-md text-sm font-semibold">Excellent Attendance</span>
           </div>
           <div className="bg-secondary-fixed text-on-secondary-fixed px-4 py-2 rounded-full flex items-center gap-2 border border-outline-variant shadow-sm">
-            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
-              military_tech
-            </span>
+            <Icon name="military_tech" className="text-lg" filled />
             <span className="font-label-md text-sm font-semibold">Punctuality Pro</span>
           </div>
           <div className="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-full flex items-center gap-2 border border-outline-variant shadow-sm opacity-60">
-            <span className="material-symbols-outlined text-lg">hotel</span>
+            <Icon name="hotel" className="text-lg" />
             <span className="font-label-md text-sm font-semibold">Perfect Month Goal</span>
           </div>
         </section>
@@ -226,7 +222,7 @@ export default function StudentAttendanceDetails() {
               onClick={() => navigate('/student/attendance/report')}
               className="text-primary font-bold text-sm flex items-center gap-1 hover:underline cursor-pointer"
             >
-              View Full Report <span className="material-symbols-outlined text-sm">open_in_new</span>
+              View Full Report <Icon name="open_in_new" className="text-sm" />
             </button>
           </div>
           <div className="overflow-x-auto">

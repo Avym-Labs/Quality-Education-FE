@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
+import PointsCard from '../../components/common/PointsCard'
 
 export default function StudentDashboard() {
   const { user } = useAuth()
@@ -11,7 +13,10 @@ export default function StudentDashboard() {
   const [stats, setStats] = useState({
     attendance_percentage: 94.2,
     average_score: 85.0,
-    total_tests: 8
+    total_tests: 8,
+    attendance_points: { total_attendance_points: 0, current_streak: 0 },
+    test_points: { total_test_points: 0, test_count: 0, breakdown: [] },
+    total_points: 0
   })
   const [homeworkCount, setHomeworkCount] = useState(3)
   const [loading, setLoading] = useState(true)
@@ -55,10 +60,11 @@ export default function StudentDashboard() {
   const attendance = stats?.attendance_percentage ?? 94.2
   const score = stats?.average_score ?? 85.0
   const testsCount = stats?.total_tests ?? 8
-  
-  // Custom calculations for gamification matching the premium look
-  const attendancePts = Math.round(attendance * 9)
-  const streakDays = Math.round(attendance / 8)
+
+  const attendancePoints = stats?.attendance_points ?? { total_attendance_points: 0, current_streak: 0 }
+  const testPoints = stats?.test_points ?? { total_test_points: 0, test_count: 0, breakdown: [] }
+  const totalPoints = stats?.total_points ?? 0
+  const streakDays = attendancePoints.current_streak ?? 0
   const rank = score >= 90 ? '#1' : score >= 80 ? '#2' : '#3'
   const rankPercentile = score >= 90 ? 'Top 0.5%' : score >= 80 ? 'Top 1%' : 'Top 5%'
   const tier = score >= 90 ? 'Legend Tier' : score >= 80 ? 'Elite Tier' : 'Aspirant Tier'
@@ -106,8 +112,8 @@ export default function StudentDashboard() {
               {getGreeting()}, your total points are:
             </h2>
             <p className="text-3xl font-black tracking-tight mt-1 flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-2xl text-yellow-300 animate-spin" style={{ fontVariationSettings: "'FILL' 1", animationDuration: '3s' }}>stars</span>
-              {attendancePts} <span className="text-sm font-bold">pts</span>
+              <Icon name="stars" className="text-2xl text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} filled />
+              {totalPoints} <span className="text-sm font-bold">pts</span>
             </p>
           </div>
 
@@ -119,7 +125,7 @@ export default function StudentDashboard() {
               </h2>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <span className="bg-white/20 text-white px-2 py-0.5 rounded-full flex items-center gap-1 text-[10px] font-bold shrink-0">
-                  <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                  <Icon name="stars" className="text-[11px]" filled />
                   {tier}
                 </span>
                 <span className="text-xs text-white/80 font-semibold">
@@ -128,8 +134,8 @@ export default function StudentDashboard() {
               </div>
             </div>
             <div className="px-4 py-2 bg-white/20 text-white font-bold text-xs rounded-xl backdrop-blur-md cursor-default select-none flex items-center gap-1.5 shrink-0">
-              <span className="material-symbols-outlined text-sm text-yellow-300 animate-spin" style={{ fontVariationSettings: "'FILL' 1", animationDuration: '3s' }}>stars</span>
-              <span>{attendancePts} Points</span>
+              <Icon name="stars" className="text-sm text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} filled />
+              <span>{totalPoints} Points</span>
             </div>
           </div>
         </section>
@@ -150,7 +156,7 @@ export default function StudentDashboard() {
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary-fixed opacity-10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
                 <div className="flex items-center gap-2.5 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-primary shrink-0">
-                    <span className="material-symbols-outlined text-base">calendar_today</span>
+                    <Icon name="calendar_today" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Attendance</span>
                 </div>
@@ -162,24 +168,8 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {/* Attendance Score Card */}
-              <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant flex flex-col justify-between relative overflow-hidden group h-32 text-left animate-fade-in">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-tertiary-fixed opacity-10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-                <div className="flex items-center gap-2.5 z-10 w-full">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-tertiary shrink-0">
-                    <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-                  </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Attendance Score</span>
-                </div>
-                <div className="flex items-baseline justify-between mt-auto z-10 w-full">
-                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">
-                    {attendancePts}<span className="text-xs font-bold text-on-surface-variant ml-0.5">pts</span>
-                  </h3>
-                  <span className="text-[9px] font-bold text-tertiary bg-tertiary-fixed-dim px-2 py-0.5 rounded shrink-0">
-                    Streak: {streakDays}d
-                  </span>
-                </div>
-              </div>
+              {/* Points Card (cycles between attendance points / test points every 5s) */}
+              <PointsCard attendancePoints={attendancePoints} testPoints={testPoints} totalPoints={totalPoints} />
 
               {/* Current Rank Card */}
               <div 
@@ -189,7 +179,7 @@ export default function StudentDashboard() {
                 <div className="absolute -right-2 -top-2 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
                 <div className="flex items-center gap-2.5 z-10 w-full text-white">
                   <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
-                    <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>trophy</span>
+                    <Icon name="trophy" className="text-base" filled />
                   </div>
                   <span className="text-[11px] font-bold text-white/90 uppercase tracking-wider block truncate">Current Rank</span>
                 </div>
@@ -319,9 +309,7 @@ export default function StudentDashboard() {
                   onClick={() => navigate('/student/results')}
                   className="bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-outline-variant/30 flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
                 >
-                  <span className="material-symbols-outlined text-error group-hover:scale-105 transition-transform text-lg">
-                    event
-                  </span>
+                  <Icon name="event" className="text-error group-hover:scale-105 transition-transform text-lg" />
                   <div>
                     <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">{testsCount}</p>
                     <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Class Tests</p>
@@ -333,9 +321,7 @@ export default function StudentDashboard() {
                   onClick={() => navigate('/student/profile/achievements')}
                   className="bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-outline-variant/30 flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
                 >
-                  <span className="material-symbols-outlined text-secondary group-hover:scale-105 transition-transform text-lg">
-                    workspace_premium
-                  </span>
+                  <Icon name="workspace_premium" className="text-secondary group-hover:scale-105 transition-transform text-lg" />
                   <div>
                     <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Cabinet</p>
                     <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Achievements</p>
@@ -347,9 +333,7 @@ export default function StudentDashboard() {
                   onClick={() => navigate('/student/reports')}
                   className="bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-outline-variant/30 flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
                 >
-                  <span className="material-symbols-outlined text-primary group-hover:scale-105 transition-transform text-lg">
-                    analytics
-                  </span>
+                  <Icon name="analytics" className="text-primary group-hover:scale-105 transition-transform text-lg" />
                   <div>
                     <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Report</p>
                     <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Analytics</p>
@@ -361,12 +345,22 @@ export default function StudentDashboard() {
                   onClick={() => navigate('/student/schedule')}
                   className="bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-outline-variant/30 flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
                 >
-                  <span className="material-symbols-outlined text-secondary group-hover:scale-105 transition-transform text-lg">
-                    calendar_today
-                  </span>
+                  <Icon name="calendar_today" className="text-secondary group-hover:scale-105 transition-transform text-lg" />
                   <div>
                     <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Schedule</p>
                     <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Lectures</p>
+                  </div>
+                </div>
+
+                {/* Leave Request Action */}
+                <div
+                  onClick={() => navigate('/student/leave')}
+                  className="bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-outline-variant/30 flex flex-col items-center justify-center gap-1.5 group text-center active:scale-98"
+                >
+                  <Icon name="event_busy" className="text-primary group-hover:scale-105 transition-transform text-lg" />
+                  <div>
+                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Apply</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Leave Request</p>
                   </div>
                 </div>
               </div>
@@ -398,9 +392,7 @@ export default function StudentDashboard() {
                     <div className="text-left">
                       <p className="text-xs font-bold text-on-surface">Sara M.</p>
                       <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold">
-                        <span className="material-symbols-outlined text-[10px] text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                          local_fire_department
-                        </span>
+                        <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
                         24 Day Streak
                       </p>
                     </div>
@@ -436,16 +428,14 @@ export default function StudentDashboard() {
                         </span>
                       </div>
                       <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold mt-0.5">
-                        <span className="material-symbols-outlined text-[10px] text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                          local_fire_department
-                        </span>
+                        <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
                         {streakDays} Day Streak
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-bold text-on-surface font-numeric-bold">{attendance}%</p>
-                    <p className="text-[8px] uppercase font-bold text-on-surface-variant">{attendancePts} pts</p>
+                    <p className="text-[8px] uppercase font-bold text-on-surface-variant">{totalPoints} pts</p>
                   </div>
                 </div>
 
@@ -465,9 +455,7 @@ export default function StudentDashboard() {
                     <div className="text-left">
                       <p className="text-xs font-bold text-on-surface">Leo K.</p>
                       <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold">
-                        <span className="material-symbols-outlined text-[10px] text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                          local_fire_department
-                        </span>
+                        <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
                         8 Day Streak
                       </p>
                     </div>

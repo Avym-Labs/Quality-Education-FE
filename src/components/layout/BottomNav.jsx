@@ -2,22 +2,21 @@ import { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import Icon from '../common/Icon'
 
 const NAV_ITEMS = {
   student: [
     { icon: 'home', label: 'Home', path: '/student/dashboard' },
     { icon: 'school', label: 'Academics', path: '/student/academics' },
-    { icon: 'assignment', label: 'Homework', path: '/student/homework' },
     { icon: 'chat', label: 'Chat', path: '/student/chat' },
-    { icon: 'person', label: 'Account', path: '/student/settings' },
+    { icon: 'settings', label: 'Account', path: '/student/settings' },
   ],
   teacher: [
     { icon: 'home', label: 'Home', path: '/teacher/dashboard' },
     { icon: 'calendar_today', label: 'Attendance', path: '/teacher/attendance' },
-    { icon: 'assignment', label: 'Homework', path: '/teacher/homework' },
     { icon: 'school', label: 'Academics', path: '/teacher/academics' },
     { icon: 'chat', label: 'Chat', path: '/teacher/chat' },
-    { icon: 'person', label: 'Account', path: '/teacher/settings' },
+    { icon: 'settings', label: 'Account', path: '/teacher/settings' },
   ],
   admin: [
     { icon: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
@@ -25,13 +24,13 @@ const NAV_ITEMS = {
     { icon: 'school', label: 'Academics', path: '/admin/academics' },
     { icon: 'campaign', label: 'Announce', path: '/admin/announcements' },
     { icon: 'chat', label: 'Chat', path: '/admin/chat' },
-    { icon: 'person', label: 'Account', path: '/admin/settings' },
+    { icon: 'settings', label: 'Account', path: '/admin/settings' },
   ],
   superadmin: [
     { icon: 'dashboard', label: 'Dashboard', path: '/superadmin/dashboard' },
     { icon: 'shield', label: 'Admins', path: '/superadmin/admins' },
     { icon: 'payments', label: 'Payments', path: '/superadmin/payments' },
-    { icon: 'person', label: 'Account', path: '/superadmin/settings' },
+    { icon: 'settings', label: 'Account', path: '/superadmin/settings' },
   ],
 }
 
@@ -185,7 +184,8 @@ export default function BottomNav({ role = 'student' }) {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface-container-lowest shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] rounded-t-xl pb-safe">
         {items.map(({ icon, label, path }, index) => {
           const isActive = location.pathname === path || location.pathname.startsWith(path + '/')
-          const isLast = index === items.length - 1
+          // Long-press-to-switch-account is not available to students.
+          const isLast = index === items.length - 1 && role !== 'student'
           const isChat = label.toLowerCase() === 'chat'
           
           return (
@@ -205,12 +205,7 @@ export default function BottomNav({ role = 'student' }) {
               }`}
             >
               <div className="relative">
-                <span
-                  className="material-symbols-outlined text-[22px]"
-                  style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
-                >
-                  {icon}
-                </span>
+                <Icon name={icon} className="text-[22px]" filled={isActive} />
                 
                 {/* Chat notifications badge */}
                 {isChat && chatUnreadCount > 0 && (
@@ -272,7 +267,7 @@ export default function BottomNav({ role = 'student' }) {
                         </div>
                       </div>
                       {isActive && (
-                        <span className="material-symbols-outlined text-primary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                        <Icon name="check_circle" className="text-primary text-base" filled />
                       )}
                     </div>
                   )
@@ -286,7 +281,7 @@ export default function BottomNav({ role = 'student' }) {
                 onClick={handleAddNewAccount}
                 className="w-full flex items-center justify-center gap-1.5 py-3.5 border border-dashed border-primary/45 hover:bg-primary/5 rounded-2xl transition-colors text-xs font-bold text-primary cursor-pointer border-medium"
               >
-                <span className="material-symbols-outlined text-sm">person_add</span>
+                <Icon name="person_add" className="text-sm" />
                 <span>Add Existing Account</span>
               </button>
               

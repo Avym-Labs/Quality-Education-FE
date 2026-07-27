@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import api from '../../api/axios'
+import Icon from '../../components/common/Icon'
 
 export default function PaymentsHistory() {
   const [payments, setPayments] = useState([])
@@ -82,7 +83,7 @@ export default function PaymentsHistory() {
 
         {error && (
           <div className="flex items-center gap-2 p-4 bg-error-container rounded-xl text-error text-sm font-semibold">
-            <span className="material-symbols-outlined text-sm">error</span>
+            <Icon name="error" className="text-sm" />
             <span>{error}</span>
           </div>
         )}
@@ -90,7 +91,7 @@ export default function PaymentsHistory() {
         {/* Filters */}
         <section className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg" />
             <input 
               type="text"
               placeholder="Search by student or invoice #..."
@@ -116,11 +117,11 @@ export default function PaymentsHistory() {
         {/* Table Ledger */}
         {loading ? (
           <div className="min-h-[30vh] flex items-center justify-center">
-            <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+            <Icon name="progress_activity" className="animate-spin text-primary text-3xl" />
           </div>
         ) : filteredPayments.length === 0 ? (
           <div className="text-center py-12 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl">
-            <span className="material-symbols-outlined text-outline text-5xl">payments</span>
+            <Icon name="payments" className="text-outline text-5xl" />
             <p className="text-sm text-on-surface-variant font-semibold mt-2">No transaction records found</p>
           </div>
         ) : (

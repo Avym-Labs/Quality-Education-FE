@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import ConversationSidebar from '../../components/chat/ConversationSidebar'
 import api from '../../api/axios'
+import Icon from '../../components/common/Icon'
 
 export default function ChatConversation() {
   const { conversationId } = useParams()
@@ -335,7 +336,7 @@ export default function ChatConversation() {
                         onClick={() => setActiveMenuId(isMenuOpen ? null : msg.id)}
                         className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-surface-container text-outline hover:text-on-surface"
                       >
-                        <span className="material-symbols-outlined text-sm">more_vert</span>
+                        <Icon name="more_vert" className="text-sm" />
                       </button>
                       
                       {isMenuOpen && (
@@ -348,7 +349,7 @@ export default function ChatConversation() {
                             }}
                             className="w-full px-2.5 py-1.5 hover:bg-surface-container-low rounded-lg text-[10px] font-bold text-on-surface flex items-center gap-1.5 cursor-pointer border-none bg-transparent"
                           >
-                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <Icon name="edit" className="text-xs" />
                             <span>Edit</span>
                           </button>
                           <button
@@ -363,7 +364,7 @@ export default function ChatConversation() {
                             }}
                             className="w-full px-2.5 py-1.5 hover:bg-red-50 rounded-lg text-[10px] font-bold text-error flex items-center gap-1.5 cursor-pointer border-none bg-transparent"
                           >
-                            <span className="material-symbols-outlined text-xs">delete</span>
+                            <Icon name="delete" className="text-xs" />
                             <span>Delete</span>
                           </button>
                         </div>
@@ -436,12 +437,12 @@ export default function ChatConversation() {
                                   : 'bg-surface-container-high/40 hover:bg-surface-container-high text-on-surface'
                               }`}
                             >
-                              <span className="material-symbols-outlined text-xl">description</span>
+                              <Icon name="description" className="text-xl" />
                               <div className="text-left min-w-0 flex-1">
                                 <p className="text-[10px] font-bold truncate leading-tight">{fileName}</p>
                                 <p className="text-[8px] opacity-75 font-semibold uppercase">document</p>
                               </div>
-                              <span className="material-symbols-outlined text-base">download</span>
+                              <Icon name="download" className="text-base" />
                             </a>
                           )
                         })}
@@ -464,11 +465,10 @@ export default function ChatConversation() {
                     <span className="text-[8px] text-outline font-medium italic">(edited)</span>
                   )}
                   {isMine && !msg.is_deleted && (
-                    <span className={`material-symbols-outlined text-[13px] ${
-                      msg.is_read ? 'text-primary' : 'text-outline/70'
-                    }`}>
-                      {msg.is_read ? 'done_all' : 'done'}
-                    </span>
+                    <Icon
+                      name={msg.is_read ? 'done_all' : 'done'}
+                      className={`text-[13px] ${msg.is_read ? 'text-primary' : 'text-outline/70'}`}
+                    />
                   )}
                 </div>
               </div>
@@ -502,7 +502,7 @@ export default function ChatConversation() {
                 onClick={() => navigate(`/${role}/chat`)}
                 className="md:hidden w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-low text-on-surface transition-colors"
               >
-                <span className="material-symbols-outlined text-base">arrow_back</span>
+                <Icon name="arrow_back" className="text-base" />
               </button>
 
               {/* Recipient info */}
@@ -580,7 +580,7 @@ export default function ChatConversation() {
                     <img src={sf.previewUrl} className="w-9 h-9 rounded-xl object-cover border border-outline-variant/15" />
                   ) : (
                     <div className="w-9 h-9 rounded-xl bg-primary-fixed text-primary flex items-center justify-center border border-outline-variant/15">
-                      <span className="material-symbols-outlined text-lg">description</span>
+                      <Icon name="description" className="text-lg" />
                     </div>
                   )}
                   <div className="text-left flex-1 min-w-0 pr-4">
@@ -592,7 +592,7 @@ export default function ChatConversation() {
                     onClick={() => handleRemoveSelectedFile(idx)}
                     className="absolute -top-1 -right-1 bg-surface-container-highest hover:bg-error hover:text-on-error w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] text-outline border border-surface shadow-sm cursor-pointer transition-colors"
                   >
-                    <span className="material-symbols-outlined text-[11px]">close</span>
+                    <Icon name="close" className="text-[11px]" />
                   </button>
                 </div>
               ))}
@@ -619,7 +619,7 @@ export default function ChatConversation() {
                     onClick={handleCancelEdit}
                     className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container-high text-outline text-xs cursor-pointer border-none bg-transparent"
                   >
-                    <span className="material-symbols-outlined text-sm">close</span>
+                    <Icon name="close" className="text-sm" />
                   </button>
                 </div>
                 <button
@@ -627,7 +627,7 @@ export default function ChatConversation() {
                   disabled={!editingText.trim() || !isConnected}
                   className="w-10 h-10 shrink-0 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-md hover:bg-opacity-95 disabled:opacity-40 transition-colors active:scale-95 duration-100 cursor-pointer border-none"
                 >
-                  <span className="material-symbols-outlined text-base">check</span>
+                  <Icon name="check" className="text-base" />
                 </button>
               </form>
             ) : (
@@ -645,9 +645,7 @@ export default function ChatConversation() {
                         : 'bg-surface-container-low hover:bg-surface-container-high text-primary'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-lg">
-                      {isAttachmentMenuOpen ? 'close' : 'add'}
-                    </span>
+                    <Icon name={isAttachmentMenuOpen ? 'close' : 'add'} className="text-lg" />
                   </button>
 
                   {/* Floating WhatsApp Menu */}
@@ -663,7 +661,7 @@ export default function ChatConversation() {
                           }}
                           className="w-11 h-11 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md active:scale-95 duration-100 border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-lg">description</span>
+                          <Icon name="description" className="text-lg" />
                         </button>
                         <span className="text-[9px] font-bold text-outline">Document</span>
                       </div>
@@ -678,7 +676,7 @@ export default function ChatConversation() {
                           }}
                           className="w-11 h-11 rounded-full bg-pink-600 hover:bg-pink-700 text-white flex items-center justify-center shadow-md active:scale-95 duration-100 border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-lg">photo_camera</span>
+                          <Icon name="photo_camera" className="text-lg" />
                         </button>
                         <span className="text-[9px] font-bold text-outline">Camera</span>
                       </div>
@@ -693,7 +691,7 @@ export default function ChatConversation() {
                           }}
                           className="w-11 h-11 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-md active:scale-95 duration-100 border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-lg">image</span>
+                          <Icon name="image" className="text-lg" />
                         </button>
                         <span className="text-[9px] font-bold text-outline">Gallery</span>
                       </div>
@@ -708,7 +706,7 @@ export default function ChatConversation() {
                           }}
                           className="w-11 h-11 rounded-full bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center shadow-md active:scale-95 duration-100 border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-lg">volume_up</span>
+                          <Icon name="volume_up" className="text-lg" />
                         </button>
                         <span className="text-[9px] font-bold text-outline">Audio</span>
                       </div>
@@ -733,7 +731,7 @@ export default function ChatConversation() {
                   {isUploading ? (
                     <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <span className="material-symbols-outlined text-base">send</span>
+                    <Icon name="send" className="text-base" />
                   )}
                 </button>
               </form>

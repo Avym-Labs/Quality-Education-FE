@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function LeaveRequest() {
   const { user } = useAuth()
@@ -166,9 +167,9 @@ export default function LeaveRequest() {
         <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
           <button 
             onClick={() => navigate('/teacher/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
-            arrow_back
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -202,7 +203,7 @@ export default function LeaveRequest() {
                   onClick={loadStudentLeaves}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low text-primary rounded-xl font-bold text-xs hover:bg-surface-container-high transition-colors active:scale-95 duration-200"
                 >
-                  <span className="material-symbols-outlined text-sm">refresh</span>
+                  <Icon name="refresh" className="text-sm" />
                   <span>Refresh</span>
                 </button>
               </div>
@@ -245,7 +246,7 @@ export default function LeaveRequest() {
                           {/* Dates and Reason */}
                           <div className="space-y-2 mb-4">
                             <div className="flex items-center gap-1.5 text-[9px] text-primary font-bold uppercase tracking-wider">
-                              <span className="material-symbols-outlined text-xs">calendar_today</span>
+                              <Icon name="calendar_today" className="text-xs" />
                               <span>{item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}</span>
                             </div>
                             <p className="text-xs text-on-surface-variant font-medium leading-relaxed bg-surface-container-lowest p-2.5 rounded-xl border border-outline-variant/10">{item.reason}</p>
@@ -260,9 +261,7 @@ export default function LeaveRequest() {
                               isApproved ? 'bg-emerald-100 text-emerald-800' :
                               'bg-error-container text-on-error-container'
                             }`}>
-                              <span className="material-symbols-outlined text-[9px]">
-                                {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
-                              </span>
+                              <Icon name={isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'} className="text-[9px]" />
                               <span>{item.status}</span>
                             </span>
                           </div>
@@ -402,7 +401,7 @@ export default function LeaveRequest() {
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Attachment (Optional)</label>
                   <div className="border-2 border-dashed border-outline-variant/60 rounded-xl p-4 flex flex-col items-center justify-center gap-1 bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
-                    <span className="material-symbols-outlined text-primary text-2xl group-hover:scale-105 transition-transform">upload_file</span>
+                    <Icon name="upload_file" className="text-primary text-2xl group-hover:scale-105 transition-transform" />
                     <p className="text-[10px] text-on-surface-variant font-bold text-center">Upload medical certificate or proof</p>
                     <p className="text-[9px] text-outline italic">PDF, PNG, JPG up to 5MB</p>
                   </div>
@@ -414,7 +413,7 @@ export default function LeaveRequest() {
                   className="w-full py-3.5 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   <span>Submit Leave Request</span>
-                  <span className="material-symbols-outlined text-sm">send</span>
+                  <Icon name="send" className="text-sm" />
                 </button>
               </form>
             </div>
@@ -477,9 +476,7 @@ export default function LeaveRequest() {
                               isApproved ? 'bg-emerald-100 text-emerald-800' :
                               'bg-error-container text-on-error-container'
                             }`}>
-                              <span className="material-symbols-outlined text-[9px]">
-                                {isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'}
-                              </span>
+                              <Icon name={isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'} className="text-[9px]" />
                               <span>{item.status}</span>
                             </span>
                           </div>

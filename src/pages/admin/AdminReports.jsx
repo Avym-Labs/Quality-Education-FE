@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function AdminReports() {
   const navigate = useNavigate()
@@ -128,9 +129,9 @@ export default function AdminReports() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/admin/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -166,7 +167,7 @@ export default function AdminReports() {
               disabled={reportType === 'student' && !selectedStudentId}
               className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold hover:shadow-md cursor-pointer active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="material-symbols-outlined text-sm">print</span>
+              <Icon name="print" className="text-sm" />
               <span>Print Page</span>
             </button>
           </div>
@@ -174,7 +175,7 @@ export default function AdminReports() {
 
         {loading ? (
           <div className="flex justify-center py-12 print:hidden">
-            <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+            <Icon name="progress_activity" className="animate-spin text-primary text-3xl" />
           </div>
         ) : (
           <div className="space-y-6 max-w-4xl mx-auto">
@@ -199,7 +200,7 @@ export default function AdminReports() {
             {/* Printable Report Wrapper */}
             {reportType === 'student' && !selectedStudentId ? (
               <div className="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant/30 print:hidden">
-                <span className="material-symbols-outlined text-outline text-4xl mb-2">assignment_ind</span>
+                <Icon name="assignment_ind" className="text-outline text-4xl mb-2" />
                 <p className="text-xs font-bold text-on-surface-variant">Please choose a student from the dropdown above to render their report card.</p>
               </div>
             ) : (
@@ -338,7 +339,7 @@ export default function AdminReports() {
                     
                     {loadingStudent ? (
                       <div className="text-center py-10">
-                        <span className="material-symbols-outlined animate-spin text-primary text-xl">progress_activity</span>
+                        <Icon name="progress_activity" className="animate-spin text-primary text-xl" />
                         <p className="text-[10px] text-on-surface-variant mt-2">Fetching student details...</p>
                       </div>
                     ) : (
@@ -405,7 +406,7 @@ export default function AdminReports() {
                           <div className="bg-emerald-50/20 border border-emerald-100 p-4 rounded-2xl text-xs space-y-2">
                             <h4 className="font-bold text-emerald-800 uppercase tracking-wider text-[10px]">Attendance Overview</h4>
                             <div className="flex items-center gap-3">
-                              <span className="material-symbols-outlined text-emerald-700 text-2xl">how_to_reg</span>
+                              <Icon name="how_to_reg" className="text-emerald-700 text-2xl" />
                               <div>
                                 <p className="font-black text-gray-900 text-sm">{studentStats?.attendance_percentage ?? 94.5}%</p>
                                 <p className="text-[10px] text-gray-500 font-semibold">Total Conducted Tests: {studentStats?.total_tests ?? studentResults.length}</p>

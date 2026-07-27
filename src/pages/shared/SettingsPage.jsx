@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -187,7 +188,7 @@ export default function SettingsPage() {
             }}
             className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-low transition-colors active:scale-95 duration-150"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">
@@ -220,13 +221,13 @@ export default function SettingsPage() {
                 className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-primary text-xl">account_box</span>
+                  <Icon name="account_box" className="text-primary text-xl" />
                   <div className="text-left">
                     <h4 className="text-xs font-bold text-on-surface">My Profile</h4>
                     <p className="text-[10px] text-outline font-semibold">View qualifications, experience summary, and student stats</p>
                   </div>
                 </div>
-                <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+                <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
               </div>
             )}
 
@@ -236,13 +237,13 @@ export default function SettingsPage() {
               className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-xl">account_circle</span>
+                <Icon name="account_circle" className="text-primary text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Account Credentials</h4>
                   <p className="text-[10px] text-outline font-semibold">Edit name, phone number, and account access</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
             {/* Preferences */}
@@ -251,13 +252,13 @@ export default function SettingsPage() {
               className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-secondary text-xl">notifications_active</span>
+                <Icon name="notifications_active" className="text-secondary text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Notification Preferences</h4>
                   <p className="text-[10px] text-outline font-semibold">Toggle push notifications and email summaries</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
             {/* Switch Account Option (Exclusively visible for Teachers) */}
@@ -267,13 +268,30 @@ export default function SettingsPage() {
                 className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-tertiary text-xl">switch_account</span>
+                  <Icon name="switch_account" className="text-tertiary text-xl" />
                   <div className="text-left">
                     <h4 className="text-xs font-bold text-on-surface">Switch Account</h4>
                     <p className="text-[10px] text-outline font-semibold">Swap active session contexts instantly</p>
                   </div>
                 </div>
-                <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+                <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
+              </div>
+            )}
+
+            {/* Manage Students (Exclusively visible for Teachers) */}
+            {user?.role === 'teacher' && (
+              <div
+                onClick={() => navigate('/teacher/manage-students')}
+                className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <Icon name="group_add" className="text-tertiary text-xl" />
+                  <div className="text-left">
+                    <h4 className="text-xs font-bold text-on-surface">Manage Students</h4>
+                    <p className="text-[10px] text-outline font-semibold">Add, edit, or import students in your classes</p>
+                  </div>
+                </div>
+                <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
               </div>
             )}
 
@@ -283,13 +301,13 @@ export default function SettingsPage() {
               className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-xl">help_center</span>
+                <Icon name="help_center" className="text-primary text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Help & Support</h4>
                   <p className="text-[10px] text-outline font-semibold">View support documents and contact administrator</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
             {/* Logout Trigger */}
@@ -298,13 +316,13 @@ export default function SettingsPage() {
               className="flex items-center justify-between p-4 bg-red-50/50 border border-red-100 rounded-2xl hover:bg-red-50 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-error text-xl">logout</span>
+                <Icon name="logout" className="text-error text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-error">Logout Account</h4>
                   <p className="text-[10px] text-red-400 font-semibold mt-0.5">Terminate current active session</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-red-300 group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-red-300 group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
           </div>
         )}
@@ -318,7 +336,7 @@ export default function SettingsPage() {
               onClick={() => setActiveView('menu')}
               className="flex items-center gap-1.5 text-primary font-bold hover:underline mb-2"
             >
-              <span className="material-symbols-outlined text-sm">arrow_back</span>
+              <Icon name="arrow_back" className="text-sm" />
               <span>Back to Account</span>
             </button>
 
@@ -333,11 +351,11 @@ export default function SettingsPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="material-symbols-outlined text-5xl text-primary/40">face</span>
+                    <Icon name="face" className="text-5xl text-primary/40" />
                   )}
                 </div>
                 <div className="absolute bottom-1 right-1 bg-primary text-white p-1 rounded-full border-2 border-white shadow-md flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <Icon name="verified" className="text-[14px]" filled />
                 </div>
               </div>
               <div className="mt-4 md:mt-0 flex-1">
@@ -345,7 +363,7 @@ export default function SettingsPage() {
                   {user?.full_name || 'Prof. Sarah Mitchell'}
                 </h3>
                 <p className="text-on-surface-variant text-xs font-semibold flex items-center justify-center md:justify-start gap-1 mt-1">
-                  <span className="material-symbols-outlined text-primary text-[16px]">functions</span>
+                  <Icon name="functions" className="text-primary text-[16px]" />
                   <span>{department}</span>
                 </p>
                 <div className="mt-3.5 flex flex-wrap justify-center md:justify-start gap-2">
@@ -375,7 +393,7 @@ export default function SettingsPage() {
                     </h5>
                     <div className="mt-2.5 flex items-center gap-1 text-primary group-hover:gap-1.5 transition-all text-[11px] font-bold">
                       <span>Mark Attendance</span>
-                      <span className="material-symbols-outlined text-[12px]">arrow_forward</span>
+                      <Icon name="arrow_forward" className="text-[12px]" />
                     </div>
                   </div>
                 ))}
@@ -386,7 +404,7 @@ export default function SettingsPage() {
             <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between h-28">
                 <div className="w-8 h-8 rounded-full bg-primary-container/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-sm">groups</span>
+                  <Icon name="groups" className="text-primary text-sm" />
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Students Handled</p>
@@ -395,7 +413,7 @@ export default function SettingsPage() {
               </div>
               <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between h-28">
                 <div className="w-8 h-8 rounded-full bg-secondary-container/15 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-secondary text-sm">upload_file</span>
+                  <Icon name="upload_file" className="text-secondary text-sm" />
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Results Uploaded</p>
@@ -404,7 +422,7 @@ export default function SettingsPage() {
               </div>
               <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between h-28">
                 <div className="w-8 h-8 rounded-full bg-tertiary-fixed-dim/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-tertiary text-sm">description</span>
+                  <Icon name="description" className="text-tertiary text-sm" />
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Homeworks Assigned</p>
@@ -413,7 +431,7 @@ export default function SettingsPage() {
               </div>
               <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between h-28">
                 <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-emerald-700 text-sm">event_available</span>
+                  <Icon name="event_available" className="text-emerald-700 text-sm" />
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Personal Attendance</p>
@@ -454,7 +472,7 @@ export default function SettingsPage() {
               <div className="p-5 grid gap-6 md:grid-cols-2">
                 <div className="flex gap-3">
                   <div className="shrink-0 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary">school</span>
+                    <Icon name="school" className="text-primary" />
                   </div>
                   <div>
                     <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Academic Qualifications</p>
@@ -468,7 +486,7 @@ export default function SettingsPage() {
 
                 <div className="flex gap-3">
                   <div className="shrink-0 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary">mail</span>
+                    <Icon name="mail" className="text-primary" />
                   </div>
                   <div>
                     <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Contact Information</p>
@@ -491,7 +509,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
               </button>
             </div>
@@ -551,7 +569,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
               </button>
             </div>
@@ -601,7 +619,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
               </button>
             </div>
@@ -624,7 +642,7 @@ export default function SettingsPage() {
                         <h4 className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors truncate">{acc.full_name}</h4>
                         <p className="text-[9px] text-outline font-semibold uppercase">{acc.role}</p>
                       </div>
-                      <span className="material-symbols-outlined text-outline text-base group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                      <Icon name="chevron_right" className="text-outline text-base group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   ))}
                 </div>
@@ -634,7 +652,7 @@ export default function SettingsPage() {
                 onClick={handleAddNewAccount}
                 className="w-full flex items-center justify-center gap-1.5 mt-2 py-2.5 border border-dashed border-primary/40 hover:bg-primary/5 rounded-xl transition-colors text-xs font-bold text-primary cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">person_add</span>
+                <Icon name="person_add" className="text-sm" />
                 <span>Add Existing Account</span>
               </button>
             </div>
@@ -650,7 +668,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
               </button>
             </div>

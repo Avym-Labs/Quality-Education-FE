@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function AdminSettings() {
   const navigate = useNavigate()
@@ -279,9 +280,9 @@ export default function AdminSettings() {
                   navigate('/admin/dashboard')
                 }
               }}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -318,13 +319,13 @@ export default function AdminSettings() {
               className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-xl">account_circle</span>
+                <Icon name="account_circle" className="text-primary text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Account Settings</h4>
                   <p className="text-[10px] text-outline font-semibold">Change your profile name, email, phone, and password</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
             {/* Faculty Access Control */}
@@ -333,13 +334,13 @@ export default function AdminSettings() {
               className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-secondary text-xl">school</span>
+                <Icon name="school" className="text-secondary text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Faculty Access Control</h4>
                   <p className="text-[10px] text-outline font-semibold">Modify teacher emails, phone numbers, and passwords</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
             {/* Student Access Control */}
@@ -348,13 +349,13 @@ export default function AdminSettings() {
               className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-tertiary text-xl">groups</span>
+                <Icon name="groups" className="text-tertiary text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Student Access Control</h4>
                   <p className="text-[10px] text-outline font-semibold">Modify student emails, phone numbers, and passwords</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
             {/* Switch Account */}
@@ -363,13 +364,13 @@ export default function AdminSettings() {
               className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-xl">switch_account</span>
+                <Icon name="switch_account" className="text-primary text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Switch Account</h4>
                   <p className="text-[10px] text-outline font-semibold">Switch to another saved credentials profile</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-outline group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
             {/* Log Out */}
@@ -378,13 +379,13 @@ export default function AdminSettings() {
               className="flex items-center justify-between p-4 bg-red-50/50 border border-red-100 rounded-2xl hover:bg-red-50 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-error text-xl">logout</span>
+                <Icon name="logout" className="text-error text-xl" />
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-error">Sign Out</h4>
                   <p className="text-[10px] text-red-400 font-semibold mt-0.5">Logout from current administrative account</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-red-300 group-hover:translate-x-0.5 transition-transform text-lg">chevron_right</span>
+              <Icon name="chevron_right" className="text-red-300 group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
           </div>
         )}
@@ -398,7 +399,7 @@ export default function AdminSettings() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Settings List</span>
               </button>
             </div>
@@ -481,7 +482,7 @@ export default function AdminSettings() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Settings List</span>
               </button>
             </div>
@@ -558,7 +559,7 @@ export default function AdminSettings() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Settings List</span>
               </button>
             </div>
@@ -635,7 +636,7 @@ export default function AdminSettings() {
                 onClick={() => setActiveView('menu')}
                 className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
               </button>
             </div>
@@ -658,7 +659,7 @@ export default function AdminSettings() {
                         <h4 className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors truncate">{acc.full_name}</h4>
                         <p className="text-[9px] text-outline font-semibold uppercase">{acc.role}</p>
                       </div>
-                      <span className="material-symbols-outlined text-outline text-base group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                      <Icon name="chevron_right" className="text-outline text-base group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   ))}
                 </div>
@@ -668,7 +669,7 @@ export default function AdminSettings() {
                 onClick={handleAddNewAccount}
                 className="w-full flex items-center justify-center gap-1.5 mt-2 py-2.5 border border-dashed border-primary/40 hover:bg-primary/5 rounded-xl transition-colors text-xs font-bold text-primary cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">person_add</span>
+                <Icon name="person_add" className="text-sm" />
                 <span>Add Existing Account</span>
               </button>
             </div>

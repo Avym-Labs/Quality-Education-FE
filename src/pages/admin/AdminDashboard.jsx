@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -204,7 +205,7 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-primary shrink-0">
-                    <span className="material-symbols-outlined text-base">groups</span>
+                    <Icon name="groups" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Students</span>
                 </div>
@@ -220,7 +221,7 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-secondary shrink-0">
-                    <span className="material-symbols-outlined text-base">person_celebrate</span>
+                    <Icon name="person_celebrate" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Teachers</span>
                 </div>
@@ -236,14 +237,14 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-error shrink-0">
-                    <span className="material-symbols-outlined text-base">how_to_reg</span>
+                    <Icon name="how_to_reg" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Attendance Rate</span>
                 </div>
                 <div className="flex items-baseline justify-between mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{attendanceRate}%</h3>
                   <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[9px] font-bold gap-0.5 print:hidden shrink-0">
-                    <span className="material-symbols-outlined text-[12px]">trending_up</span>
+                    <Icon name="trending_up" className="text-[12px]" />
                     2.1%
                   </div>
                 </div>
@@ -256,14 +257,14 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-tertiary shrink-0">
-                    <span className="material-symbols-outlined text-base">insights</span>
+                    <Icon name="insights" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Avg. Results</span>
                 </div>
                 <div className="flex items-baseline justify-between mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{avgResults}%</h3>
                   <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[9px] font-bold gap-0.5 print:hidden shrink-0">
-                    <span className="material-symbols-outlined text-[12px]">trending_up</span>
+                    <Icon name="trending_up" className="text-[12px]" />
                     1.5%
                   </div>
                 </div>
@@ -277,7 +278,7 @@ export default function AdminDashboard() {
                 onClick={() => navigate('/admin/chat-logs')}
                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">visibility</span>
+                <Icon name="visibility" className="text-sm" />
                 <span>Audit Chat Logs</span>
               </button>
               <button 
@@ -285,7 +286,7 @@ export default function AdminDashboard() {
                 onClick={() => navigate('/admin/sms-logs')}
                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">sms</span>
+                <Icon name="sms" className="text-sm" />
                 <span>Audit SMS Logs</span>
               </button>
               <button 
@@ -293,7 +294,7 @@ export default function AdminDashboard() {
                 onClick={() => navigate('/admin/announcements')}
                 className="flex items-center gap-2 px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-all active:scale-95 duration-100 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">campaign</span>
+                <Icon name="campaign" className="text-sm" />
                 <span>Send Notice Announcement</span>
               </button>
               <button 
@@ -301,7 +302,7 @@ export default function AdminDashboard() {
                 onClick={() => navigate('/admin/schedule')}
                 className="flex items-center gap-2 px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-all active:scale-95 duration-100 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">calendar_today</span>
+                <Icon name="calendar_today" className="text-sm" />
                 <span>Manage Class Schedules</span>
               </button>
             </section>
@@ -318,7 +319,7 @@ export default function AdminDashboard() {
                   {/* Attendance Trend */}
                   <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 lg:h-full flex flex-col justify-between">
                     <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold">
-                      <span className="material-symbols-outlined text-primary">calendar_month</span>
+                      <Icon name="calendar_month" className="text-primary" />
                       Attendance Trend
                     </h3>
                     <div className="flex-1 flex items-end gap-3 pb-2 px-2 pt-6">
@@ -343,7 +344,7 @@ export default function AdminDashboard() {
                   {/* Academic Grade Trend */}
                   <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 lg:h-full flex flex-col justify-between">
                     <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold">
-                      <span className="material-symbols-outlined text-secondary">show_chart</span>
+                      <Icon name="show_chart" className="text-secondary" />
                       Academic Grade Trend
                     </h3>
                     <div className="flex-1 relative flex items-center justify-center min-h-[160px] my-2">
@@ -374,7 +375,7 @@ export default function AdminDashboard() {
                   {/* Subject-wise */}
                   <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between lg:h-full">
                     <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
-                      <span className="material-symbols-outlined text-tertiary">bar_chart</span>
+                      <Icon name="bar_chart" className="text-tertiary" />
                       Subject Performance
                     </h3>
                     <div className="flex flex-col gap-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
@@ -398,7 +399,7 @@ export default function AdminDashboard() {
                   {/* Section-wise */}
                   <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between lg:h-full">
                     <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
-                      <span className="material-symbols-outlined text-secondary">leaderboard</span>
+                      <Icon name="leaderboard" className="text-secondary" />
                       Section Comparison
                     </h3>
                     <div className="flex items-end justify-around h-32 pt-4">
@@ -542,7 +543,7 @@ export default function AdminDashboard() {
         onClick={() => navigate('/admin/announcements')}
         className="fixed right-6 bottom-24 md:bottom-8 bg-primary text-on-primary hover:bg-opacity-95 w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform duration-150 z-50 hover:shadow-xl"
       >
-        <span className="material-symbols-outlined text-2xl">add</span>
+        <Icon name="add" className="text-2xl" />
       </button>
     </DashboardLayout>
   )

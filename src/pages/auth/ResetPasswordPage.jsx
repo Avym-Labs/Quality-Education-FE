@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import loginIllustration from '../../assets/login_illustration.png'
 import api from '../../api/axios'
+import Icon from '../../components/common/Icon'
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -62,7 +63,7 @@ export default function ResetPasswordPage() {
           <div className="w-full max-w-sm flex flex-col items-center gap-3.5 relative z-10">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-1">
-              <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <Icon name="school" className="text-primary text-5xl" filled />
               <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
             </div>
             
@@ -88,7 +89,7 @@ export default function ResetPasswordPage() {
         <div className="p-container-padding-mobile md:p-stack-lg lg:p-16 flex flex-col justify-center text-left">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-stack-lg">
-            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+            <Icon name="school" className="text-primary text-3xl" filled />
             <span className="text-headline-lg-mobile font-bold text-primary tracking-tight">EduCore</span>
           </div>
 
@@ -99,7 +100,7 @@ export default function ResetPasswordPage() {
 
           {!token ? (
             <div className="p-4 bg-error-container rounded-2xl border border-error-variant/20 text-center w-full">
-              <span className="material-symbols-outlined text-4xl text-error">lock_reset</span>
+              <Icon name="lock_reset" className="text-4xl text-error" />
               <p className="text-xs text-error font-bold mt-2">Missing Reset Token.</p>
               <p className="text-[11px] text-outline font-medium mt-1">Please request a new reset email link.</p>
               <button
@@ -117,7 +118,7 @@ export default function ResetPasswordPage() {
                   New Password
                 </label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                  <Icon name="lock" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
                   <input
                     id="newPassword"
                     type={showPassword ? 'text' : 'password'}
@@ -132,7 +133,7 @@ export default function ResetPasswordPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
                   >
-                    <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                    <Icon name={showPassword ? 'visibility_off' : 'visibility'} />
                   </button>
                 </div>
               </div>
@@ -143,7 +144,7 @@ export default function ResetPasswordPage() {
                   Confirm Password
                 </label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                  <Icon name="lock" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
                   <input
                     id="confirmPassword"
                     type={showPassword ? 'text' : 'password'}
@@ -159,7 +160,7 @@ export default function ResetPasswordPage() {
               {/* Error Message */}
               {error && (
                 <div className="flex items-center gap-2 p-3 bg-error-container rounded-xl">
-                  <span className="material-symbols-outlined text-error text-sm">error</span>
+                  <Icon name="error" className="text-error text-sm" />
                   <span className="text-label-md text-error font-semibold">{error}</span>
                 </div>
               )}
@@ -167,7 +168,7 @@ export default function ResetPasswordPage() {
               {/* Success Message */}
               {success && (
                 <div className="flex items-center gap-2 p-3 bg-green-50 rounded-xl border border-green-200">
-                  <span className="material-symbols-outlined text-green-700 text-sm">check_circle</span>
+                  <Icon name="check_circle" className="text-green-700 text-sm" />
                   <span className="text-label-md text-green-700 font-bold">{success}</span>
                 </div>
               )}
@@ -179,11 +180,11 @@ export default function ResetPasswordPage() {
                 className="w-full bg-primary text-on-primary py-4 rounded-xl text-title-lg font-bold shadow-lg hover:bg-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
-                  <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                  <Icon name="progress_activity" className="animate-spin" />
                 ) : (
                   <>
                     <span>Reset Password</span>
-                    <span className="material-symbols-outlined">check</span>
+                    <Icon name="check" />
                   </>
                 )}
               </button>

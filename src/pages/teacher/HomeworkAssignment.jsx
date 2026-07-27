@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
-export default function HomeworkAssignment() {
+export default function HomeworkAssignment({ embed = false }) {
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -171,17 +172,17 @@ export default function HomeworkAssignment() {
   const activeHomeworks = homeworkList.filter(hw => hw.due_date >= todayStr)
   const pastHomeworks = homeworkList.filter(hw => hw.due_date < todayStr)
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-stack-lg mt-stack-sm pb-24">
-        
-        {/* Header */}
+  const content = (
+    <div className="space-y-stack-lg mt-stack-sm pb-24">
+
+      {/* Header */}
+      {!embed && (
         <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
-          <button 
+          <button
             onClick={() => navigate('/teacher/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
-            arrow_back
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -189,6 +190,7 @@ export default function HomeworkAssignment() {
             </h2>
           </div>
         </section>
+      )}
 
         {/* Message Banner */}
         {message && (
@@ -211,9 +213,7 @@ export default function HomeworkAssignment() {
                 <h3 className="font-title-lg text-sm text-on-surface font-bold">
                   {editingHomeworkId ? 'Edit Homework' : 'Assign Homework'}
                 </h3>
-                <span className="material-symbols-outlined text-primary">
-                  {editingHomeworkId ? 'edit' : 'edit_note'}
-                </span>
+                <Icon name={editingHomeworkId ? 'edit' : 'edit_note'} className="text-primary" />
               </div>
 
               <form onSubmit={handleAssign} className="space-y-4">
@@ -283,7 +283,7 @@ export default function HomeworkAssignment() {
                 {/* Homework Link */}
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-on-surface-variant flex items-center gap-1">
-                    <span className="material-symbols-outlined text-xs">link</span>
+                    <Icon name="link" className="text-xs" />
                     <span>Homework Link / Reference URL</span>
                   </label>
                   <input 
@@ -298,12 +298,12 @@ export default function HomeworkAssignment() {
                 {/* File Attachments */}
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-on-surface-variant flex items-center gap-1">
-                    <span className="material-symbols-outlined text-xs">upload_file</span>
+                    <Icon name="upload_file" className="text-xs" />
                     <span>Upload Documents / Worksheets / Images</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-outline-variant/60 rounded-xl bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
-                      <span className="material-symbols-outlined text-base text-primary">cloud_upload</span>
+                      <Icon name="cloud_upload" className="text-base text-primary" />
                       <span className="text-[11px] font-semibold text-on-surface-variant">
                         {uploadingFile ? 'Uploading...' : 'Choose file...'}
                       </span>
@@ -320,15 +320,15 @@ export default function HomeworkAssignment() {
                       {attachments.map((file, idx) => (
                         <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-surface-container-low border border-outline-variant/35">
                           <span className="text-[11px] font-semibold truncate max-w-[180px] text-on-surface flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px] text-primary">description</span>
+                            <Icon name="description" className="text-[14px] text-primary" />
                             {file.name}
                           </span>
                           <button 
                             type="button" 
                             onClick={() => handleRemoveAttachment(idx)}
-                            className="material-symbols-outlined text-xs text-error hover:bg-error-container p-1 rounded-full cursor-pointer"
+                            className="text-xs text-error hover:bg-error-container p-1 rounded-full cursor-pointer"
                           >
-                            close
+                            <Icon name="close" />
                           </button>
                         </div>
                       ))}
@@ -342,9 +342,7 @@ export default function HomeworkAssignment() {
                      type="submit"
                      className="flex-1 py-3 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
                    >
-                     <span className="material-symbols-outlined text-sm">
-                       {editingHomeworkId ? 'save' : 'send'}
-                     </span>
+                     <Icon name={editingHomeworkId ? 'save' : 'send'} className="text-sm" />
                      <span>{editingHomeworkId ? 'Update Homework' : 'Assign Homework'}</span>
                    </button>
                    {editingHomeworkId && (
@@ -421,7 +419,7 @@ export default function HomeworkAssignment() {
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 px-3 py-1 bg-primary/15 text-primary text-[11px] font-bold rounded-xl hover:bg-primary/25 transition-colors"
                                 >
-                                  <span className="material-symbols-outlined text-xs">link</span>
+                                  <Icon name="link" className="text-xs" />
                                   <span>Reference Link</span>
                                 </a>
                               </div>
@@ -440,7 +438,7 @@ export default function HomeworkAssignment() {
                                       download
                                       className="inline-flex items-center gap-1 px-3 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-bold rounded-xl hover:bg-opacity-90 transition-colors"
                                     >
-                                      <span className="material-symbols-outlined text-xs">download</span>
+                                      <Icon name="download" className="text-xs" />
                                       <span>{name}</span>
                                     </a>
                                   )
@@ -451,11 +449,11 @@ export default function HomeworkAssignment() {
                         </div>
                         <div className="flex items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-3 gap-4 pt-1">
                           <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">event</span>
+                            <Icon name="event" className="text-xs" />
                             <span>Due: {hw.due_date}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">book</span>
+                            <Icon name="book" className="text-xs" />
                             <span>{hw.subject}</span>
                           </div>
                         </div>
@@ -477,21 +475,21 @@ export default function HomeworkAssignment() {
                             }}
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <Icon name="edit" className="text-xs" />
                             <span>Edit</span>
                           </button>
                           <button 
                             onClick={() => handleDuplicate(hw)}
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-xs">content_copy</span>
+                            <Icon name="content_copy" className="text-xs" />
                             <span>Reuse</span>
                           </button>
                           <button 
                             onClick={() => handleDelete(hw.id)}
                             className="p-1.5 rounded-xl bg-error-container/20 text-error hover:bg-error-container/40 transition-colors active:scale-95 flex items-center justify-center border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-xs">delete</span>
+                            <Icon name="delete" className="text-xs" />
                           </button>
                         </div>
                       </div>
@@ -522,7 +520,7 @@ export default function HomeworkAssignment() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 px-3 py-1 bg-outline-variant text-on-surface-variant text-[11px] font-bold rounded-xl hover:bg-outline-variant/65 transition-colors"
                               >
-                                <span className="material-symbols-outlined text-xs">link</span>
+                                <Icon name="link" className="text-xs" />
                                 <span>Reference Link</span>
                               </a>
                             </div>
@@ -541,7 +539,7 @@ export default function HomeworkAssignment() {
                                     download
                                     className="inline-flex items-center gap-1 px-3 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-bold rounded-xl hover:bg-opacity-90 transition-colors"
                                   >
-                                    <span className="material-symbols-outlined text-xs">download</span>
+                                    <Icon name="download" className="text-xs" />
                                     <span>{name}</span>
                                   </a>
                                 )
@@ -551,11 +549,11 @@ export default function HomeworkAssignment() {
                         </div>
                         <div className="flex items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-3 gap-4">
                           <div className="flex items-center gap-1 text-error">
-                            <span className="material-symbols-outlined text-xs">event_busy</span>
+                            <Icon name="event_busy" className="text-xs" />
                             <span>Expired: {hw.due_date}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">book</span>
+                            <Icon name="book" className="text-xs" />
                             <span>{hw.subject}</span>
                           </div>
                         </div>
@@ -577,21 +575,21 @@ export default function HomeworkAssignment() {
                             }}
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <Icon name="edit" className="text-xs" />
                             <span>Edit</span>
                           </button>
                           <button 
                             onClick={() => handleDuplicate(hw)}
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-xs">restore</span>
+                            <Icon name="restore" className="text-xs" />
                             <span>Reuse</span>
                           </button>
                           <button 
                             onClick={() => handleDelete(hw.id)}
                             className="p-1.5 rounded-xl bg-error-container/20 text-error hover:bg-error-container/40 transition-colors active:scale-95 flex items-center justify-center border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-xs">delete</span>
+                            <Icon name="delete" className="text-xs" />
                           </button>
                         </div>
                       </div>
@@ -605,7 +603,9 @@ export default function HomeworkAssignment() {
 
         </div>
 
-      </div>
-    </DashboardLayout>
+    </div>
   )
+
+  if (embed) return content
+  return <DashboardLayout>{content}</DashboardLayout>
 }

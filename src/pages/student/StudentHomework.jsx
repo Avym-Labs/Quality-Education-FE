@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
-export default function StudentHomework() {
+export default function StudentHomework({ embed = false }) {
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -41,17 +42,17 @@ export default function StudentHomework() {
   const activeHomeworks = homeworkList.filter(hw => hw.due_date >= todayStr)
   const pastHomeworks = homeworkList.filter(hw => hw.due_date < todayStr)
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-stack-lg mt-stack-md pb-24">
-        
-        {/* Header */}
+  const content = (
+    <div className="space-y-stack-lg mt-stack-md pb-24">
+
+      {/* Header */}
+      {!embed && (
         <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
-          <button 
+          <button
             onClick={() => navigate('/student/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
-            arrow_back
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -59,10 +60,11 @@ export default function StudentHomework() {
             </h2>
           </div>
         </section>
+      )}
 
         {error && (
           <div className="p-3 bg-error-container rounded-xl text-error text-xs font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-xs">error</span>
+            <Icon name="error" className="text-xs" />
             <span>{error}</span>
           </div>
         )}
@@ -115,7 +117,7 @@ export default function StudentHomework() {
                           {hw.subject}
                         </span>
                         <span className="text-[10px] text-error font-bold flex items-center gap-0.5">
-                          <span className="material-symbols-outlined text-xs">alarm</span>
+                          <Icon name="alarm" className="text-xs" />
                           Due: {hw.due_date}
                         </span>
                       </div>
@@ -132,7 +134,7 @@ export default function StudentHomework() {
                             rel="noopener noreferrer"
                             className="w-full flex items-center justify-center gap-1 py-2 bg-primary/15 text-primary text-xs font-bold rounded-xl hover:bg-primary/25 transition-colors"
                           >
-                            <span className="material-symbols-outlined text-sm">link</span>
+                            <Icon name="link" className="text-sm" />
                             <span>Open Reference Link</span>
                           </a>
                         </div>
@@ -154,10 +156,10 @@ export default function StudentHomework() {
                                 className="w-full flex items-center justify-between p-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl border border-outline-variant/20 transition-colors"
                               >
                                 <span className="text-xs font-bold text-on-surface truncate pr-4 flex items-center gap-1.5">
-                                  <span className="material-symbols-outlined text-base text-primary">description</span>
+                                  <Icon name="description" className="text-base text-primary" />
                                   {name}
                                 </span>
-                                <span className="material-symbols-outlined text-base text-outline">download</span>
+                                <Icon name="download" className="text-base text-outline" />
                               </a>
                             )
                           })}
@@ -200,7 +202,7 @@ export default function StudentHomework() {
                             rel="noopener noreferrer"
                             className="w-full flex items-center justify-center gap-1 py-2 bg-outline-variant text-on-surface-variant text-xs font-bold rounded-xl hover:bg-opacity-95 transition-colors"
                           >
-                            <span className="material-symbols-outlined text-sm">link</span>
+                            <Icon name="link" className="text-sm" />
                             <span>Reference Link</span>
                           </a>
                         </div>
@@ -221,10 +223,10 @@ export default function StudentHomework() {
                                 className="w-full flex items-center justify-between p-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl border border-outline-variant/20 transition-colors"
                               >
                                 <span className="text-xs font-bold text-on-surface truncate pr-4 flex items-center gap-1.5">
-                                  <span className="material-symbols-outlined text-base text-outline">description</span>
+                                  <Icon name="description" className="text-base text-outline" />
                                   {name}
                                 </span>
-                                <span className="material-symbols-outlined text-base text-outline">download</span>
+                                <Icon name="download" className="text-base text-outline" />
                               </a>
                             )
                           })}
@@ -238,7 +240,9 @@ export default function StudentHomework() {
           </div>
         )}
 
-      </div>
-    </DashboardLayout>
+    </div>
   )
+
+  if (embed) return content
+  return <DashboardLayout>{content}</DashboardLayout>
 }

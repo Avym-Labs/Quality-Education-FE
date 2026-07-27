@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import api from '../../api/axios'
+import Icon from '../../components/common/Icon'
 
 export default function AdminManagement() {
   const [admins, setAdmins] = useState([])
@@ -172,14 +173,14 @@ export default function AdminManagement() {
             onClick={handleOpenCreateModal}
             className="flex items-center gap-1.5 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold hover:shadow-md cursor-pointer active:scale-95 transition-all border-none"
           >
-            <span className="material-symbols-outlined text-[16px]">add</span>
+            <Icon name="add" className="text-[16px]" />
             <span>Create Admin</span>
           </button>
         </section>
 
         {error && (
           <div className="flex items-center gap-2 p-4 bg-error-container rounded-xl text-error text-sm font-semibold">
-            <span className="material-symbols-outlined text-sm">error</span>
+            <Icon name="error" className="text-sm" />
             <span>{error}</span>
           </div>
         )}
@@ -187,11 +188,11 @@ export default function AdminManagement() {
         {/* Admins Table */}
         {loading ? (
           <div className="min-h-[30vh] flex items-center justify-center">
-            <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+            <Icon name="progress_activity" className="animate-spin text-primary text-3xl" />
           </div>
         ) : admins.length === 0 ? (
           <div className="text-center py-12 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl">
-            <span className="material-symbols-outlined text-outline text-5xl">shield</span>
+            <Icon name="shield" className="text-outline text-5xl" />
             <p className="text-sm text-on-surface-variant font-semibold mt-2">No Admin accounts found</p>
           </div>
         ) : (
@@ -234,9 +235,7 @@ export default function AdminManagement() {
                             }`}
                             title={admin.is_active ? "Pause Account" : "Activate Account"}
                           >
-                            <span className="material-symbols-outlined text-[18px]">
-                              {admin.is_active ? 'pause_circle' : 'play_circle'}
-                            </span>
+                            <Icon name={admin.is_active ? 'pause_circle' : 'play_circle'} className="text-[18px]" />
                           </button>
                           
                           {/* Edit button */}
@@ -245,7 +244,7 @@ export default function AdminManagement() {
                             className="text-primary hover:bg-primary-fixed/20 p-1.5 rounded-lg active:scale-90 transition-all cursor-pointer flex items-center justify-center border-none"
                             title="Edit Admin Credentials"
                           >
-                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                            <Icon name="edit" className="text-[18px]" />
                           </button>
 
                           {/* Delete button */}
@@ -254,7 +253,7 @@ export default function AdminManagement() {
                             className="text-error hover:bg-red-50 p-1.5 rounded-lg active:scale-90 transition-all cursor-pointer flex items-center justify-center border-none"
                             title="Delete Admin"
                           >
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                            <Icon name="delete" className="text-[18px]" />
                           </button>
                         </div>
                       </td>
@@ -276,15 +275,15 @@ export default function AdminManagement() {
                 </h3>
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container border-none bg-transparent"
+                  className="text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container border-none bg-transparent"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
               {formError && (
                 <div className="flex items-center gap-2 p-3 bg-error-container rounded-xl text-error text-xs font-semibold mb-4">
-                  <span className="material-symbols-outlined text-xs">error</span>
+                  <Icon name="error" className="text-xs" />
                   <span>{formError}</span>
                 </div>
               )}
@@ -381,9 +380,9 @@ export default function AdminManagement() {
                 <h3 className="font-title-lg text-base text-on-surface font-bold">Pause Account</h3>
                 <button 
                   onClick={() => setPauseModalOpen(false)}
-                  className="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container border-none bg-transparent"
+                  className="text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container border-none bg-transparent"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -458,14 +457,14 @@ export default function AdminManagement() {
             <div className="bg-surface-container-lowest rounded-2xl w-full max-w-md p-6 shadow-xl border border-outline-variant/40 animate-fade-in text-left">
               <div className="flex justify-between items-center pb-3 border-b border-outline-variant/15 mb-4">
                 <h3 className="font-title-lg text-base text-on-surface font-bold flex items-center gap-1.5 text-emerald-800">
-                  <span className="material-symbols-outlined">play_circle</span>
+                  <Icon name="play_circle" />
                   <span>Reactivate Account</span>
                 </h3>
                 <button 
                   onClick={() => setUnpauseModalOpen(false)}
-                  className="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container border-none bg-transparent"
+                  className="text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container border-none bg-transparent"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -473,7 +472,7 @@ export default function AdminManagement() {
                 Are you sure you want to activate the administrator account for <strong>{unpausingAdmin.full_name}</strong>?
               </p>
               <p className="text-[11px] text-on-surface-variant leading-relaxed p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100 font-semibold flex items-start gap-2">
-                <span className="material-symbols-outlined text-sm mt-0.5">info</span>
+                <Icon name="info" className="text-sm mt-0.5" />
                 <span>This will immediately restore access privileges for all teacher and student accounts under this institution.</span>
               </p>
 

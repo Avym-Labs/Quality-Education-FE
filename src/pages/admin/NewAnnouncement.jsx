@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function NewAnnouncement() {
   const navigate = useNavigate()
@@ -79,7 +80,7 @@ export default function NewAnnouncement() {
             onClick={() => navigate('/admin/dashboard')}
             className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-low transition-colors active:scale-95 duration-150"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">New Announcement</h2>
@@ -106,7 +107,7 @@ export default function NewAnnouncement() {
             {/* Content Details Card */}
             <section className="bg-surface-container-lowest p-stack-lg rounded-[24px] border border-outline-variant/30 flex flex-col gap-stack-md shadow-sm">
               <div className="flex items-center gap-stack-sm border-b border-outline-variant/20 pb-stack-sm mb-stack-sm">
-                <span className="material-symbols-outlined text-primary">edit_note</span>
+                <Icon name="edit_note" className="text-primary" />
                 <h3 className="font-title-lg text-sm text-on-surface font-bold">Content Details</h3>
               </div>
               
@@ -161,7 +162,7 @@ export default function NewAnnouncement() {
             {/* Audience Selection Card */}
             <section className="bg-surface-container-lowest p-stack-lg rounded-[24px] border border-outline-variant/30 flex flex-col gap-stack-md shadow-sm">
               <div className="flex items-center gap-stack-sm border-b border-outline-variant/20 pb-stack-sm mb-stack-sm">
-                <span className="material-symbols-outlined text-primary">group_add</span>
+                <Icon name="group_add" className="text-primary" />
                 <h3 className="font-title-lg text-sm text-on-surface font-bold">Audience Target</h3>
               </div>
               
@@ -178,7 +179,7 @@ export default function NewAnnouncement() {
                         : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-base">groups</span>
+                    <Icon name="groups" className="text-base" />
                     All Students
                   </button>
                   <button
@@ -190,7 +191,7 @@ export default function NewAnnouncement() {
                         : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-base">supervisor_account</span>
+                    <Icon name="supervisor_account" className="text-base" />
                     Teachers
                   </button>
                 </div>
@@ -236,7 +237,7 @@ export default function NewAnnouncement() {
                 disabled={loading}
                 className="px-8 py-3 bg-primary text-on-primary rounded-2xl font-bold shadow-lg hover:shadow-primary/20 hover:bg-opacity-95 transition-all active:scale-95 disabled:bg-opacity-50 flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-base">send</span>
+                <Icon name="send" className="text-base" />
                 {loading ? 'Publishing...' : 'Publish Announcement'}
               </button>
             </div>
@@ -274,7 +275,7 @@ export default function NewAnnouncement() {
                   >
                     <div className="flex items-start gap-2">
                       <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center text-on-primary shrink-0">
-                        <span className="material-symbols-outlined text-lg">campaign</span>
+                        <Icon name="campaign" className="text-lg" />
                       </div>
                       <div className="flex flex-col gap-0.5 overflow-hidden w-full">
                         <div className="flex justify-between items-center w-full">
@@ -292,7 +293,7 @@ export default function NewAnnouncement() {
                   </div>
 
                   <div className="mt-auto mb-4 flex flex-col items-center gap-1.5 text-white/50">
-                    <span className="material-symbols-outlined text-2xl">lock</span>
+                    <Icon name="lock" className="text-2xl" />
                     <p className="text-[9px] font-medium tracking-wider">Swipe up to unlock</p>
                   </div>
                 </div>
@@ -300,11 +301,11 @@ export default function NewAnnouncement() {
 
               <div className="mt-unit flex flex-col gap-2 text-xs">
                 <p className="text-on-surface-variant flex items-center gap-1 text-[11px] font-medium">
-                  <span className="material-symbols-outlined text-sm">info</span>
+                  <Icon name="info" className="text-sm" />
                   Push preview updates in real-time as you write.
                 </p>
                 <div className="flex items-center gap-2 p-2 bg-surface-container-low rounded-xl border border-outline-variant/30">
-                  <span className="material-symbols-outlined text-primary text-sm">smartphone</span>
+                  <Icon name="smartphone" className="text-primary text-sm" />
                   <span className="font-semibold text-[10px] text-on-surface-variant">Push Notification Enabled</span>
                   <div className="ml-auto w-8 h-4 bg-primary rounded-full relative">
                     <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>

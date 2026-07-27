@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 const DEFAULT_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Literature', 'Biology', 'History']
 
@@ -318,9 +319,7 @@ export default function StudentManagement() {
         {/* Search & Filter Header */}
         <section className="flex flex-col md:flex-row gap-gutter">
           <div className="relative flex-1 group">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">
-              search
-            </span>
+            <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
             <input 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -345,7 +344,7 @@ export default function StudentManagement() {
                   : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant'
               }`}
             >
-              <span className="material-symbols-outlined">filter_list</span>
+              <Icon name="filter_list" />
               <span>Filters</span>
             </button>
           </div>
@@ -403,7 +402,7 @@ export default function StudentManagement() {
             <div className="flex items-baseline gap-2 mt-2">
               <span className="font-display-lg text-headline-lg text-primary font-bold">{totalStudents}</span>
               <span className="text-green-600 text-xs font-bold flex items-center">
-                <span className="material-symbols-outlined text-[14px]">arrow_upward</span> 3%
+                <Icon name="arrow_upward" className="text-[14px]" /> 3%
               </span>
             </div>
           </div>
@@ -465,7 +464,7 @@ export default function StudentManagement() {
                           onClick={() => setMenuOpenId(menuOpenId === student.id ? null : student.id)}
                           className="p-1.5 hover:bg-surface-container rounded-full transition-colors"
                         >
-                          <span className="material-symbols-outlined text-outline">more_vert</span>
+                          <Icon name="more_vert" className="text-outline" />
                         </button>
                         {menuOpenId === student.id && (
                           <div className="absolute right-0 top-8 w-28 bg-surface-container-lowest shadow-lg rounded-xl border border-outline-variant z-10 py-1.5 animate-fadeIn">
@@ -522,7 +521,7 @@ export default function StudentManagement() {
                         {student.full_name || `${student.first_name} ${student.last_name}`}
                       </h3>
                       <p className="text-on-surface-variant text-xs flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">id_card</span>
+                        <Icon name="id_card" className="text-sm" />
                         Roll: #{student.roll_number}
                       </p>
                     </div>
@@ -555,7 +554,7 @@ export default function StudentManagement() {
         onClick={handleOpenCreateModal}
         className="fixed bottom-24 right-6 lg:bottom-12 lg:right-12 w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 group hover:shadow-2xl"
       >
-        <span className="material-symbols-outlined text-2xl font-bold">add</span>
+        <Icon name="add" className="text-2xl font-bold" />
         <span className="absolute right-full mr-4 bg-on-surface text-surface text-xs py-1 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
           Onboard Student
         </span>
@@ -574,9 +573,9 @@ export default function StudentManagement() {
                 </h3>
                 <button 
                   onClick={() => setModalOpen(false)}
-                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
+                  className="text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -800,9 +799,7 @@ export default function StudentManagement() {
                                   : 'bg-surface-container-lowest border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
                               }`}
                             >
-                              <span className="material-symbols-outlined text-[16px]">
-                                {active ? 'check_box' : 'check_box_outline_blank'}
-                              </span>
+                              <Icon name={active ? 'check_box' : 'check_box_outline_blank'} className="text-[16px]" />
                               <span>{subj}</span>
                             </button>
 
@@ -863,9 +860,9 @@ export default function StudentManagement() {
                 </h3>
                 <button 
                   onClick={() => setCredsModalOpen(false)}
-                  className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
+                  className="text-on-surface-variant hover:bg-surface-container p-1 rounded-full"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 

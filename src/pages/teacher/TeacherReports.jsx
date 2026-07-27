@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function TeacherReports() {
   const { user } = useAuth()
@@ -95,9 +96,9 @@ export default function TeacherReports() {
         <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20 print:hidden">
           <button 
             onClick={() => navigate('/teacher/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
-            arrow_back
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -149,7 +150,7 @@ export default function TeacherReports() {
         {/* Loading Report Indicator - Hidden in Print */}
         {loadingReport && (
           <div className="flex flex-col items-center py-10 print:hidden">
-            <span className="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+            <Icon name="progress_activity" className="animate-spin text-primary text-4xl" />
             <p className="text-xs text-on-surface-variant font-semibold mt-2">Compiling report card...</p>
           </div>
         )}
@@ -245,7 +246,7 @@ export default function TeacherReports() {
                 onClick={handlePrint}
                 className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl text-xs font-bold hover:shadow-md cursor-pointer active:scale-95 transition-all border-none"
               >
-                <span className="material-symbols-outlined text-sm">print</span>
+                <Icon name="print" className="text-sm" />
                 <span>Print Report Card</span>
               </button>
             </div>

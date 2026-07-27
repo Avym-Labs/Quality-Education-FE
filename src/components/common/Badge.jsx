@@ -1,3 +1,5 @@
+import Icon from './Icon'
+
 const variants = {
   primary: 'bg-primary text-white',
   secondary: 'bg-secondary-container text-on-secondary-container',
@@ -11,11 +13,7 @@ const variants = {
 export default function Badge({ label, variant = 'secondary', icon, className = '' }) {
   return (
     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-label-md font-medium ${variants[variant]} ${className}`}>
-      {icon && (
-        <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
-          {icon}
-        </span>
-      )}
+      {icon && <Icon name={icon} className="text-sm" filled />}
       {label}
     </span>
   )

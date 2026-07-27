@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function AdminChatLogs() {
   const navigate = useNavigate()
@@ -90,9 +91,9 @@ export default function AdminChatLogs() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/admin/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -109,7 +110,7 @@ export default function AdminChatLogs() {
             onClick={loadChatLogs}
             className="flex items-center gap-1.5 px-4 py-2 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-colors shadow-xs active:scale-95 duration-100 cursor-pointer select-none"
           >
-            <span className="material-symbols-outlined text-sm">refresh</span>
+            <Icon name="refresh" className="text-sm" />
             <span>Refresh Logs</span>
           </button>
         </section>
@@ -117,9 +118,7 @@ export default function AdminChatLogs() {
         {/* Filter Toolbar */}
         <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">
-              search
-            </span>
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" />
             <input 
               type="text"
               placeholder="Search by sender/receiver name, email, or message content..."
@@ -155,7 +154,7 @@ export default function AdminChatLogs() {
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="bg-surface-container-lowest p-12 text-center rounded-2xl border border-outline-variant/30 shadow-xs">
-            <span className="material-symbols-outlined text-4xl text-outline">visibility_off</span>
+            <Icon name="visibility_off" className="text-4xl text-outline" />
             <p className="text-xs text-outline font-bold mt-2">No chat logs match active search filters.</p>
           </div>
         ) : (
@@ -175,7 +174,7 @@ export default function AdminChatLogs() {
                       <span className="text-[10px] text-outline font-medium">({log.sender_email})</span>
                     </div>
 
-                    <span className="material-symbols-outlined text-outline text-sm">trending_flat</span>
+                    <Icon name="trending_flat" className="text-outline text-sm" />
 
                     {/* Receiver */}
                     <div className="flex items-center gap-1.5">
@@ -218,9 +217,9 @@ export default function AdminChatLogs() {
                             rel="noopener noreferrer"
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container hover:bg-primary-fixed hover:text-primary rounded-xl text-[10px] font-bold text-on-surface transition-colors"
                           >
-                            <span className="material-symbols-outlined text-sm">{isImg ? 'image' : 'description'}</span>
+                            <Icon name={isImg ? 'image' : 'description'} className="text-sm" />
                             <span className="truncate max-w-[120px]">{fileName}</span>
-                            <span className="material-symbols-outlined text-xs">download</span>
+                            <Icon name="download" className="text-xs" />
                           </a>
                         )
                       })}

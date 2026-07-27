@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function NotificationCenter() {
   const navigate = useNavigate()
@@ -188,11 +189,11 @@ export default function NotificationCenter() {
               onClick={() => navigate(-1)}
               className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-low transition-colors active:scale-95 duration-150"
             >
-              <span className="material-symbols-outlined">arrow_back</span>
+              <Icon name="arrow_back" />
             </button>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Notifications</h2>
           </div>
-          <span className="material-symbols-outlined text-primary text-2xl">notifications</span>
+          <Icon name="notifications" className="text-primary text-2xl" />
         </section>
 
         {error && (
@@ -235,7 +236,7 @@ export default function NotificationCenter() {
                       <div className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-primary-container/20"></div>
                     )}
                     <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${meta.color}`}>
-                      <span className="material-symbols-outlined text-lg">{meta.icon}</span>
+                      <Icon name={meta.icon} className="text-lg" />
                     </div>
                     <div className="flex-grow min-w-0 pr-4">
                       <div className="flex justify-between items-start mb-0.5">
@@ -270,7 +271,7 @@ export default function NotificationCenter() {
                       <div className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-primary-container/20"></div>
                     )}
                     <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${meta.color}`}>
-                      <span className="material-symbols-outlined text-lg">{meta.icon}</span>
+                      <Icon name={meta.icon} className="text-lg" />
                     </div>
                     <div className="flex-grow min-w-0 pr-2">
                       <div className="flex justify-between items-start mb-0.5">
@@ -300,7 +301,7 @@ export default function NotificationCenter() {
                     className="bg-surface-container border border-outline-variant/30 p-4 rounded-2xl transition-all flex items-start gap-4 opacity-75 cursor-pointer hover:opacity-90"
                   >
                     <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${meta.color}`}>
-                      <span className="material-symbols-outlined text-lg">{meta.icon}</span>
+                      <Icon name={meta.icon} className="text-lg" />
                     </div>
                     <div className="flex-grow min-w-0">
                       <div className="flex justify-between items-start mb-0.5">
@@ -320,7 +321,7 @@ export default function NotificationCenter() {
         <section className="mt-8">
           <div className="relative overflow-hidden rounded-3xl bg-primary-container p-6 text-on-primary-container shadow-md">
             <div className="absolute top-0 right-0 p-4 opacity-15">
-              <span className="material-symbols-outlined text-[80px]">school</span>
+              <Icon name="school" className="text-[80px]" />
             </div>
             <div className="relative z-10 space-y-2">
               <div className="bg-on-primary-container/20 w-fit px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import Icon from '../common/Icon'
 
 export default function ConversationSidebar({ activeConversationId }) {
   const { user } = useAuth()
@@ -209,13 +210,13 @@ export default function ConversationSidebar({ activeConversationId }) {
             onClick={openNewChatModal}
             className="flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary rounded-full text-xs font-bold hover:bg-opacity-90 transition-colors active:scale-95 duration-100 shadow-sm cursor-pointer"
           >
-            <span className="material-symbols-outlined text-sm">add_comment</span>
+            <Icon name="add_comment" className="text-sm" />
             <span>New Chat</span>
           </button>
         </div>
 
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-2.5 text-outline text-base">search</span>
+          <Icon name="search" className="absolute left-3 top-2.5 text-outline text-base" />
           <input
             type="text"
             placeholder="Search conversations..."
@@ -230,12 +231,12 @@ export default function ConversationSidebar({ activeConversationId }) {
       <div className="flex-1 overflow-y-auto p-2 space-y-1.5 min-h-0">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 text-outline gap-2">
-            <span className="material-symbols-outlined text-3xl animate-spin">sync</span>
+            <Icon name="sync" className="text-3xl animate-spin" />
             <p className="text-[10px] font-bold uppercase tracking-wider">Loading inbox...</p>
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="text-center py-16 px-4 text-outline space-y-2">
-            <span className="material-symbols-outlined text-4xl">chat_bubble_outline</span>
+            <Icon name="chat_bubble_outline" className="text-4xl" />
             <p className="text-xs font-semibold">No active conversations found.</p>
             <p className="text-[10px] leading-relaxed">Click "New Chat" to connect with others.</p>
           </div>
@@ -308,7 +309,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                 onClick={() => setIsModalOpen(false)}
                 className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high text-outline hover:text-on-surface transition-colors"
               >
-                <span className="material-symbols-outlined text-base">close</span>
+                <Icon name="close" className="text-base" />
               </button>
             </div>
 
@@ -344,7 +345,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                 /* Direct Message Flow: Searchable Contact  */
                 <div className="space-y-4 h-full flex flex-col">
                   <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-outline text-base">search</span>
+                    <Icon name="search" className="absolute left-3 top-2.5 text-outline text-base" />
                     <input
                       type="text"
                       placeholder={user?.role === 'student' || user?.role === 'admin' ? 'Search teachers...' : 'Search students...'}
@@ -357,12 +358,12 @@ export default function ConversationSidebar({ activeConversationId }) {
                   <div className="flex-1 overflow-y-auto space-y-1.5 min-h-[250px] max-h-[350px] pr-1">
                     {contactsLoading ? (
                       <div className="flex flex-col items-center justify-center py-12 text-outline gap-2">
-                        <span className="material-symbols-outlined text-2xl animate-spin">sync</span>
+                        <Icon name="sync" className="text-2xl animate-spin" />
                         <p className="text-[10px] font-bold uppercase tracking-wider">Loading ...</p>
                       </div>
                     ) : filteredContacts.length === 0 ? (
                       <div className="text-center py-12 text-outline">
-                        <span className="material-symbols-outlined text-3xl">group_off</span>
+                        <Icon name="group_off" className="text-3xl" />
                         <p className="text-xs font-semibold mt-2">No matching contacts found.</p>
                       </div>
                     ) : (
@@ -389,7 +390,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                               </p>
                             </div>
                           </div>
-                          <span className="material-symbols-outlined text-outline text-lg group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                          <Icon name="chevron_right" className="text-outline text-lg group-hover:translate-x-0.5 transition-transform" />
                         </div>
                       ))
                     )}
@@ -563,7 +564,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                     disabled={broadcasting}
                     className="w-full mt-2 py-3 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:bg-opacity-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <span className="material-symbols-outlined text-sm">campaign</span>
+                    <Icon name="campaign" className="text-sm" />
                     <span>{broadcasting ? 'Sending Broadcast...' : 'Broadcast to Group'}</span>
                   </button>
                 </form>

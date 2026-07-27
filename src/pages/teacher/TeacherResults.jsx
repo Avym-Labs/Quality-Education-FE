@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function TeacherResults() {
   const { user } = useAuth()
@@ -190,9 +191,9 @@ export default function TeacherResults() {
         <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
           <button 
             onClick={() => navigate('/teacher/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
-            arrow_back
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -321,7 +322,7 @@ export default function TeacherResults() {
                 
                 {loadingStudents ? (
                   <div className="flex justify-center py-10">
-                    <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+                    <Icon name="progress_activity" className="animate-spin text-primary text-3xl" />
                   </div>
                 ) : students.length === 0 ? (
                   <p className="text-xs text-on-surface-variant italic py-6 text-center">No students registered in this class.</p>
@@ -380,7 +381,7 @@ export default function TeacherResults() {
           <div className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg" />
               <input 
                 type="text" 
                 placeholder="Search by student, test name, or subject..."
@@ -392,11 +393,11 @@ export default function TeacherResults() {
 
             {historyLoading ? (
               <div className="flex justify-center py-10">
-                <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+                <Icon name="progress_activity" className="animate-spin text-primary text-3xl" />
               </div>
             ) : filteredHistory.length === 0 ? (
               <div className="text-center py-12 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl">
-                <span className="material-symbols-outlined text-outline text-5xl">book</span>
+                <Icon name="book" className="text-outline text-5xl" />
                 <p className="text-sm text-on-surface-variant font-semibold mt-2">No grade history items found.</p>
               </div>
             ) : (
@@ -428,7 +429,7 @@ export default function TeacherResults() {
                               onClick={() => handleDeleteHistoryItem(record.id)}
                               className="text-error hover:bg-red-50 p-1.5 rounded-lg cursor-pointer"
                             >
-                              <span className="material-symbols-outlined text-[18px]">delete</span>
+                              <Icon name="delete" className="text-[18px]" />
                             </button>
                           </td>
                         </tr>

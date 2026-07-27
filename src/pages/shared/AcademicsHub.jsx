@@ -4,6 +4,9 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import SchedulePage from './SchedulePage'
+import StudentHomework from '../student/StudentHomework'
+import HomeworkAssignment from '../teacher/HomeworkAssignment'
+import Icon from '../../components/common/Icon'
 
 export default function AcademicsHub() {
   const { user } = useAuth()
@@ -552,7 +555,7 @@ export default function AcademicsHub() {
   // falling back to legacy dedicated paths like /results and /reports
   useEffect(() => {
     const tabParam = new URLSearchParams(location.search).get('tab')
-    const validTabs = ['material', 'tests', 'results', 'reports', 'schedules']
+    const validTabs = ['material', 'tests', 'results', 'reports', 'schedules', 'homework']
     if (tabParam && validTabs.includes(tabParam)) {
       setActiveTab(tabParam)
     } else if (location.pathname.includes('/results')) {
@@ -1102,9 +1105,9 @@ export default function AcademicsHub() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate(`/${role}/dashboard`)}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -1123,7 +1126,7 @@ export default function AcademicsHub() {
                   : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
               }`}
             >
-              <span className="material-symbols-outlined text-sm">library_books</span>
+              <Icon name="library_books" className="text-sm" />
               <span>Study Material</span>
             </button>
             <button
@@ -1134,7 +1137,7 @@ export default function AcademicsHub() {
                   : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
               }`}
             >
-              <span className="material-symbols-outlined text-sm">quiz</span>
+              <Icon name="quiz" className="text-sm" />
               <span>Tests & Answer Keys</span>
             </button>
             <button
@@ -1145,7 +1148,7 @@ export default function AcademicsHub() {
                   : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
               }`}
             >
-              <span className="material-symbols-outlined text-sm">grade</span>
+              <Icon name="grade" className="text-sm" />
               <span>Grades & Results</span>
             </button>
             <button
@@ -1156,7 +1159,7 @@ export default function AcademicsHub() {
                   : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
               }`}
             >
-              <span className="material-symbols-outlined text-sm">bar_chart</span>
+              <Icon name="bar_chart" className="text-sm" />
               <span>Performance Reports</span>
             </button>
             <button
@@ -1167,24 +1170,37 @@ export default function AcademicsHub() {
                   : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
               }`}
             >
-              <span className="material-symbols-outlined text-sm">calendar_today</span>
+              <Icon name="calendar_today" className="text-sm" />
               <span>Lecture Calendar</span>
             </button>
+            {role !== 'admin' && (
+              <button
+                onClick={() => handleTabChange('homework')}
+                className={`flex items-center justify-center gap-2 p-3.5 rounded-2xl font-bold text-xs select-none cursor-pointer border transition-all duration-150 active:scale-95 ${
+                  activeTab === 'homework'
+                    ? 'bg-primary text-on-primary border-primary shadow-sm'
+                    : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'
+                }`}
+              >
+                <Icon name="assignment" className="text-sm" />
+                <span>Homework</span>
+              </button>
+            )}
           </div>
         </section>
 
         {/* Global Notifications Panel */}
-        {(error || success) && activeTab !== 'results' && activeTab !== 'reports' && activeTab !== 'schedules' && (
+        {(error || success) && activeTab !== 'results' && activeTab !== 'reports' && activeTab !== 'schedules' && activeTab !== 'homework' && (
           <div className="print:hidden">
             {error && (
               <div className="p-3 bg-error-container rounded-xl text-error text-xs font-bold flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-xs">error</span>
+                <Icon name="error" className="text-xs" />
                 <span>{error}</span>
               </div>
             )}
             {success && (
               <div className="p-3 bg-green-50 rounded-xl text-green-700 text-xs font-bold flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-xs">check_circle</span>
+                <Icon name="check_circle" className="text-xs" />
                 <span>{success}</span>
               </div>
             )}
@@ -1296,7 +1312,7 @@ export default function AcademicsHub() {
                               className="px-3.5 py-2 rounded-2xl bg-primary-fixed hover:bg-primary hover:text-on-primary text-primary font-bold text-[10px] shadow-xs active:scale-95 duration-100 flex items-center gap-1 border-none cursor-pointer animate-fadeIn"
                               title="View Resource"
                             >
-                              <span className="material-symbols-outlined text-xs">visibility</span>
+                              <Icon name="visibility" className="text-xs" />
                               <span>View Resource</span>
                             </button>
                           ) : (
@@ -1308,7 +1324,7 @@ export default function AcademicsHub() {
                                 className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center hover:bg-primary-fixed hover:text-primary transition-colors text-on-surface"
                                 title="Download Material"
                               >
-                                <span className="material-symbols-outlined text-sm">download</span>
+                                <Icon name="download" className="text-sm" />
                               </a>
                               {(role === 'teacher' || role === 'admin') && (
                                 <button
@@ -1316,7 +1332,7 @@ export default function AcademicsHub() {
                                   className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
                                   title="Delete Material"
                                 >
-                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                  <Icon name="delete" className="text-sm" />
                                 </button>
                               )}
                             </>
@@ -1441,7 +1457,7 @@ export default function AcademicsHub() {
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 px-3 py-2 bg-surface-container hover:bg-primary-fixed hover:text-primary rounded-xl text-[10px] font-bold text-on-surface transition-colors"
                           >
-                            <span className="material-symbols-outlined text-[14px]">description</span>
+                            <Icon name="description" className="text-[14px]" />
                             <span>Question Paper</span>
                           </a>
                         )}
@@ -1452,7 +1468,7 @@ export default function AcademicsHub() {
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 px-3 py-2 bg-primary-fixed text-primary hover:bg-primary/10 rounded-xl text-[10px] font-bold transition-colors"
                           >
-                            <span className="material-symbols-outlined text-[14px]">key</span>
+                            <Icon name="key" className="text-[14px]" />
                             <span>Answer Key</span>
                           </a>
                         )}
@@ -1462,7 +1478,7 @@ export default function AcademicsHub() {
                             className="w-8 h-8 rounded-xl bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
                             title="Delete Test Package"
                           >
-                            <span className="material-symbols-outlined text-sm">delete</span>
+                            <Icon name="delete" className="text-sm" />
                           </button>
                         )}
                       </div>
@@ -1483,7 +1499,7 @@ export default function AcademicsHub() {
             {/* Unified Filter Controls card */}
             <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-4 text-xs text-left">
               <div className="flex items-center gap-1.5 border-b border-outline-variant/15 pb-2">
-                <span className="material-symbols-outlined text-primary text-base">filter_alt</span>
+                <Icon name="filter_alt" className="text-primary text-base" />
                 <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
                   Search & Filter Results
                 </h3>
@@ -1603,14 +1619,12 @@ export default function AcademicsHub() {
                   className="p-5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low/20 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">add_circle</span>
+                    <Icon name="add_circle" className="text-primary" />
                     <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
                       Record New Class Test Scores ({filterClass})
                     </h3>
                   </div>
-                  <span className="material-symbols-outlined text-outline">
-                    {isRecordScoresOpen ? 'expand_less' : 'expand_more'}
-                  </span>
+                  <Icon name={isRecordScoresOpen ? 'expand_less' : 'expand_more'} className="text-outline" />
                 </div>
 
                 {isRecordScoresOpen && (
@@ -1675,13 +1689,13 @@ export default function AcademicsHub() {
                           onClick={handleDownloadCSVTemplate}
                           className="flex items-center gap-1.5 px-3 py-2 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/50 rounded-xl font-bold cursor-pointer transition-colors"
                         >
-                          <span className="material-symbols-outlined text-xs">download</span>
+                          <Icon name="download" className="text-xs" />
                           <span>Download Template</span>
                         </button>
                         
                         {/* Upload CSV button */}
                         <label className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:bg-opacity-95 transition-all active:scale-95 duration-100 shadow-xs">
-                          <span className="material-symbols-outlined text-xs">upload</span>
+                          <Icon name="upload" className="text-xs" />
                           <span>Upload Scores (CSV)</span>
                           <input 
                             type="file" 
@@ -1754,7 +1768,7 @@ export default function AcademicsHub() {
                     onClick={handleExportHistoryCSV}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high border border-outline-variant/50 text-[10px] font-bold rounded-xl cursor-pointer hover:bg-surface-container-highest transition-colors active:scale-95 duration-100"
                   >
-                    <span className="material-symbols-outlined text-xs">download_for_offline</span>
+                    <Icon name="download_for_offline" className="text-xs" />
                     <span>Export History (CSV)</span>
                   </button>
                 )}
@@ -1854,7 +1868,7 @@ export default function AcademicsHub() {
                   width: 100% !important;
                   background: white !important;
                 }
-                .print\\:hidden, button, select, input, .material-symbols-outlined, header, nav, aside {
+                .print\\:hidden, button, select, input, svg, header, nav, aside {
                   display: none !important;
                 }
               }
@@ -1869,7 +1883,7 @@ export default function AcademicsHub() {
                 <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4">
                   <div>
                     <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-black flex items-center gap-2">
-                      <span className="material-symbols-outlined text-primary text-2xl md:text-3xl">description</span>
+                      <Icon name="description" className="text-primary text-2xl md:text-3xl" />
                       <span>Detailed Attendance Report</span>
                     </h2>
                     <p className="text-xs text-outline font-semibold uppercase tracking-wider mt-0.5">
@@ -1887,7 +1901,7 @@ export default function AcademicsHub() {
                       }}
                       className="flex items-center gap-1 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:opacity-95 border-none cursor-pointer print:hidden"
                     >
-                      <span className="material-symbols-outlined text-sm">download</span>
+                      <Icon name="download" className="text-sm" />
                       <span>Export PDF</span>
                     </button>
                   </div>
@@ -1919,7 +1933,7 @@ export default function AcademicsHub() {
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Total Days</span>
                           <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.schoolDays}</h4>
                           <p className="text-[9px] text-on-surface-variant font-semibold mt-1.5 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs text-primary">calendar_today</span>
+                            <Icon name="calendar_today" className="text-xs text-primary" />
                             <span>Total Period Days</span>
                           </p>
                         </div>
@@ -1927,7 +1941,7 @@ export default function AcademicsHub() {
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Present Days</span>
                           <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.present}</h4>
                           <p className="text-[9px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">check_circle</span>
+                            <Icon name="check_circle" className="text-xs" />
                             <span>Present Days</span>
                           </p>
                         </div>
@@ -1935,7 +1949,7 @@ export default function AcademicsHub() {
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Absent Days</span>
                           <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.absent}</h4>
                           <p className="text-[9px] text-error font-bold mt-1.5 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">cancel</span>
+                            <Icon name="cancel" className="text-xs" />
                             <span>Absent Days</span>
                           </p>
                         </div>
@@ -1943,7 +1957,7 @@ export default function AcademicsHub() {
                           <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Attendance Rate</span>
                           <h4 className={`attendance-pct-card leading-none mt-1 ${rData.rate < 75 ? 'text-error' : 'text-primary'}`}>{rData.rate}%</h4>
                           <p className={`text-[9px] font-bold mt-1.5 flex items-center gap-1 ${rData.rate < 75 ? 'text-error' : 'text-primary'}`}>
-                            <span className="material-symbols-outlined text-xs">trending_up</span>
+                            <Icon name="trending_up" className="text-xs" />
                             <span>Overall Rate</span>
                           </p>
                         </div>
@@ -1952,7 +1966,7 @@ export default function AcademicsHub() {
                       {/* Warning Banner */}
                       {rData.rate < 75 && (
                         <div className="bg-red-50 border border-red-200 text-error rounded-2xl p-4 flex items-start gap-3 text-xs font-bold">
-                          <span className="material-symbols-outlined text-[20px] mt-0.5">error_outline</span>
+                          <Icon name="error_outline" className="text-[20px] mt-0.5" />
                           <div className="space-y-0.5">
                             <h5 className="text-xs font-black">Attention Required</h5>
                             <p className="text-[10px] font-semibold text-red-700 leading-normal">
@@ -2030,7 +2044,7 @@ export default function AcademicsHub() {
                       <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4 flex flex-col justify-between">
                         <div className="flex gap-4 items-start">
                           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                            <span className="material-symbols-outlined text-2xl">groups</span>
+                            <Icon name="groups" className="text-2xl" />
                           </div>
                           <div>
                             <h3 className="text-lg font-black text-on-surface">Class Reports</h3>
@@ -2043,21 +2057,21 @@ export default function AcademicsHub() {
                             onClick={handleGenerateReport}
                             className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-2xl font-bold text-xs shadow-sm hover:opacity-95 border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-sm">trending_up</span>
+                            <Icon name="trending_up" className="text-sm" />
                             <span>Detailed Class Report</span>
                           </button>
                           <button 
                             onClick={() => triggerReportsExport('pdf')}
                             className="w-full flex items-center justify-center gap-2 bg-primary-fixed/40 text-primary py-2.5 rounded-2xl font-bold text-xs hover:bg-primary-fixed/60 border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-sm">download</span>
+                            <Icon name="download" className="text-sm" />
                             <span>Quick PDF Export</span>
                           </button>
                           <button 
                             onClick={() => triggerReportsExport('csv')}
                             className="w-full flex items-center justify-center gap-2 bg-primary-fixed/20 text-primary py-2.5 rounded-2xl font-bold text-xs hover:bg-primary-fixed/30 border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-sm">download</span>
+                            <Icon name="download" className="text-sm" />
                             <span>Export as CSV</span>
                           </button>
                         </div>
@@ -2067,7 +2081,7 @@ export default function AcademicsHub() {
                       <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4 flex flex-col justify-between">
                         <div className="flex gap-4 items-start">
                           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
-                            <span className="material-symbols-outlined text-2xl">person</span>
+                            <Icon name="person" className="text-2xl" />
                           </div>
                           <div>
                             <h3 className="text-lg font-black text-on-surface">Individual Reports</h3>
@@ -2089,7 +2103,7 @@ export default function AcademicsHub() {
                           onClick={() => setIsReportsModalOpen(true)}
                           className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-2xl font-bold text-xs shadow-sm hover:opacity-95 border-none cursor-pointer mt-2"
                         >
-                          <span className="material-symbols-outlined text-sm">person</span>
+                          <Icon name="person" className="text-sm" />
                           <span>Student Report</span>
                         </button>
                       </div>
@@ -2099,7 +2113,7 @@ export default function AcademicsHub() {
                     {/* Report Filters */}
                     <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4 text-left">
                       <div className="flex items-center gap-2 pb-1 border-b border-outline-variant/20">
-                        <span className="material-symbols-outlined text-on-surface text-[20px]">filter_list</span>
+                        <Icon name="filter_list" className="text-on-surface text-[20px]" />
                         <h4 className="text-sm font-bold text-on-surface">Report Filters (for Class Reports)</h4>
                       </div>
 
@@ -2148,7 +2162,7 @@ export default function AcademicsHub() {
                             onClick={handleGenerateReport}
                             className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-xl font-bold text-xs shadow-md hover:opacity-95 border-none cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-sm">trending_up</span>
+                            <Icon name="trending_up" className="text-sm" />
                             <span>Generate</span>
                           </button>
                         </div>
@@ -2168,13 +2182,13 @@ export default function AcademicsHub() {
                       <div className="flex items-center gap-3">
                         <button 
                           onClick={() => setReportsViewMode('config')}
-                          className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors border-none bg-transparent cursor-pointer"
+                          className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors border-none bg-transparent cursor-pointer"
                         >
-                          arrow_back
+                          <Icon name="arrow_back" />
                         </button>
                         <div>
                           <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-black flex items-center gap-2 flex-wrap">
-                            <span className="material-symbols-outlined text-primary text-2xl md:text-3xl">description</span>
+                            <Icon name="description" className="text-primary text-2xl md:text-3xl" />
                             <span>Detailed Attendance Report</span>
                           </h2>
                           <p className="text-xs text-outline font-semibold uppercase tracking-wider mt-0.5">
@@ -2189,14 +2203,14 @@ export default function AcademicsHub() {
                           onClick={() => triggerReportsExport('pdf')}
                           className="flex items-center gap-1.5 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:opacity-95 border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-[16px]">download</span>
+                          <Icon name="download" className="text-[16px]" />
                           <span>Export PDF</span>
                         </button>
                         <button 
                           onClick={() => triggerReportsExport('csv')}
                           className="flex items-center gap-1.5 bg-primary-fixed text-primary px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-fixed-dim border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-[16px]">download</span>
+                          <Icon name="download" className="text-[16px]" />
                           <span>Export CSV</span>
                         </button>
                       </div>
@@ -2317,7 +2331,7 @@ export default function AcademicsHub() {
                                       <div>
                                         <h4 className="text-sm font-black text-on-surface capitalize">{student.name}</h4>
                                         <p className="text-[10px] text-on-surface-variant font-semibold flex items-center gap-1">
-                                          <span className="material-symbols-outlined text-xs">phone</span>
+                                          <Icon name="phone" className="text-xs" />
                                           <span>Father: {student.phone}</span>
                                         </p>
                                       </div>
@@ -2372,7 +2386,7 @@ export default function AcademicsHub() {
 
                                     {isAttentionRequired && (
                                       <div className="bg-red-50 border border-red-200 text-error rounded-xl p-3 flex items-start gap-2 text-xs font-bold">
-                                        <span className="material-symbols-outlined text-[16px] mt-0.5">warning</span>
+                                        <Icon name="warning" className="text-[16px] mt-0.5" />
                                         <span>Attention Required: Attendance below 75%. Consider parent meeting.</span>
                                       </div>
                                     )}
@@ -2386,7 +2400,7 @@ export default function AcademicsHub() {
                           {/* Quick export cards */}
                           <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4">
                             <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/20 pb-2 flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-primary text-[18px]">download</span>
+                              <Icon name="download" className="text-primary text-[18px]" />
                               <span>Quick Export Options</span>
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2394,7 +2408,7 @@ export default function AcademicsHub() {
                                 onClick={() => triggerReportsExport('pdf')}
                                 className="border border-dashed border-outline-variant hover:border-primary/55 rounded-2xl p-4 flex gap-3 cursor-pointer hover:bg-surface-container-low transition-all"
                               >
-                                <span className="material-symbols-outlined text-primary text-2xl mt-0.5">picture_as_pdf</span>
+                                <Icon name="picture_as_pdf" className="text-primary text-2xl mt-0.5" />
                                 <div>
                                   <h4 className="text-xs font-bold text-on-surface">Export as PDF</h4>
                                   <p className="text-[10px] text-on-surface-variant font-medium mt-0.5">{reportsSelectedClass.split(' (')[0]} attendance report</p>
@@ -2404,7 +2418,7 @@ export default function AcademicsHub() {
                                 onClick={() => triggerReportsExport('csv')}
                                 className="border border-dashed border-outline-variant hover:border-primary/55 rounded-2xl p-4 flex gap-3 cursor-pointer hover:bg-surface-container-low transition-all"
                               >
-                                <span className="material-symbols-outlined text-primary text-2xl mt-0.5">table_view</span>
+                                <Icon name="table_view" className="text-primary text-2xl mt-0.5" />
                                 <div>
                                   <h4 className="text-xs font-bold text-on-surface">Export as CSV</h4>
                                   <p className="text-[10px] text-on-surface-variant font-medium mt-0.5">{reportsSelectedClass.split(' (')[0]} spreadsheet format</p>
@@ -2428,6 +2442,10 @@ export default function AcademicsHub() {
         <SchedulePage embed={true} />
       )}
 
+      {activeTab === 'homework' && role !== 'admin' && (
+        role === 'student' ? <StudentHomework embed /> : <HomeworkAssignment embed />
+      )}
+
         {/* Secure In-App Viewer Modal (Student view restriction) */}
         {viewingMaterial && (
           <div className="fixed inset-0 bg-surface-container-lowest z-[100] flex flex-col animate-fadeIn">
@@ -2446,7 +2464,7 @@ export default function AcademicsHub() {
                   onClick={() => setViewingMaterial(null)}
                   className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors border-none cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-sm">close</span>
+                  <Icon name="close" className="text-sm" />
                 </button>
               </div>
 
@@ -2493,7 +2511,7 @@ export default function AcademicsHub() {
 
                   return (
                     <div className="text-center p-8 max-w-sm rounded-2xl border border-dashed border-outline-variant bg-surface-container-low/20">
-                      <span className="material-symbols-outlined text-4xl text-primary">menu_book</span>
+                      <Icon name="menu_book" className="text-4xl text-primary" />
                       <h4 className="font-bold text-xs mt-2 text-on-surface">Secure Document Stream</h4>
                       <p className="text-[10px] text-outline font-semibold mt-1">
                         Resource files of format .{ext} are streamed securely in-app. Local download is disabled by administrator policy.
@@ -2504,7 +2522,7 @@ export default function AcademicsHub() {
                         rel="noopener noreferrer"
                         className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-xl text-[10px] font-bold shadow-xs hover:bg-opacity-95 text-decoration-none"
                       >
-                        <span className="material-symbols-outlined text-xs">open_in_new</span>
+                        <Icon name="open_in_new" className="text-xs" />
                         <span>Stream Live View</span>
                       </a>
                     </div>
@@ -2515,7 +2533,7 @@ export default function AcademicsHub() {
 
               {/* Secure Footnote */}
               <div className="p-3 bg-surface-container-low border-t border-outline-variant/20 text-center text-[9px] font-bold text-outline uppercase tracking-wider flex items-center justify-center gap-1.5">
-                <span className="material-symbols-outlined text-[13px] text-primary">lock</span>
+                <Icon name="lock" className="text-[13px] text-primary" />
                 <span>Protected by Educore Security Shield Policy &bull; Local copies disallowed</span>
               </div>
 
@@ -2535,16 +2553,16 @@ export default function AcademicsHub() {
               <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-black text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">person</span>
+                    <Icon name="person" className="text-primary" />
                     <span>Individual Student Report</span>
                   </h3>
                   <p className="text-xs text-on-surface-variant font-medium">Generate detailed attendance report for a specific student</p>
                 </div>
                 <button 
                   onClick={() => setIsReportsModalOpen(false)}
-                  className="material-symbols-outlined hover:bg-surface-container-high p-1.5 rounded-full border-none bg-transparent cursor-pointer text-on-surface"
+                  className="hover:bg-surface-container-high p-1.5 rounded-full border-none bg-transparent cursor-pointer text-on-surface"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -2634,7 +2652,7 @@ export default function AcademicsHub() {
                               {reportsModalStandard.split(' (')[0]}
                             </span>
                             <span className="text-[10px] text-on-surface-variant font-medium flex items-center gap-0.5">
-                              <span className="material-symbols-outlined text-xs">phone</span>
+                              <Icon name="phone" className="text-xs" />
                               <span>Father: {activeModalStudentReport.phone}</span>
                             </span>
                           </div>
@@ -2651,14 +2669,14 @@ export default function AcademicsHub() {
                           onClick={() => triggerModalStudentExport('pdf', activeModalStudentReport.name)}
                           className="flex items-center gap-1 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:opacity-95 border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-sm">download</span>
+                          <Icon name="download" className="text-sm" />
                           <span>Export PDF</span>
                         </button>
                         <button 
                           onClick={() => triggerModalStudentExport('csv', activeModalStudentReport.name)}
                           className="flex items-center gap-1 bg-primary-fixed text-primary px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-fixed-dim border-none cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-sm">download</span>
+                          <Icon name="download" className="text-sm" />
                           <span>Export CSV</span>
                         </button>
                       </div>
@@ -2671,7 +2689,7 @@ export default function AcademicsHub() {
                         <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Total Days</span>
                         <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{activeModalStudentReport.schoolDays}</h4>
                         <p className="text-[9px] text-on-surface-variant font-semibold mt-1.5 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-xs text-primary">calendar_today</span>
+                          <Icon name="calendar_today" className="text-xs text-primary" />
                           <span>Total Days</span>
                         </p>
                       </div>
@@ -2681,7 +2699,7 @@ export default function AcademicsHub() {
                         <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Present Days</span>
                         <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{activeModalStudentReport.present}</h4>
                         <p className="text-[9px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-xs">check_circle</span>
+                          <Icon name="check_circle" className="text-xs" />
                           <span>Present Days</span>
                         </p>
                       </div>
@@ -2691,7 +2709,7 @@ export default function AcademicsHub() {
                         <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Absent Days</span>
                         <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{activeModalStudentReport.absent}</h4>
                         <p className="text-[9px] text-error font-bold mt-1.5 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-xs">cancel</span>
+                          <Icon name="cancel" className="text-xs" />
                           <span>Absent Days</span>
                         </p>
                       </div>
@@ -2701,7 +2719,7 @@ export default function AcademicsHub() {
                         <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Attendance Rate</span>
                         <h4 className="text-xl font-numeric-bold font-black text-error leading-none mt-1">{activeModalStudentReport.rate}%</h4>
                         <p className="text-[9px] text-error font-bold mt-1.5 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-xs">trending_up</span>
+                          <Icon name="trending_up" className="text-xs" />
                           <span>Attendance Rate</span>
                         </p>
                       </div>
@@ -2710,7 +2728,7 @@ export default function AcademicsHub() {
                     {/* Attention Alert Banner */}
                     {activeModalStudentReport.rate < 75 && (
                       <div className="bg-red-50 border border-red-200 text-error rounded-2xl p-4 flex items-start gap-3 text-xs font-bold animate-fadeIn">
-                        <span className="material-symbols-outlined text-[20px] mt-0.5">error_outline</span>
+                        <Icon name="error_outline" className="text-[20px] mt-0.5" />
                         <div className="space-y-0.5">
                           <h5 className="text-xs font-black">Attention Required</h5>
                           <p className="text-[10px] font-semibold text-red-700 leading-normal">
@@ -2771,7 +2789,7 @@ export default function AcademicsHub() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
-                    <span className="material-symbols-outlined text-6xl text-outline mb-3">person</span>
+                    <Icon name="person" className="text-6xl text-outline mb-3" />
                     <p className="text-sm font-bold">Select a student to generate their individual report</p>
                   </div>
                 )}

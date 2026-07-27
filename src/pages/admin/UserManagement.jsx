@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 const AVAILABLE_CLASSES = ['9-A', '9-B', '9-C', '10-A', '10-B', '10-C', '11-A', '11-B', '11-C', '12-A', '12-B', '12-C']
 const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Literature', 'Biology', 'History']
@@ -413,14 +414,14 @@ export default function UserManagement() {
               }}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary-container text-on-secondary-container hover:bg-opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
             >
-              <span className="material-symbols-outlined text-sm">publish</span>
+              <Icon name="publish" className="text-sm" />
               <span>Bulk Import</span>
             </button>
             <button 
               onClick={handleOpenCreateModal}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
             >
-              <span className="material-symbols-outlined text-sm">person_add</span>
+              <Icon name="person_add" className="text-sm" />
               <span>Add {activeRole === 'student' ? 'Student' : 'Teacher'}</span>
             </button>
           </div>
@@ -447,7 +448,7 @@ export default function UserManagement() {
 
           <div className="flex flex-wrap items-center gap-2 flex-1 md:justify-end">
             <div className="relative min-w-[200px]">
-              <span className="material-symbols-outlined absolute left-3 top-2.5 text-outline text-base">search</span>
+              <Icon name="search" className="absolute left-3 top-2.5 text-outline text-base" />
               <input
                 type="text"
                 placeholder={`Search by name...`}
@@ -495,12 +496,12 @@ export default function UserManagement() {
           </div>
         ) : error ? (
           <div className="text-center py-16 bg-surface-container-lowest rounded-3xl border border-outline-variant/15 text-error">
-            <span className="material-symbols-outlined text-3xl">error</span>
+            <Icon name="error" className="text-3xl" />
             <p className="mt-2 font-semibold">{error}</p>
           </div>
         ) : usersList.length === 0 ? (
           <div className="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant/15 text-outline">
-            <span className="material-symbols-outlined text-4xl">group_off</span>
+            <Icon name="group_off" className="text-4xl" />
             <p className="mt-2 font-semibold">No {activeRole} records found matching constraints.</p>
           </div>
         ) : (
@@ -593,28 +594,28 @@ export default function UserManagement() {
                             className="p-2 hover:bg-surface-container-high text-on-surface rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
                             title="View Profile"
                           >
-                            <span className="material-symbols-outlined text-base">visibility</span>
+                            <Icon name="visibility" className="text-base" />
                           </button>
                           <button
                             onClick={() => handleOpenEditModal(item)}
                             className="p-2 hover:bg-primary/10 text-primary rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
                             title="Edit Details"
                           >
-                            <span className="material-symbols-outlined text-base">edit</span>
+                            <Icon name="edit" className="text-base" />
                           </button>
                           <button
                             onClick={() => handleOpenCredsModal(item)}
                             className="p-2 hover:bg-tertiary/10 text-tertiary rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
                             title="Update Password"
                           >
-                            <span className="material-symbols-outlined text-base">vpn_key</span>
+                            <Icon name="vpn_key" className="text-base" />
                           </button>
                           <button
                             onClick={() => handleDeleteUser(item)}
                             className="p-2 hover:bg-error/10 text-error rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
                             title="Delete User"
                           >
-                            <span className="material-symbols-outlined text-base">delete</span>
+                            <Icon name="delete" className="text-base" />
                           </button>
                         </div>
                       </td>
@@ -632,14 +633,14 @@ export default function UserManagement() {
             <div className="bg-surface-container-lowest p-6 rounded-[28px] border border-outline-variant shadow-2xl max-w-md w-full animate-slideUp text-left space-y-4">
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
                 <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-primary">publish</span>
+                  <Icon name="publish" className="text-primary" />
                   Bulk Spreadsheet Import
                 </h3>
                 <button 
                   onClick={() => setBulkImportModalOpen(false)}
-                  className="material-symbols-outlined hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
+                  className="hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -697,12 +698,12 @@ export default function UserManagement() {
                   >
                     {importing ? (
                       <>
-                        <span className="animate-spin material-symbols-outlined text-sm">sync</span>
+                        <Icon name="sync" className="animate-spin text-sm" />
                         <span>Uploading...</span>
                       </>
                     ) : (
                       <>
-                        <span className="material-symbols-outlined text-sm">upload_file</span>
+                        <Icon name="upload_file" className="text-sm" />
                         <span>Import Records</span>
                       </>
                     )}
@@ -719,14 +720,14 @@ export default function UserManagement() {
             <div className="bg-surface-container-lowest p-6 rounded-[28px] border border-outline-variant shadow-2xl max-w-md w-full animate-slideUp text-left space-y-4">
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
                 <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-tertiary">vpn_key</span>
+                  <Icon name="vpn_key" className="text-tertiary" />
                   Edit Access Access
                 </h3>
                 <button 
                   onClick={() => setCredsModalOpen(false)}
-                  className="material-symbols-outlined hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
+                  className="hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -807,9 +808,9 @@ export default function UserManagement() {
                 </h3>
                 <button 
                   onClick={() => setModalOpen(false)}
-                  className="material-symbols-outlined hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
+                  className="hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
                 >
-                  close
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -1079,9 +1080,9 @@ export default function UserManagement() {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveQualification(idx)}
-                                className="material-symbols-outlined text-xs text-error hover:bg-error-container p-0.5 rounded-full cursor-pointer border-none bg-transparent"
+                                className="text-xs text-error hover:bg-error-container p-0.5 rounded-full cursor-pointer border-none bg-transparent"
                               >
-                                close
+                                <Icon name="close" />
                               </button>
                             )}
                           </div>

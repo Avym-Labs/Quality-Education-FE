@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function StudentReports() {
   const { user } = useAuth()
@@ -71,9 +72,9 @@ export default function StudentReports() {
         <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20 print:hidden">
           <button 
             onClick={() => navigate('/student/dashboard')}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+            className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
-            arrow_back
+            <Icon name="arrow_back" />
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -84,7 +85,7 @@ export default function StudentReports() {
 
         {error && (
           <div className="p-3 bg-error-container rounded-xl text-error text-xs font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-xs">error</span>
+            <Icon name="error" className="text-xs" />
             <span>{error}</span>
           </div>
         )}
@@ -119,7 +120,7 @@ export default function StudentReports() {
         {/* Printable Report Card Section */}
         {loading ? (
           <div className="flex justify-center py-10 print:hidden">
-            <span className="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+            <Icon name="progress_activity" className="animate-spin text-primary text-3xl" />
           </div>
         ) : (
           <section className="bg-white text-gray-900 rounded-[28px] border-2 border-dashed border-gray-300 p-8 shadow-sm max-w-2xl mx-auto space-y-6 print:border-none print:shadow-none print:p-0 print:max-w-full">
@@ -211,7 +212,7 @@ export default function StudentReports() {
                 onClick={handlePrint}
                 className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl text-xs font-bold hover:shadow-md cursor-pointer active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined text-sm">print</span>
+                <Icon name="print" className="text-sm" />
                 <span>Print Report Card</span>
               </button>
             </div>

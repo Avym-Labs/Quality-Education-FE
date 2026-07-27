@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function TeacherDashboard() {
   const { user } = useAuth()
@@ -221,7 +222,7 @@ export default function TeacherDashboard() {
               onClick={() => setShowSwitchModal(true)}
               className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 w-fit border-none cursor-pointer self-start sm:self-center"
             >
-              <span className="material-symbols-outlined text-sm">swap_horiz</span>
+              <Icon name="swap_horiz" className="text-sm" />
               <span>Switch Profile</span>
             </button>
           </div>
@@ -239,7 +240,7 @@ export default function TeacherDashboard() {
               <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 border-l-4 border-l-[#6351E0] flex flex-col justify-between h-32 cursor-default hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 text-left">
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-[#6351E0] shrink-0">
-                    <span className="material-symbols-outlined text-base">groups</span>
+                    <Icon name="groups" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Students</span>
                 </div>
@@ -255,7 +256,7 @@ export default function TeacherDashboard() {
               >
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-                    <span className="material-symbols-outlined text-base">check_circle</span>
+                    <Icon name="check_circle" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Present Today</span>
                 </div>
@@ -271,7 +272,7 @@ export default function TeacherDashboard() {
               >
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
-                    <span className="material-symbols-outlined text-base">analytics</span>
+                    <Icon name="analytics" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Average Attd.</span>
                 </div>
@@ -287,7 +288,7 @@ export default function TeacherDashboard() {
               >
                 <div className="flex items-center gap-2 z-10 w-full">
                   <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
-                    <span className="material-symbols-outlined text-base">sick</span>
+                    <Icon name="sick" className="text-base" />
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Leave Requests</span>
                 </div>
@@ -427,7 +428,7 @@ export default function TeacherDashboard() {
                 {/* Top Performers Section */}
                 <div className="space-y-1.5 text-left">
                   <div className="flex items-center gap-1 text-emerald-600 font-bold text-[10px] uppercase tracking-wider">
-                    <span className="material-symbols-outlined text-[12px] font-variation-settings-fill">trending_up</span>
+                    <Icon name="trending_up" className="text-[12px] font-variation-settings-fill" />
                     <span>Top 3 Students</span>
                   </div>
                   <div className="space-y-1">
@@ -448,7 +449,7 @@ export default function TeacherDashboard() {
                 {/* Bottom Performers Section */}
                 <div className="space-y-1.5 text-left">
                   <div className="flex items-center gap-1 text-rose-600 font-bold text-[10px] uppercase tracking-wider">
-                    <span className="material-symbols-outlined text-[12px]">trending_down</span>
+                    <Icon name="trending_down" className="text-[12px]" />
                     <span>Bottom 3 Students</span>
                   </div>
                   <div className="space-y-1">
@@ -518,20 +519,20 @@ export default function TeacherDashboard() {
           <div className="bg-surface-container-lowest rounded-3xl w-full max-w-md p-6 shadow-2xl border border-outline-variant/40 animate-scaleIn">
             <div className="flex justify-between items-center pb-3 border-b border-outline-variant/15 mb-4">
               <h3 className="font-title-lg text-base text-on-surface font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">swap_horiz</span>
+                <Icon name="swap_horiz" className="text-primary" />
                 <span>Switch Profile</span>
               </h3>
               <button 
                 onClick={() => setShowSwitchModal(false)}
-                className="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container"
+                className="text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container"
               >
-                close
+                <Icon name="close" />
               </button>
             </div>
 
             {switchError && (
               <div className="p-3 bg-error-container rounded-xl text-error text-xs font-semibold mb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined text-xs">error</span>
+                <Icon name="error" className="text-xs" />
                 <span>{switchError}</span>
               </div>
             )}
@@ -561,9 +562,9 @@ export default function TeacherDashboard() {
                       <p className="text-[10px] text-outline font-semibold mt-1">{acc.email}</p>
                     </div>
                     {switchingTo === acc.user_id ? (
-                      <span className="material-symbols-outlined animate-spin text-primary ml-auto text-base">progress_activity</span>
+                      <Icon name="progress_activity" className="animate-spin text-primary ml-auto text-base" />
                     ) : (
-                      <span className="material-symbols-outlined text-outline ml-auto text-base group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                      <Icon name="chevron_right" className="text-outline ml-auto text-base group-hover:translate-x-0.5 transition-transform" />
                     )}
                   </div>
                 ))
@@ -574,7 +575,7 @@ export default function TeacherDashboard() {
                 onClick={handleAddNewAccount}
                 className="w-full flex items-center justify-center gap-2 mt-4 py-3 border-2 border-dashed border-outline-variant hover:bg-surface-container-low rounded-2xl transition-colors text-xs font-bold text-primary"
               >
-                <span className="material-symbols-outlined text-sm">person_add</span>
+                <Icon name="person_add" className="text-sm" />
                 <span>Add Existing Account</span>
               </button>
             </div>

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import Icon from '../../components/common/Icon'
 
 export default function TeacherProfileDashboard() {
   const { user } = useAuth()
@@ -23,9 +24,9 @@ export default function TeacherProfileDashboard() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/teacher/dashboard')}
-              className="material-symbols-outlined text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
+              className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
             >
-              arrow_back
+              <Icon name="arrow_back" />
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
@@ -40,7 +41,7 @@ export default function TeacherProfileDashboard() {
             onClick={() => navigate('/teacher/settings')}
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-full text-xs font-bold active:scale-95 transition-all border border-outline-variant/35 shadow-sm"
           >
-            <span className="material-symbols-outlined text-[16px]">settings</span>
+            <Icon name="settings" className="text-[16px]" />
             <span>Settings</span>
           </button>
         </section>
@@ -56,11 +57,11 @@ export default function TeacherProfileDashboard() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="material-symbols-outlined text-5xl text-primary/40">face</span>
+                <Icon name="face" className="text-5xl text-primary/40" />
               )}
             </div>
             <div className="absolute bottom-1 right-1 bg-primary text-white p-1 rounded-full border-2 border-white shadow-md flex items-center justify-center">
-              <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+              <Icon name="verified" className="text-[14px]" filled />
             </div>
           </div>
           <div className="mt-4 md:mt-0 flex-1">
@@ -68,7 +69,7 @@ export default function TeacherProfileDashboard() {
               {user?.full_name || 'Prof. Sarah Mitchell'}
             </h3>
             <p className="text-on-surface-variant text-xs font-semibold flex items-center justify-center md:justify-start gap-1 mt-1">
-              <span className="material-symbols-outlined text-primary text-[16px]">functions</span>
+              <Icon name="functions" className="text-primary text-[16px]" />
               <span>{department}</span>
             </p>
             <div className="mt-3.5 flex flex-wrap justify-center md:justify-start gap-2">
@@ -106,7 +107,7 @@ export default function TeacherProfileDashboard() {
                 </h5>
                 <div className="mt-2.5 flex items-center gap-1 text-primary group-hover:gap-1.5 transition-all text-[11px] font-bold">
                   <span>Mark Attendance</span>
-                  <span className="material-symbols-outlined text-[12px]">arrow_forward</span>
+                  <Icon name="arrow_forward" className="text-[12px]" />
                 </div>
               </div>
             ))}
@@ -117,7 +118,7 @@ export default function TeacherProfileDashboard() {
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between">
             <div className="w-9 h-9 rounded-full bg-primary-container/10 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-primary text-lg">groups</span>
+              <Icon name="groups" className="text-primary text-lg" />
             </div>
             <div>
               <p className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Students Handled</p>
@@ -126,7 +127,7 @@ export default function TeacherProfileDashboard() {
           </div>
           <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between">
             <div className="w-9 h-9 rounded-full bg-secondary-container/15 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-secondary text-lg">upload_file</span>
+              <Icon name="upload_file" className="text-secondary text-lg" />
             </div>
             <div>
               <p className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Results Uploaded</p>
@@ -135,7 +136,7 @@ export default function TeacherProfileDashboard() {
           </div>
           <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between">
             <div className="w-9 h-9 rounded-full bg-tertiary-fixed-dim/20 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-tertiary text-lg">description</span>
+              <Icon name="description" className="text-tertiary text-lg" />
             </div>
             <div>
               <p className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Homeworks Assigned</p>
@@ -144,7 +145,7 @@ export default function TeacherProfileDashboard() {
           </div>
           <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between">
             <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-emerald-700 text-lg">event_available</span>
+              <Icon name="event_available" className="text-emerald-700 text-lg" />
             </div>
             <div>
               <p className="text-on-surface-variant text-[9px] uppercase tracking-wider font-bold">Personal Attendance</p>
@@ -199,7 +200,7 @@ export default function TeacherProfileDashboard() {
           <div className="p-5 grid gap-6 md:grid-cols-2">
             <div className="flex gap-3">
               <div className="shrink-0 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">school</span>
+                <Icon name="school" className="text-primary" />
               </div>
               <div>
                 <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Academic Qualifications</p>
@@ -213,7 +214,7 @@ export default function TeacherProfileDashboard() {
 
             <div className="flex gap-3">
               <div className="shrink-0 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">mail</span>
+                <Icon name="mail" className="text-primary" />
               </div>
               <div>
                 <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Contact Information</p>
@@ -224,7 +225,7 @@ export default function TeacherProfileDashboard() {
 
             <div className="flex gap-3">
               <div className="shrink-0 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">history</span>
+                <Icon name="history" className="text-primary" />
               </div>
               <div>
                 <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Tenure / Experience</p>
@@ -235,7 +236,7 @@ export default function TeacherProfileDashboard() {
 
             <div className="flex gap-3">
               <div className="shrink-0 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">verified_user</span>
+                <Icon name="verified_user" className="text-primary" />
               </div>
               <div>
                 <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Security Role</p>

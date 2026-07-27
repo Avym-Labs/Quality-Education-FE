@@ -1,3 +1,5 @@
+import Icon from './Icon'
+
 const variants = {
   primary: 'bg-primary text-on-primary hover:bg-primary/90 shadow-md',
   secondary: 'bg-secondary-container text-on-secondary-container hover:bg-secondary-container/80',
@@ -22,12 +24,12 @@ export default function Button({ children, variant = 'primary', size = 'md', ico
       className={`inline-flex items-center justify-center gap-2 font-medium transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {loading ? (
-        <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+        <Icon name="progress_activity" className="animate-spin text-[20px]" />
       ) : (
         <>
-          {icon && <span className="material-symbols-outlined text-[20px]">{icon}</span>}
+          {icon && <Icon name={icon} className="text-[20px]" />}
           {children}
-          {iconRight && <span className="material-symbols-outlined text-[20px]">{iconRight}</span>}
+          {iconRight && <Icon name={iconRight} className="text-[20px]" />}
         </>
       )}
     </button>
