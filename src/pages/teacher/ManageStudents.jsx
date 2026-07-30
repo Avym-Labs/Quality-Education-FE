@@ -4,6 +4,7 @@ import Papa from 'papaparse'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import AccountSidebar from '../../components/layout/AccountSidebar'
 import Icon from '../../components/common/Icon'
 
 const CSV_FIELDS = ['first_name', 'last_name', 'email', 'phone', 'password', 'grade', 'section', 'roll_number', 'father_name', 'mother_name']
@@ -276,20 +277,32 @@ export default function ManageStudents() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-stack-lg mt-stack-sm pb-24 text-left">
+      <div className="mt-stack-sm pb-24 md:pb-10 text-left">
 
-        {/* Header */}
-        <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
+        {/* Mobile Header (stacked navigation with back button) */}
+        <section className="md:hidden flex items-center gap-3 pb-2 border-b border-outline-variant/20 mb-4">
           <button
             onClick={() => navigate('/teacher/settings')}
             className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors active:scale-95 duration-200"
           >
             <Icon name="arrow_back" />
           </button>
-          <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
+          <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">
             Manage Students
           </h2>
         </section>
+
+        {/* Desktop Header */}
+        <div className="hidden md:block mb-6">
+          <h1 className="text-xl font-bold text-on-surface">Manage Students</h1>
+          <p className="text-on-surface-variant text-[10px] uppercase font-bold mt-1 tracking-wider">Department Faculty Portal</p>
+        </div>
+
+        <div className="md:flex md:gap-8 md:items-start">
+
+          <AccountSidebar active="manage-students" />
+
+          <div className="flex-1 min-w-0 space-y-stack-lg">
 
         {message && (
           <div className="p-3 rounded-xl text-center text-xs font-bold bg-primary-container/20 text-primary border border-primary/20">
@@ -514,6 +527,9 @@ export default function ManageStudents() {
             </div>
           </section>
         )}
+
+          </div>
+        </div>
 
         {/* Add/Edit modal */}
         {modalOpen && (

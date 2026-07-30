@@ -650,13 +650,34 @@ export default function AcademicsHub() {
     loadAttendanceStats()
   }, [user, filterStudentId, filterClass, studentsList])
 
+  // Shared date-range-preset -> {start_date, end_date} params, used by every /results fetch
+  const getDateRangeParams = () => {
+    let startStr = ''
+    let endStr = ''
+    if (dateRange === '30days') {
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      startStr = d.toISOString().split('T')[0]
+    } else if (dateRange === 'semester') {
+      startStr = '2026-06-01'
+      endStr = '2026-12-31'
+    } else if (dateRange === 'custom') {
+      startStr = customStartDate
+      endStr = customEndDate
+    }
+    const params = {}
+    if (startStr) params.start_date = startStr
+    if (endStr) params.end_date = endStr
+    return params
+  }
+
   // Fetch results based on active filters
   const fetchFilteredResults = async () => {
     if (!user) return
     setLoadingResults(true)
     try {
-      const params = {}
-      
+      const params = { ...getDateRangeParams() }
+
       if (role === 'student') {
         params.student_id = user.id
       } else {
@@ -674,24 +695,6 @@ export default function AcademicsHub() {
         params.subject = filterSubject
       }
 
-      // Time range presets
-      let startStr = ''
-      let endStr = ''
-      if (dateRange === '30days') {
-        const d = new Date()
-        d.setDate(d.getDate() - 30)
-        startStr = d.toISOString().split('T')[0]
-      } else if (dateRange === 'semester') {
-        startStr = '2026-06-01'
-        endStr = '2026-12-31'
-      } else if (dateRange === 'custom') {
-        startStr = customStartDate
-        endStr = customEndDate
-      }
-
-      if (startStr) params.start_date = startStr
-      if (endStr) params.end_date = endStr
-
       const { data } = await api.get('/results', { params })
       setFilteredResults(data || [])
     } catch (err) {
@@ -700,6 +703,31 @@ export default function AcademicsHub() {
       setLoadingResults(false)
     }
   }
+
+  // For students: also pull the whole class's results (same grade/section) so
+  // the Results tab can chart "you" vs "class average" vs "top student".
+  const [classResults, setClassResults] = useState([])
+  const [loadingClassResults, setLoadingClassResults] = useState(false)
+
+  const fetchClassResults = async () => {
+    if (!user || role !== 'student' || !user.grade) return
+    setLoadingClassResults(true)
+    try {
+      const params = { ...getDateRangeParams(), grade: user.grade, section: user.section || '' }
+      if (filterSubject !== 'All') params.subject = filterSubject
+      const { data } = await api.get('/results', { params })
+      setClassResults(data || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingClassResults(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchClassResults()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, filterSubject, dateRange, customStartDate, customEndDate])
 
   useEffect(() => {
     fetchFilteredResults()
@@ -721,6 +749,39 @@ export default function AcademicsHub() {
   const passRate = totalTests > 0
     ? Math.round((filteredResults.filter(r => r.percentage >= 50).length / totalTests) * 100)
     : 0
+
+  // Student view: per-test "you" vs class average vs class top scorer, oldest -> newest.
+  // Sorted by test_date (not created_at/insertion order) since bulk score uploads can
+  // share the same created_at timestamp, making that ordering unreliable.
+  const comparisonChartData = role === 'student'
+    ? [...filteredResults]
+        .sort((a, b) => new Date(a.test_date || a.created_at) - new Date(b.test_date || b.created_at))
+        .map(r => {
+        const classForTest = classResults.filter(cr => cr.test_title === r.test_title && cr.subject === r.subject)
+        const classAvg = classForTest.length > 0
+          ? Math.round(classForTest.reduce((acc, cr) => acc + cr.percentage, 0) / classForTest.length)
+          : r.percentage
+        const classTop = classForTest.length > 0
+          ? Math.max(...classForTest.map(cr => cr.percentage))
+          : r.percentage
+        return { label: r.test_title, you: r.percentage, classAvg, classTop }
+      })
+    : []
+
+  // Geometry for the student comparison line chart (plain SVG, no charting lib)
+  const chartWidth = Math.max(560, comparisonChartData.length * 90)
+  const chartHeight = 200
+  const chartPadTop = 16
+  const chartPadBottom = 28
+  const chartPadLeft = 32
+  const chartPadRight = 12
+  const chartPlotHeight = chartHeight - chartPadTop - chartPadBottom
+  const chartXStep = comparisonChartData.length > 1
+    ? (chartWidth - chartPadLeft - chartPadRight) / (comparisonChartData.length - 1)
+    : 0
+  const chartXFor = (i) => chartPadLeft + i * chartXStep
+  const chartYFor = (v) => chartPadTop + ((100 - v) / 100) * chartPlotHeight
+  const chartPointsFor = (key) => comparisonChartData.map((d, i) => `${chartXFor(i)},${chartYFor(d[key])}`).join(' ')
 
   // Grade Distribution Counts
   const gradeCounts = { 'A+': 0, 'A': 0, 'B': 0, 'C': 0, 'F': 0 }
@@ -1610,6 +1671,73 @@ export default function AcademicsHub() {
                 <h4 className="text-xl font-black text-primary mt-0.5">{passRate}%</h4>
               </div>
             </div>
+
+            {/* Student view: You vs Class Average vs Top Scorer trend chart */}
+            {role === 'student' && (
+              <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/35 p-5 shadow-sm space-y-4 text-left">
+                <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2 flex-wrap gap-3">
+                  <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
+                    You vs Class Average vs Top Scorer
+                  </h3>
+                  <div className="flex items-center gap-3 text-[10px] font-bold text-on-surface-variant">
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6351E0]"></span>You</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]"></span>Class Average</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>Top Scorer</span>
+                  </div>
+                </div>
+
+                {loadingResults || loadingClassResults ? (
+                  <div className="py-12 text-center text-outline font-semibold text-xs">Loading comparison...</div>
+                ) : comparisonChartData.length === 0 ? (
+                  <div className="py-12 text-center text-outline font-semibold text-xs">No scores match the selected filters.</div>
+                ) : (
+                  <div className="overflow-x-auto pr-1">
+                    <svg width={chartWidth} height={chartHeight} style={{ minWidth: chartWidth }}>
+                      {/* Gridlines + y-axis labels */}
+                      {[0, 25, 50, 75, 100].map(v => (
+                        <g key={v}>
+                          <line
+                            x1={chartPadLeft} x2={chartWidth - chartPadRight}
+                            y1={chartYFor(v)} y2={chartYFor(v)}
+                            stroke="currentColor" className="text-outline-variant/25" strokeWidth="1"
+                          />
+                          <text x={chartPadLeft - 6} y={chartYFor(v) + 3} textAnchor="end" fontSize="9" className="fill-outline font-semibold">
+                            {v}
+                          </text>
+                        </g>
+                      ))}
+
+                      {/* Class Average (dashed) */}
+                      <polyline points={chartPointsFor('classAvg')} fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,4" strokeLinecap="round" />
+                      {/* Top Scorer (dotted) */}
+                      <polyline points={chartPointsFor('classTop')} fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="1,4" strokeLinecap="round" />
+                      {/* You (solid, drawn last so it stays on top) */}
+                      <polyline points={chartPointsFor('you')} fill="none" stroke="#6351E0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+                      {comparisonChartData.map((d, i) => (
+                        <g key={i}>
+                          <circle cx={chartXFor(i)} cy={chartYFor(d.classAvg)} r="3" fill="#94a3b8">
+                            <title>{d.label}: Class Average {d.classAvg}%</title>
+                          </circle>
+                          <circle cx={chartXFor(i)} cy={chartYFor(d.classTop)} r="3" fill="#f59e0b">
+                            <title>{d.label}: Top Scorer {d.classTop}%</title>
+                          </circle>
+                          <circle cx={chartXFor(i)} cy={chartYFor(d.you)} r="3.5" fill="#6351E0">
+                            <title>{d.label}: You {d.you}%</title>
+                          </circle>
+                          <text
+                            x={chartXFor(i)} y={chartHeight - 8} textAnchor="middle" fontSize="9"
+                            className="fill-outline font-semibold"
+                          >
+                            {d.label.length > 12 ? `${d.label.slice(0, 11)}…` : d.label}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Record New Scores Collapsible Panel (Teacher & Admin views) */}
             {(role === 'teacher' || role === 'admin') && (

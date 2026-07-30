@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import AccountSidebar from '../../components/layout/AccountSidebar'
 import Icon from '../../components/common/Icon'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, logout } = useAuth()
 
   // activeView: 'menu' | 'my-academic-profile' | 'profile-details' | 'preferences' | 'support' | 'switch-profile'
-  const [activeView, setActiveView] = useState('menu')
+  // Pages that link into a specific section (e.g. Manage Students' sidebar)
+  // pass the target view via router state so it opens directly.
+  const [activeView, setActiveView] = useState(location.state?.initialView || 'menu')
 
   // Toggle States
   const [pushEnabled, setPushEnabled] = useState(true)
@@ -172,13 +176,17 @@ export default function SettingsPage() {
     }
   }
 
+  // Which nav view desktop's persistent sidebar+content pane should display
+  // when nothing has been explicitly selected yet (mobile's root menu state).
+  const effectiveView = activeView === 'menu' ? 'profile-details' : activeView
+
   return (
     <DashboardLayout>
-      <div className="space-y-stack-lg mt-stack-md pb-24 max-w-2xl mx-auto">
-        
-        {/* Top Header */}
-        <section className="flex items-center gap-3 pb-2 border-b border-outline-variant/20 mb-4">
-          <button 
+      <div className="mt-stack-md pb-24 md:pb-10 max-w-2xl mx-auto md:max-w-none md:mx-0">
+
+        {/* Mobile Top Header (stacked navigation with back button) */}
+        <section className="md:hidden flex items-center gap-3 pb-2 border-b border-outline-variant/20 mb-4">
+          <button
             onClick={() => {
               if (activeView !== 'menu') {
                 setActiveView('menu')
@@ -210,9 +218,23 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* View 1: Root Menu */}
+        {/* Desktop Header */}
+        <div className="hidden md:block mb-6">
+          <h1 className="text-xl font-bold text-on-surface">Account Settings</h1>
+          <p className="text-on-surface-variant text-[10px] uppercase font-bold mt-1 tracking-wider">
+            {user?.role === 'teacher' ? 'Department Faculty Portal' : 'Student Hub'}
+          </p>
+        </div>
+
+        <div className="md:flex md:gap-8 md:items-start">
+
+          <AccountSidebar active={effectiveView} onSelect={setActiveView} />
+
+          <div className="flex-1 min-w-0">
+
+        {/* View 1: Root Menu (mobile only — desktop uses the persistent sidebar) */}
         {activeView === 'menu' && (
-          <div className="space-y-3.5 animate-fadeIn">
+          <div className="md:hidden space-y-3.5 animate-fadeIn">
             
             {/* My Academic Profile (Exclusively visible for Teachers) */}
             {user?.role === 'teacher' && (
@@ -330,11 +352,11 @@ export default function SettingsPage() {
         {/* View 2: Academic Profile (Embed Layout) */}
         {activeView === 'my-academic-profile' && user?.role === 'teacher' && (
           <div className="space-y-stack-lg animate-scaleIn text-xs">
-            
-            {/* Back Header */}
-            <button 
+
+            {/* Back Header (mobile only — desktop uses the sidebar) */}
+            <button
               onClick={() => setActiveView('menu')}
-              className="flex items-center gap-1.5 text-primary font-bold hover:underline mb-2"
+              className="md:hidden flex items-center gap-1.5 text-primary font-bold hover:underline mb-2"
             >
               <Icon name="arrow_back" className="text-sm" />
               <span>Back to Account</span>
@@ -501,19 +523,19 @@ export default function SettingsPage() {
         )}
 
         {/* View 3: Account Credentials */}
-        {activeView === 'profile-details' && (
-          <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn">
+        {effectiveView === 'profile-details' && (
+          <section className={`bg-surface-container-lowest rounded-[24px] md:rounded-2xl p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn ${activeView === 'menu' ? 'hidden md:block' : ''}`}>
             <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
               <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Account Credentials</h3>
-              <button 
+              <button
                 onClick={() => setActiveView('menu')}
-                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
+                className="md:hidden text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
                 <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
@@ -561,13 +583,13 @@ export default function SettingsPage() {
         )}
 
         {/* View 4: Preferences */}
-        {activeView === 'preferences' && (
-          <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn">
+        {effectiveView === 'preferences' && (
+          <section className={`bg-surface-container-lowest rounded-[24px] md:rounded-2xl p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn ${activeView === 'menu' ? 'hidden md:block' : ''}`}>
             <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
               <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Toggles & Alerts</h3>
-              <button 
+              <button
                 onClick={() => setActiveView('menu')}
-                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
+                className="md:hidden text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
                 <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
@@ -612,12 +634,12 @@ export default function SettingsPage() {
 
         {/* View 5: Switch Profile */}
         {activeView === 'switch-profile' && user?.role === 'teacher' && (
-          <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn text-xs">
+          <section className="bg-surface-container-lowest rounded-[24px] md:rounded-2xl p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn text-xs">
             <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
               <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Saved  Swaps</h3>
-              <button 
+              <button
                 onClick={() => setActiveView('menu')}
-                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
+                className="md:hidden text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
                 <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
@@ -661,12 +683,12 @@ export default function SettingsPage() {
 
         {/* View 6: Help & Support */}
         {activeView === 'support' && (
-          <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn text-xs">
+          <section className="bg-surface-container-lowest rounded-[24px] md:rounded-2xl p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn text-xs">
             <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
               <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Help Documentation</h3>
-              <button 
+              <button
                 onClick={() => setActiveView('menu')}
-                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
+                className="md:hidden text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
                 <Icon name="arrow_back" className="text-[12px]" />
                 <span>Back</span>
@@ -686,6 +708,8 @@ export default function SettingsPage() {
           </section>
         )}
 
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   )

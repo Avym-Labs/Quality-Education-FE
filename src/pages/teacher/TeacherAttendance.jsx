@@ -221,6 +221,20 @@ export default function TeacherAttendance() {
     }))
   }
 
+  // Whether a student is on approved leave for the currently viewed date, and
+  // how many consecutive days (inclusive of the leave's start date) that leave
+  // has run for as of that date — used to flag long absences in the list.
+  const getLeaveInfo = (studentUserId) => {
+    const leave = leavesList.find(l =>
+      l.user_id === studentUserId &&
+      markingDate >= l.start_date &&
+      markingDate <= l.end_date
+    )
+    if (!leave) return { isOnLeave: false, daysSince: 0, leave: null }
+    const daysSince = Math.floor((new Date(markingDate) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1
+    return { isOnLeave: true, daysSince, leave }
+  }
+
   const presentCount = Object.values(attendanceStates).filter(s => s === 'present').length
   const absentCount = Object.values(attendanceStates).filter(s => s === 'absent').length
   const lateCount = Object.values(attendanceStates).filter(s => s === 'late').length
@@ -611,11 +625,7 @@ export default function TeacherAttendance() {
                                 const rate = attendanceRates[student.user_id] ?? 100
                                 const isLowAttendance = rate < 75
 
-                                const isOnLeave = leavesList.some(l =>
-                                  l.user_id === student.user_id &&
-                                  markingDate >= l.start_date &&
-                                  markingDate <= l.end_date
-                                )
+                                const { isOnLeave, daysSince: leaveDaysSince } = getLeaveInfo(student.user_id)
 
                                 return (
                                   <div
@@ -663,9 +673,11 @@ export default function TeacherAttendance() {
                                             </span>
                                           )}
                                           {isOnLeave && (
-                                            <span className="px-1.5 py-0.5 bg-red-100 text-error text-[8px] font-black uppercase rounded-md flex items-center gap-0.5">
+                                            <span className={`px-1.5 py-0.5 text-[8px] font-black uppercase rounded-md flex items-center gap-0.5 ${
+                                              leaveDaysSince > 3 ? 'bg-error text-white animate-pulse' : 'bg-red-100 text-error'
+                                            }`}>
                                               <Icon name="sick" className="text-[9px]" />
-                                              <span>Leave</span>
+                                              <span>{leaveDaysSince > 3 ? `Absent ${leaveDaysSince} Days` : 'Leave'}</span>
                                             </span>
                                           )}
                                         </div>
@@ -712,11 +724,7 @@ export default function TeacherAttendance() {
                                 const rate = attendanceRates[student.user_id] ?? 100
                                 const isLowAttendance = rate < 75
 
-                                const isOnLeave = leavesList.some(l =>
-                                  l.user_id === student.user_id &&
-                                  markingDate >= l.start_date &&
-                                  markingDate <= l.end_date
-                                )
+                                const { isOnLeave, daysSince: leaveDaysSince } = getLeaveInfo(student.user_id)
 
                                 return (
                                   <div
@@ -776,9 +784,11 @@ export default function TeacherAttendance() {
                                           </span>
                                         )}
                                         {isOnLeave && (
-                                          <span className="px-2 py-0.5 bg-red-100 text-error text-[9px] font-black uppercase rounded-md flex items-center gap-0.5">
+                                          <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-md flex items-center gap-0.5 ${
+                                            leaveDaysSince > 3 ? 'bg-error text-white animate-pulse' : 'bg-red-100 text-error'
+                                          }`}>
                                             <Icon name="sick" className="text-[10px]" />
-                                            <span>Leave</span>
+                                            <span>{leaveDaysSince > 3 ? `Absent ${leaveDaysSince} Days` : 'Leave'}</span>
                                           </span>
                                         )}
                                       </div>
@@ -1004,6 +1014,22 @@ export default function TeacherAttendance() {
                   </div>
                 </div>
               </div>
+
+              {/* Long-absence alert (approved leave running more than 3 days) */}
+              {(() => {
+                const { isOnLeave, daysSince, leave } = getLeaveInfo(selectedStudent.user_id)
+                if (!isOnLeave || daysSince <= 3) return null
+                const startLabel = new Date(leave.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                return (
+                  <div className="flex items-center gap-2.5 bg-error/10 border border-error/25 rounded-2xl p-3.5 mb-6">
+                    <Icon name="sick" className="text-error text-xl shrink-0" />
+                    <div>
+                      <p className="text-xs font-black text-error">Absent since {daysSince} days</p>
+                      <p className="text-[10px] font-semibold text-error/80 mt-0.5">On approved leave since {startLabel}</p>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4 mb-6">
