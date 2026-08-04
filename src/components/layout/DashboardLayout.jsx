@@ -4,6 +4,7 @@ import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import { useAuth } from '../../context/AuthContext'
 import Icon from '../common/Icon'
+import logo from '../../assets/logo.png'
 
 // Shared submenu shown under "Academics" for every role, mirrors the tabs inside AcademicsHub
 const ACADEMICS_SUBITEMS = [
@@ -33,6 +34,7 @@ const SIDEBAR_ITEMS = {
     { icon: 'home', label: 'Home', path: '/teacher/dashboard' },
     { icon: 'calendar_today', label: 'Attendance', path: '/teacher/attendance' },
     { icon: 'school', label: 'Academics', path: '/teacher/academics', children: ACADEMICS_SUBITEMS_WITH_HOMEWORK },
+    { icon: 'group_add', label: 'Manage Students', path: '/teacher/manage-students' },
     { icon: 'chat', label: 'Chat', path: '/teacher/chat' },
     { icon: 'person', label: 'Account', path: '/teacher/settings' },
   ],
@@ -81,8 +83,8 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
         <div className="space-y-6">
           {/* Logo / Header */}
           <div className="flex items-center gap-3 px-2 py-1 cursor-pointer" onClick={() => navigate(`/${role}/dashboard`)}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6351E0] to-[#DD62F2] flex items-center justify-center text-white shadow-md">
-              <Icon name="school" className="text-[20px]" />
+            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-md overflow-hidden shrink-0">
+              <img src={logo} alt="Educore" className="w-full h-full object-cover" />
             </div>
             <div className="text-left">
               <h2 className="text-base font-black text-on-surface tracking-tight">Educore</h2>

@@ -84,9 +84,9 @@ export default function AdminDashboard() {
     { label: 'Midterm 2', score: 78.4 }
   ]
   const sectionComparison = analyticsData?.section_comparison ?? [
-    { section: 'Sec A', grade10: 80, grade11: 75 },
-    { section: 'Sec B', grade10: 70, grade11: 78 },
-    { section: 'Sec C', grade10: 85, grade11: 65 }
+    { section: 'Sec A', attendance: 92, avg_result: 80 },
+    { section: 'Sec B', attendance: 88, avg_result: 70 },
+    { section: 'Sec C', attendance: 95, avg_result: 85 }
   ]
   const facultySpotlight = analyticsData?.faculty_spotlight ?? [
     {
@@ -308,46 +308,49 @@ export default function AdminDashboard() {
             </section>
 
             {/* Main Analytics Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 lg:min-h-0 lg:items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               
               {/* Left: Charting Sections (Column 1-8) */}
-              <div className="lg:col-span-8 flex flex-col gap-4 lg:h-full lg:min-h-0">
+              <div className="lg:col-span-8 flex flex-col gap-4">
                 
                 {/* Trend Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:flex-1 lg:min-h-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
                   {/* Attendance Trend */}
-                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 lg:h-full flex flex-col justify-between">
-                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold">
+                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
+                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold mb-3">
                       <Icon name="calendar_month" className="text-primary" />
                       Attendance Trend
                     </h3>
-                    <div className="flex-1 flex items-end gap-3 pb-2 px-2 pt-6">
-                      {attendanceTrend.map((item, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                          <div 
-                            className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${
-                              idx === attendanceTrend.length - 1 ? 'bg-primary' : 'bg-primary-fixed-dim'
-                            }`}
-                            style={{ height: `${item.rate}%` }}
-                          ></div>
-                        </div>
-                      ))}
+                    <div className="flex items-end gap-1.5 px-2 h-32">
+                      {(() => {
+                        const maxRate = Math.max(...attendanceTrend.map(i => i.rate))
+                        return attendanceTrend.map((item, idx) => (
+                          <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full">
+                            <div 
+                              className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${
+                                idx === attendanceTrend.length - 1 ? 'bg-primary' : 'bg-primary-fixed-dim'
+                              }`}
+                              style={{ height: `${(item.rate / maxRate) * 100}%` }}
+                            ></div>
+                          </div>
+                        ))
+                      })()}
                     </div>
-                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
+                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
                       {attendanceTrend.map((item, idx) => (
-                        <span key={idx} className="w-8 text-center">{item.month}</span>
+                        <span key={idx} className="flex-1 text-center">{item.month}</span>
                       ))}
                     </div>
                   </div>
 
                   {/* Academic Grade Trend */}
-                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 lg:h-full flex flex-col justify-between">
-                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold">
+                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
+                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold mb-3">
                       <Icon name="show_chart" className="text-secondary" />
                       Academic Grade Trend
                     </h3>
-                    <div className="flex-1 relative flex items-center justify-center min-h-[160px] my-2">
+                    <div className="relative h-32 w-full">
                       <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 200">
                         <path d="M0,160 Q100,135 200,110 T400,75" fill="none" stroke="#4648d4" strokeWidth="4" strokeLinecap="round"></path>
                         <circle cx="0" cy="160" fill="#4648d4" r="5"></circle>
@@ -360,7 +363,7 @@ export default function AdminDashboard() {
                         <div className="w-px h-full bg-outline"></div>
                       </div>
                     </div>
-                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
+                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
                       {gradeTrend.map((item, idx) => (
                         <span key={idx}>{item.label}</span>
                       ))}
@@ -370,15 +373,15 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Comparison Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:flex-1 lg:min-h-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
                   {/* Subject-wise */}
-                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between lg:h-full">
+                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
                     <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
                       <Icon name="bar_chart" className="text-tertiary" />
                       Subject Performance
                     </h3>
-                    <div className="flex flex-col gap-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
+                    <div className="flex flex-col gap-3">
                       {subjectPerformance.map((subj, idx) => (
                         <div key={idx} className="space-y-1">
                           <div className="flex justify-between text-xs font-bold">
@@ -397,48 +400,50 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Section-wise */}
-                  <div className="bg-surface-container-lowest p-4.5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between lg:h-full">
-                    <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
+                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
+                    <h3 className="font-title-lg text-title-lg mb-3 flex items-center gap-2 text-on-surface font-bold">
                       <Icon name="leaderboard" className="text-secondary" />
                       Section Comparison
                     </h3>
-                    <div className="flex items-end justify-around h-32 pt-4">
-                      {/* Sec A */}
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="flex gap-1.5 items-end">
-                          <div className="w-4 bg-primary h-24 rounded-t-md hover:opacity-90 transition-opacity" title="Grade 10: 80%"></div>
-                          <div className="w-4 bg-secondary h-20 rounded-t-md hover:opacity-90 transition-opacity" title="Grade 11: 75%"></div>
-                        </div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Sec A</span>
+                    {sectionComparison.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-8">
+                        No sibling section data for this class yet.
                       </div>
-                      
-                      {/* Sec B */}
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="flex gap-1.5 items-end">
-                          <div className="w-4 bg-primary h-20 rounded-t-md hover:opacity-90 transition-opacity" title="Grade 10: 70%"></div>
-                          <div className="w-4 bg-secondary h-22 rounded-t-md hover:opacity-90 transition-opacity" title="Grade 11: 78%"></div>
+                    ) : (
+                      <>
+                        <div className="flex items-end justify-around h-28">
+                          {(() => {
+                            const maxVal = Math.max(...sectionComparison.flatMap(s => [s.attendance, s.avg_result]))
+                            return sectionComparison.map((sec, idx) => (
+                              <div key={idx} className="flex flex-col items-center gap-1.5">
+                                <div className="flex gap-1.5 items-end h-20">
+                                  <div
+                                    className="w-5 bg-primary rounded-t-md hover:opacity-90 transition-opacity"
+                                    style={{ height: `${(Math.max(sec.attendance, 2) / maxVal) * 100}%` }}
+                                    title={`Attendance: ${sec.attendance}%`}
+                                  ></div>
+                                  <div
+                                    className="w-5 bg-secondary rounded-t-md hover:opacity-90 transition-opacity"
+                                    style={{ height: `${(Math.max(sec.avg_result, 2) / maxVal) * 100}%` }}
+                                    title={`Avg Result: ${sec.avg_result}%`}
+                                  ></div>
+                                </div>
+                                <span className="text-[10px] font-bold text-on-surface-variant">{sec.section}</span>
+                              </div>
+                            ))
+                          })()}
                         </div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Sec B</span>
-                      </div>
 
-                      {/* Sec C */}
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="flex gap-1.5 items-end">
-                          <div className="w-4 bg-primary h-26 rounded-t-md hover:opacity-90 transition-opacity" title="Grade 10: 85%"></div>
-                          <div className="w-4 bg-secondary h-16 rounded-t-md hover:opacity-90 transition-opacity" title="Grade 11: 65%"></div>
+                        <div className="mt-3 flex justify-center gap-4">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">
+                            <div className="w-2.5 h-2.5 bg-primary rounded-sm"></div> Attendance %
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">
+                            <div className="w-2.5 h-2.5 bg-secondary rounded-sm"></div> Avg Result %
+                          </div>
                         </div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Sec C</span>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 flex justify-center gap-4">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">
-                        <div className="w-2.5 h-2.5 bg-primary rounded-sm"></div> Grade 10
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">
-                        <div className="w-2.5 h-2.5 bg-secondary rounded-sm"></div> Grade 11
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </div>
 
                 </div>
@@ -446,26 +451,26 @@ export default function AdminDashboard() {
               </div>
 
               {/* Right: Lists & Spotlight (Column 9-12) */}
-              <div className="lg:col-span-4 flex flex-col gap-4 lg:h-full lg:min-h-0">
+              <div className="lg:col-span-4 flex flex-col gap-4">
                 
                 {/* Faculty Spotlight Card */}
-                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col lg:flex-1 lg:min-h-0">
-                  <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 flex-shrink-0">
+                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col">
+                  <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 shrink-0">
                     <h3 className="font-title-lg text-sm text-on-surface font-bold">Faculty Spotlight</h3>
                   </div>
-                  <div className="divide-y divide-outline-variant/10 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
+                  <div className="divide-y divide-outline-variant/10">
                     {facultySpotlight.map((fac, idx) => (
-                      <div key={idx} className="p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors duration-200">
+                      <div key={idx} className="p-3 flex items-center gap-3 hover:bg-surface-container-low transition-colors duration-200">
                         <img 
                           alt={fac.name} 
-                          className="w-10 h-10 rounded-full object-cover border border-outline-variant"
+                          className="w-9 h-9 rounded-full object-cover border border-outline-variant shrink-0"
                           src={fac.avatar}
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-on-surface truncate text-sm">{fac.name}</p>
-                          <p className="text-[11px] text-on-surface-variant font-medium">{fac.department} • {fac.rating} Rating</p>
+                          <p className="text-[11px] text-on-surface-variant font-medium truncate">{fac.department} • {fac.rating} Rating</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                           <p className="text-primary font-bold text-sm">{fac.success}</p>
                           <p className="text-[9px] uppercase font-bold text-on-surface-variant">Success</p>
                         </div>
@@ -475,11 +480,11 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Students Spotlight */}
-                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col lg:flex-1 lg:min-h-0">
-                  <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 flex-shrink-0">
+                <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col">
+                  <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 shrink-0">
                     <h3 className="font-title-lg text-sm text-on-surface font-bold">Student Spotlight</h3>
                   </div>
-                  <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
+                  <div className="p-4">
                     
                     {/* High Performers */}
                     <p className="text-[10px] font-bold text-on-surface-variant mb-3 uppercase tracking-wider">High Performers</p>

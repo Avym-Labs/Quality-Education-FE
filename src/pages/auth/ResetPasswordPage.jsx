@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import loginIllustration from '../../assets/login_illustration.png'
+import logo from '../../assets/logo.png'
 import api from '../../api/axios'
 import Icon from '../../components/common/Icon'
 
@@ -63,8 +64,7 @@ export default function ResetPasswordPage() {
           <div className="w-full max-w-sm flex flex-col items-center gap-3.5 relative z-10">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-1">
-              <Icon name="school" className="text-primary text-5xl" filled />
-              <span className="text-3xl font-extrabold text-primary tracking-tight">EduCore</span>
+              <img src={logo} alt="EduCore" className="h-20 w-20 object-contain" />
             </div>
             
             {/* Photo */}
@@ -89,8 +89,7 @@ export default function ResetPasswordPage() {
         <div className="p-container-padding-mobile md:p-stack-lg lg:p-16 flex flex-col justify-center text-left">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-stack-lg">
-            <Icon name="school" className="text-primary text-3xl" filled />
-            <span className="text-headline-lg-mobile font-bold text-primary tracking-tight">EduCore</span>
+            <img src={logo} alt="EduCore" className="h-12 w-12 object-contain" />
           </div>
 
           <div className="mb-stack-lg">

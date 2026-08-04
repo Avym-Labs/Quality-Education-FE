@@ -10,6 +10,13 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Multiple requests can 401 at once on page load (chat, analytics, notifications, etc.
+// all fire in parallel). The backend enforces a single active token per device, and
+// each refresh call overwrites it — so if every 401'd request refreshed independently,
+// they'd stomp on each other's tokens and the loser(s) would 401 again. Sharing one
+// in-flight refresh promise means every concurrent 401 waits for the same new token.
+let refreshPromise = null
+
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -27,10 +34,15 @@ api.interceptors.response.use(
       const refresh = localStorage.getItem('refresh_token')
       if (refresh) {
         try {
-          const { data } = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/auth/token/refresh`,
-            { refresh }
-          )
+          if (!refreshPromise) {
+            refreshPromise = axios.post(
+              `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/auth/token/refresh`,
+              { refresh }
+            ).finally(() => {
+              refreshPromise = null
+            })
+          }
+          const { data } = await refreshPromise
           localStorage.setItem('access_token', data.access)
           original.headers.Authorization = `Bearer ${data.access}`
           return api(original)

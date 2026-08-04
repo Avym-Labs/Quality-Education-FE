@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Papa from 'papaparse'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
-import AccountSidebar from '../../components/layout/AccountSidebar'
 import Icon from '../../components/common/Icon'
 
 const CSV_FIELDS = ['first_name', 'last_name', 'email', 'phone', 'password', 'grade', 'section', 'roll_number', 'father_name', 'mother_name']
@@ -224,29 +222,33 @@ export default function ManageStudents() {
     URL.revokeObjectURL(url)
   }
 
-  const handleCsvFile = (e) => {
+  // Parsing (flexible header matching: either 'first_name'+'last_name' columns
+  // or a single 'name'/'full_name' column) happens server-side via
+  // /students/parse-csv, so the website and the app share identical logic.
+  const handleCsvFile = async (e) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const rows = results.data.map(r => {
-          const row = {}
-          CSV_FIELDS.forEach(f => { row[f] = (r[f] || '').toString().trim() })
-          return row
-        }).filter(r => r.first_name || r.last_name || r.roll_number)
-        setCsvRows(rows)
-        setCsvSelectedRows(rows.map((_, i) => i))
-        setCsvResults(null)
-        setMessage('')
-      },
-      error: (err) => {
-        console.error('CSV parse error:', err)
-        setMessage('Failed to parse CSV file.')
-      }
-    })
     e.target.value = ''
+    if (!file) return
+
+    setMessage('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await api.post('/students/parse-csv', formData)
+      const rows = res.data.rows || []
+
+      setCsvRows(rows)
+      setCsvSelectedRows(rows.map((_, i) => i))
+      setCsvResults(null)
+      setMessage(
+        rows.length === 0
+          ? 'No valid student rows found in that file. Make sure it has recognizable headers like "First Name", "Last Name", and "Roll Number" — see the downloadable template.'
+          : ''
+      )
+    } catch (err) {
+      console.error('CSV parse failed:', err)
+      setMessage(err.response?.data?.detail || 'Failed to parse that file. Please check the format and try again.')
+    }
   }
 
   const toggleCsvSelectAll = () => {
@@ -298,11 +300,7 @@ export default function ManageStudents() {
           <p className="text-on-surface-variant text-[10px] uppercase font-bold mt-1 tracking-wider">Department Faculty Portal</p>
         </div>
 
-        <div className="md:flex md:gap-8 md:items-start">
-
-          <AccountSidebar active="manage-students" />
-
-          <div className="flex-1 min-w-0 space-y-stack-lg">
+        <div className="space-y-stack-lg">
 
         {message && (
           <div className="p-3 rounded-xl text-center text-xs font-bold bg-primary-container/20 text-primary border border-primary/20">
@@ -450,8 +448,8 @@ export default function ManageStudents() {
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[24px] p-5 shadow-sm space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div>
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold">Bulk Upload via CSV</h3>
-                  <p className="text-[10px] text-on-surface-variant font-semibold">Create many new students at once (export Excel sheets as CSV first)</p>
+                  <h3 className="font-title-lg text-sm text-on-surface font-bold">Bulk Upload via CSV/Excel</h3>
+                  <p className="text-[10px] text-on-surface-variant font-semibold">Create many new students at once</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -463,8 +461,8 @@ export default function ManageStudents() {
                   </button>
                   <label className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold text-xs cursor-pointer hover:opacity-90 transition-colors">
                     <Icon name="upload_file" className="text-xs" />
-                    <span>Choose CSV File</span>
-                    <input type="file" accept=".csv,text/csv" onChange={handleCsvFile} className="hidden" />
+                    <span>Choose CSV/Excel File</span>
+                    <input type="file" accept=".csv,text/csv,.xlsx" onChange={handleCsvFile} className="hidden" />
                   </label>
                 </div>
               </div>
@@ -528,7 +526,6 @@ export default function ManageStudents() {
           </section>
         )}
 
-          </div>
         </div>
 
         {/* Add/Edit modal */}
