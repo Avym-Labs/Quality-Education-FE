@@ -517,6 +517,7 @@ export default function UserManagement() {
                         <th className="p-4">Class</th>
                         <th className="p-4">Roll Number</th>
                         <th className="p-4">Subjects</th>
+                        <th className="p-4">Added By</th>
                       </>
                     ) : (
                       <>
@@ -565,6 +566,7 @@ export default function UserManagement() {
                               {item.subjects?.join(', ') || 'No subjects enrolled'}
                             </p>
                           </td>
+                          <td className="p-4 text-outline text-[10px]">{item.added_by || 'N/A'}</td>
                         </>
                       ) : (
                         <>

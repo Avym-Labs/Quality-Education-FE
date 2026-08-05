@@ -40,10 +40,9 @@ export default function ManageStudents() {
   const [formRows, setFormRows] = useState([emptyFormRow(assignedClasses[0]?.split('-')[0], assignedClasses[0]?.split('-')[1])])
   const [submitting, setSubmitting] = useState(false)
 
-  // Import tab: existing students
-  const [importable, setImportable] = useState([])
-  const [loadingImportable, setLoadingImportable] = useState(false)
-  const [importSelectedIds, setImportSelectedIds] = useState([])
+  // Import tab: add a single student manually
+  const [singleForm, setSingleForm] = useState(emptyFormRow(assignedClasses[0]?.split('-')[0], assignedClasses[0]?.split('-')[1]))
+  const [singleSubmitting, setSingleSubmitting] = useState(false)
 
   // Import tab: CSV upload
   const [csvRows, setCsvRows] = useState([])
@@ -64,21 +63,8 @@ export default function ManageStudents() {
     }
   }
 
-  const loadImportable = async () => {
-    setLoadingImportable(true)
-    try {
-      const res = await api.get('/students/importable')
-      setImportable(res.data || [])
-    } catch (err) {
-      console.error('Failed to load importable students:', err)
-    } finally {
-      setLoadingImportable(false)
-    }
-  }
-
   useEffect(() => {
     loadRoster()
-    loadImportable()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -181,27 +167,26 @@ export default function ManageStudents() {
   }
 
   // ---------------------------------------------------------------------
-  // Import tab: existing students
+  // Import tab: add a single student manually
   // ---------------------------------------------------------------------
-  const toggleImportSelectAll = () => {
-    setImportSelectedIds(importSelectedIds.length === importable.length ? [] : importable.map(s => s.id))
-  }
-  const toggleImportSelect = (id) => {
-    setImportSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
+  const updateSingleForm = (field, value) => {
+    setSingleForm(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleImportSelected = async () => {
-    if (importSelectedIds.length === 0) return
+  const handleSingleAddSubmit = async (e) => {
+    e.preventDefault()
+    setSingleSubmitting(true)
     setMessage('')
     try {
-      await Promise.all(importSelectedIds.map(id => api.post(`/students/${id}/import-subjects`, {})))
-      setMessage(`Added ${importSelectedIds.length} student(s) to your roster.`)
-      setImportSelectedIds([])
-      loadImportable()
+      await api.post('/students', singleForm)
+      setMessage(`Added ${singleForm.first_name} ${singleForm.last_name}.`)
+      setSingleForm(emptyFormRow(assignedClasses[0]?.split('-')[0], assignedClasses[0]?.split('-')[1]))
       loadRoster()
     } catch (err) {
-      console.error('Import failed:', err)
-      setMessage('Some students could not be imported.')
+      console.error('Failed to add student:', err)
+      setMessage(err.response?.data?.detail || 'Failed to add student.')
+    } finally {
+      setSingleSubmitting(false)
     }
   }
 
@@ -399,49 +384,37 @@ export default function ManageStudents() {
         {activeTab === 'import' && (
           <section className="space-y-6 animate-fadeIn">
 
-            {/* Existing students created by other teachers */}
+            {/* Add a single student manually */}
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[24px] p-5 shadow-sm space-y-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold">Add Existing Students</h3>
-                  <p className="text-[10px] text-on-surface-variant font-semibold">Students in your classes not yet on your subject roster</p>
-                </div>
-                {importSelectedIds.length > 0 && (
-                  <button
-                    onClick={handleImportSelected}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 border-none cursor-pointer"
-                  >
-                    <Icon name="download" className="text-sm" />
-                    <span>Import Selected ({importSelectedIds.length})</span>
-                  </button>
-                )}
+              <div>
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">Add a Student</h3>
+                <p className="text-[10px] text-on-surface-variant font-semibold">Create a single new student in one of your assigned classes</p>
               </div>
 
-              {loadingImportable ? (
-                <div className="flex justify-center items-center py-8">
-                  <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></span>
+              <form onSubmit={handleSingleAddSubmit} className="grid grid-cols-2 gap-3">
+                <input placeholder="First name" value={singleForm.first_name} onChange={e => updateSingleForm('first_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                <input placeholder="Last name" value={singleForm.last_name} onChange={e => updateSingleForm('last_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                <input placeholder="Email (optional)" value={singleForm.email} onChange={e => updateSingleForm('email', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                <input placeholder="Phone (optional)" value={singleForm.phone} onChange={e => updateSingleForm('phone', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                <input placeholder="Password (defaults to roll no.)" value={singleForm.password} onChange={e => updateSingleForm('password', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                <select value={`${singleForm.grade}-${singleForm.section}`} onChange={e => { const [g, s] = e.target.value.split('-'); updateSingleForm('grade', g); updateSingleForm('section', s) }} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:outline-none">
+                  {assignedClasses.length === 0 && <option value="-">No assigned classes</option>}
+                  {assignedClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <input placeholder="Roll number" value={singleForm.roll_number} onChange={e => updateSingleForm('roll_number', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                <input placeholder="Father's name (optional)" value={singleForm.father_name} onChange={e => updateSingleForm('father_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                <input placeholder="Mother's name (optional)" value={singleForm.mother_name} onChange={e => updateSingleForm('mother_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+
+                <div className="col-span-2 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={singleSubmitting}
+                    className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 disabled:opacity-50 border-none cursor-pointer"
+                  >
+                    {singleSubmitting ? 'Adding...' : 'Add Student'}
+                  </button>
                 </div>
-              ) : importable.length === 0 ? (
-                <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
-                  Nothing to import — every student in your classes is already on your roster.
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-                  <label className="flex items-center gap-2 text-[10px] font-bold text-on-surface-variant uppercase px-1">
-                    <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={importSelectedIds.length === importable.length} onChange={toggleImportSelectAll} />
-                    Select all
-                  </label>
-                  {importable.map(s => (
-                    <label key={s.id} className="flex items-center gap-3 p-3 rounded-xl border border-outline-variant/20 hover:bg-surface-container-low cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={importSelectedIds.includes(s.id)} onChange={() => toggleImportSelect(s.id)} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-on-surface">{s.full_name}</p>
-                        <p className="text-[10px] text-on-surface-variant">Roll #{s.roll_number} • Class {s.grade}-{s.section} • Currently: {(s.subjects || []).join(', ') || 'no subjects'}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
+              </form>
             </div>
 
             {/* CSV bulk upload */}

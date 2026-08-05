@@ -62,7 +62,7 @@ export default function LoginPage() {
           <div className="w-full max-w-sm flex flex-col items-center gap-3.5 relative z-10">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-1">
-              <img src={logo} alt="EduCore" className="h-20 w-20 object-contain" />
+              <img src={logo} alt="Quality Education" className="h-36 w-36 object-contain" />
             </div>
             
             {/* Photo */}
@@ -88,7 +88,7 @@ export default function LoginPage() {
         <div className="p-container-padding-mobile md:p-stack-lg lg:p-16 flex flex-col justify-center">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-stack-lg">
-            <img src={logo} alt="EduCore" className="h-12 w-12 object-contain" />
+            <img src={logo} alt="Quality Education" className="h-20 w-20 object-contain" />
           </div>
 
           <div className="mb-stack-lg">

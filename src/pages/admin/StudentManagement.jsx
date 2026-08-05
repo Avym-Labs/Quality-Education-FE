@@ -524,6 +524,12 @@ export default function StudentManagement() {
                         <Icon name="id_card" className="text-sm" />
                         Roll: #{student.roll_number}
                       </p>
+                      {student.added_by && (
+                        <p className="text-on-surface-variant/70 text-[10px] flex items-center gap-1">
+                          <Icon name="person_add" className="text-xs" />
+                          Added by {student.added_by}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -622,6 +628,10 @@ export default function StudentManagement() {
                     <div>
                       <p className="text-xs text-outline font-semibold">Mother's Name</p>
                       <p className="font-medium text-on-surface">{selectedStudent?.mother_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-outline font-semibold">Added By</p>
+                      <p className="font-medium text-on-surface">{selectedStudent?.added_by || 'N/A'}</p>
                     </div>
                   </div>
 
