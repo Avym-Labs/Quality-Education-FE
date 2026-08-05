@@ -3,16 +3,31 @@ import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
-const AVAILABLE_CLASSES = ['9-A', '9-B', '9-C', '10-A', '10-B', '10-C', '11-A', '11-B', '11-C', '12-A', '12-B', '12-C']
+const FALLBACK_CLASS_OPTIONS = ['9-A', '9-B', '9-C', '10-A', '10-B', '10-C', '11-A', '11-B', '11-C', '12-A', '12-B', '12-C']
+const FALLBACK_GRADES = ['9', '10', '11', '12']
+const FALLBACK_SECTIONS = ['A', 'B', 'C']
 const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Literature', 'Biology', 'History']
 
 export default function UserManagement() {
-  const [activeRole, setActiveRole] = useState('student') // 'student' | 'teacher'
+  const [activeRole, setActiveRole] = useState('student') // 'student' | 'teacher' | 'classes'
   const [usersList, setUsersList] = useState([])
   const [teachersList, setTeachersList] = useState([]) // Loaded for student mapping
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
+
+  // Classes tab state
+  const [classesList, setClassesList] = useState([])
+  const [classesLoading, setClassesLoading] = useState(true)
+  const [classModalOpen, setClassModalOpen] = useState(false)
+  const [newClassGrade, setNewClassGrade] = useState('')
+  const [newClassSection, setNewClassSection] = useState('')
+  const [classFormError, setClassFormError] = useState(null)
+  const [classSubmitting, setClassSubmitting] = useState(false)
+
+  const classKeys = classesList.length ? classesList.map(c => `${c.grade}-${c.section}`) : FALLBACK_CLASS_OPTIONS
+  const gradeOptions = classesList.length ? [...new Set(classesList.map(c => c.grade))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0)) : FALLBACK_GRADES
+  const sectionOptions = classesList.length ? [...new Set(classesList.map(c => c.section))].sort() : FALLBACK_SECTIONS
   
   // Student Filters
   const [gradeFilter, setGradeFilter] = useState('')
@@ -75,8 +90,68 @@ export default function UserManagement() {
     loadTeachers()
   }, [])
 
+  const fetchClasses = async () => {
+    try {
+      setClassesLoading(true)
+      const res = await api.get('/classes')
+      setClassesList(res.data || [])
+    } catch (err) {
+      console.error('Failed to load classes:', err)
+    } finally {
+      setClassesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchClasses()
+  }, [])
+
+  const handleOpenCreateClassModal = () => {
+    setNewClassGrade('')
+    setNewClassSection('')
+    setClassFormError(null)
+    setClassModalOpen(true)
+  }
+
+  const handleCreateClass = async (e) => {
+    e.preventDefault()
+    if (!newClassGrade.trim() || !newClassSection.trim()) {
+      setClassFormError('Grade and section are both required.')
+      return
+    }
+    setClassSubmitting(true)
+    setClassFormError(null)
+    try {
+      await api.post('/classes', { grade: newClassGrade.trim(), section: newClassSection.trim() })
+      setClassModalOpen(false)
+      fetchClasses()
+    } catch (err) {
+      setClassFormError(err.response?.data?.detail || 'Failed to add class.')
+    } finally {
+      setClassSubmitting(false)
+    }
+  }
+
+  const handleDeleteClass = async (cls) => {
+    const classKey = `${cls.grade}-${cls.section}`
+    const warnings = []
+    if (cls.student_count > 0) warnings.push(`permanently delete ${cls.student_count} student${cls.student_count === 1 ? '' : 's'} and their login access`)
+    if (cls.teacher_count > 0) warnings.push(`unassign ${cls.teacher_count} teacher${cls.teacher_count === 1 ? '' : 's'} from this class (accounts kept)`)
+    const suffix = warnings.length ? ` This will ${warnings.join(' and ')}.` : ''
+    if (!window.confirm(`Delete Class ${classKey}?${suffix} This cannot be undone.`)) return
+    try {
+      await api.delete(`/classes/${cls.id}`)
+      fetchClasses()
+      fetchUsers()
+    } catch (err) {
+      console.error(err)
+      alert('Failed to delete class.')
+    }
+  }
+
   // Fetch users list based on activeRole
   const fetchUsers = async () => {
+    if (activeRole === 'classes') return
     try {
       setLoading(true)
       setError(null)
@@ -404,25 +479,27 @@ export default function UserManagement() {
             </h2>
           </div>
           <div className="flex gap-2.5">
-            <button 
-              onClick={() => {
-                setImportRole(activeRole)
-                setImportResult(null)
-                setImportError(null)
-                setSelectedFile(null)
-                setBulkImportModalOpen(true)
-              }}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary-container text-on-secondary-container hover:bg-opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
-            >
-              <Icon name="publish" className="text-sm" />
-              <span>Bulk Import</span>
-            </button>
-            <button 
-              onClick={handleOpenCreateModal}
+            {activeRole !== 'classes' && (
+              <button
+                onClick={() => {
+                  setImportRole(activeRole)
+                  setImportResult(null)
+                  setImportError(null)
+                  setSelectedFile(null)
+                  setBulkImportModalOpen(true)
+                }}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary-container text-on-secondary-container hover:bg-opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
+              >
+                <Icon name="publish" className="text-sm" />
+                <span>Bulk Import</span>
+              </button>
+            )}
+            <button
+              onClick={activeRole === 'classes' ? handleOpenCreateClassModal : handleOpenCreateModal}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
             >
-              <Icon name="person_add" className="text-sm" />
-              <span>Add {activeRole === 'student' ? 'Student' : 'Teacher'}</span>
+              <Icon name={activeRole === 'classes' ? 'add_circle' : 'person_add'} className="text-sm" />
+              <span>Add {activeRole === 'student' ? 'Student' : activeRole === 'teacher' ? 'Teacher' : 'Class'}</span>
             </button>
           </div>
         </section>
@@ -430,7 +507,7 @@ export default function UserManagement() {
         {/* Filters and Search toolbar */}
         <section className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/20 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-outline uppercase font-bold">Manage Role:</span>
+            <span className="text-[11px] text-outline uppercase font-bold">Manage:</span>
             <select
               value={activeRole}
               onChange={(e) => {
@@ -441,11 +518,13 @@ export default function UserManagement() {
               }}
               className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
             >
+              <option value="classes">🏫 Classes</option>
               <option value="student">🎓 Students List</option>
               <option value="teacher">👨‍🏫 Teachers List</option>
             </select>
           </div>
 
+          {activeRole !== 'classes' && (
           <div className="flex flex-wrap items-center gap-2 flex-1 md:justify-end">
             <div className="relative min-w-[200px]">
               <Icon name="search" className="absolute left-3 top-2.5 text-outline text-base" />
@@ -467,7 +546,7 @@ export default function UserManagement() {
                   className="px-3.5 py-2 rounded-xl border border-outline bg-surface-container-low text-xs outline-none focus:border-primary"
                 >
                   <option value="">All Grades</option>
-                  {['9', '10', '11', '12'].map(g => <option key={g} value={g}>Grade {g}</option>)}
+                  {gradeOptions.map(g => <option key={g} value={g}>Grade {g}</option>)}
                 </select>
                 <select
                   value={sectionFilter}
@@ -475,7 +554,7 @@ export default function UserManagement() {
                   className="px-3.5 py-2 rounded-xl border border-outline bg-surface-container-low text-xs outline-none focus:border-primary"
                 >
                   <option value="">All Sections</option>
-                  {['A', 'B', 'C'].map(s => <option key={s} value={s}>Section {s}</option>)}
+                  {sectionOptions.map(s => <option key={s} value={s}>Section {s}</option>)}
                 </select>
               </>
             )}
@@ -487,10 +566,48 @@ export default function UserManagement() {
               Apply Filter
             </button>
           </div>
+          )}
         </section>
 
+        {/* Classes Grid */}
+        {activeRole === 'classes' && (
+          classesLoading ? (
+            <div className="flex justify-center items-center py-24 bg-surface-container-lowest rounded-3xl border border-outline-variant/15">
+              <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+            </div>
+          ) : classesList.length === 0 ? (
+            <div className="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant/15 text-outline">
+              <Icon name="school" className="text-4xl" />
+              <p className="mt-2 font-semibold">No classes yet. Click &ldquo;Add Class&rdquo; to create one.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {classesList.map(cls => (
+                <div key={cls.id} className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/20 shadow-xs flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                    {cls.grade}-{cls.section}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-on-surface">Class {cls.grade}-{cls.section}</h4>
+                    <p className="text-[10px] text-outline font-semibold mt-0.5">
+                      {cls.student_count} Student{cls.student_count === 1 ? '' : 's'} • {cls.teacher_count} Teacher{cls.teacher_count === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteClass(cls)}
+                    className="p-2 hover:bg-error/10 text-error rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center shrink-0"
+                    title="Delete Class"
+                  >
+                    <Icon name="delete" className="text-base" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
         {/* Users Table / Grid list */}
-        {loading ? (
+        {activeRole !== 'classes' && (loading ? (
           <div className="flex justify-center items-center py-24 bg-surface-container-lowest rounded-3xl border border-outline-variant/15">
             <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
           </div>
@@ -627,7 +744,7 @@ export default function UserManagement() {
               </table>
             </div>
           </div>
-        )}
+        ))}
 
         {/* Modal: Bulk Import Excel/CSV */}
         {bulkImportModalOpen && (
@@ -709,6 +826,74 @@ export default function UserManagement() {
                         <span>Import Records</span>
                       </>
                     )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add New Class */}
+        {classModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="bg-surface-container-lowest p-6 rounded-[28px] border border-outline-variant shadow-2xl max-w-sm w-full animate-slideUp text-left space-y-4">
+              <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
+                  <Icon name="school" className="text-primary" />
+                  Add New Class
+                </h3>
+                <button
+                  onClick={() => setClassModalOpen(false)}
+                  className="hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
+                >
+                  <Icon name="close" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateClass} className="space-y-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-outline font-bold uppercase">Grade</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 10"
+                    value={newClassGrade}
+                    onChange={(e) => setNewClassGrade(e.target.value)}
+                    className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-outline font-bold uppercase">Section</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. C"
+                    value={newClassSection}
+                    onChange={(e) => setNewClassSection(e.target.value)}
+                    className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
+                    required
+                  />
+                </div>
+
+                {classFormError && (
+                  <div className="p-3 bg-error-container/20 border border-error/25 text-error rounded-xl text-[10px] font-bold text-center">
+                    {classFormError}
+                  </div>
+                )}
+
+                <div className="flex gap-2 justify-end border-t border-outline-variant/20 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setClassModalOpen(false)}
+                    className="px-4 py-2.5 border border-outline hover:bg-surface-container text-xs font-bold rounded-xl cursor-pointer bg-transparent"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={classSubmitting}
+                    className="px-5 py-2.5 bg-primary text-on-primary hover:opacity-95 disabled:opacity-40 rounded-xl text-xs font-bold cursor-pointer border-none shadow-sm"
+                  >
+                    {classSubmitting ? 'Adding...' : 'Add Class'}
                   </button>
                 </div>
               </form>
@@ -895,7 +1080,7 @@ export default function UserManagement() {
                           onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
                           className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                         >
-                          {['9', '10', '11', '12'].map(g => <option key={g} value={g}>Grade {g}</option>)}
+                          {gradeOptions.map(g => <option key={g} value={g}>Grade {g}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -906,7 +1091,7 @@ export default function UserManagement() {
                           onChange={(e) => setFormData(prev => ({ ...prev, section: e.target.value }))}
                           className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                         >
-                          {['A', 'B', 'C'].map(s => <option key={s} value={s}>Section {s}</option>)}
+                          {sectionOptions.map(s => <option key={s} value={s}>Section {s}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -1030,7 +1215,7 @@ export default function UserManagement() {
                       <div className="flex flex-col gap-1.5 text-left">
                         <label className="text-[10px] text-outline font-bold uppercase">Assigned Lecturing Classes</label>
                         <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-surface-container-low/30 border border-outline-variant/20 max-h-[150px] overflow-y-auto">
-                          {AVAILABLE_CLASSES.map((cls) => {
+                          {classKeys.map((cls) => {
                             const isAssigned = formData.assigned_classes.includes(cls)
                             return (
                               <button
