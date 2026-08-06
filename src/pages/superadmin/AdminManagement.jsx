@@ -16,6 +16,7 @@ export default function AdminManagement() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [schoolName, setSchoolName] = useState('')
   const [formSubmitting, setFormSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
 
@@ -109,6 +110,7 @@ export default function AdminManagement() {
     setEmail('')
     setPhone('')
     setPassword('')
+    setSchoolName('')
     setFormError('')
     setIsModalOpen(true)
   }
@@ -147,7 +149,8 @@ export default function AdminManagement() {
           last_name: lastName,
           email,
           phone,
-          password
+          password,
+          school_name: schoolName
         })
       }
       setIsModalOpen(false)
@@ -202,6 +205,7 @@ export default function AdminManagement() {
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant/25">
                     <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Name</th>
+                    <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">School</th>
                     <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Email</th>
                     <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Phone</th>
                     <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Status</th>
@@ -212,6 +216,7 @@ export default function AdminManagement() {
                   {admins.map((admin) => (
                     <tr key={admin.id} className="hover:bg-surface-container-low/20 transition-colors">
                       <td className="p-4 text-xs font-bold text-on-surface">{admin.full_name}</td>
+                      <td className="p-4 text-xs text-on-surface-variant font-semibold">{admin.school_name || 'N/A'}</td>
                       <td className="p-4 text-xs text-on-surface-variant font-semibold">{admin.email}</td>
                       <td className="p-4 text-xs text-on-surface-variant font-semibold">{admin.phone}</td>
                       <td className="p-4 text-xs">
@@ -311,6 +316,19 @@ export default function AdminManagement() {
                     />
                   </div>
                 </div>
+
+                {!editingAdmin && (
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">School Name</label>
+                    <input
+                      type="text"
+                      value={schoolName}
+                      onChange={(e) => setSchoolName(e.target.value)}
+                      className="px-3 py-2 rounded-xl border border-outline-variant bg-transparent text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-semibold"
+                      required
+                    />
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-on-surface-variant uppercase">Email Address</label>
