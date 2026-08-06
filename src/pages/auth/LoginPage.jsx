@@ -16,24 +16,6 @@ export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleQuickLogin = async (idVal, passVal) => {
-    setError('')
-    setLoading(true)
-    try {
-      const user = await login({ identifier: idVal, password: passVal }, rememberMe)
-      navigate(`/${user.role}/dashboard`, { replace: true })
-    } catch (err) {
-      const detail = err.response?.data?.detail || ''
-      if (err.response?.status === 403 && (detail.includes('paused') || detail.includes('Paused'))) {
-        navigate('/paused', { replace: true })
-        return
-      }
-      setError(detail || 'Invalid credentials. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -187,34 +169,6 @@ export default function LoginPage() {
                 </>
               )}
             </button>
-
-            {/* Quick login helper buttons */}
-            <div className="pt-6 border-t border-outline-variant/20 mt-6 text-center space-y-3">
-              <p className="text-[11px] font-bold text-outline uppercase tracking-wider">Login as:</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('admin@educore.com', 'admin123')}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-[11px] font-bold text-on-surface-variant transition-all hover:text-primary active:scale-95 cursor-pointer"
-                >
-                  Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('teacher@educore.com', 'teacher123')}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-[11px] font-bold text-on-surface-variant transition-all hover:text-primary active:scale-95 cursor-pointer"
-                >
-                  Teacher Sarah
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('student@educore.com', 'student123')}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-[11px] font-bold text-on-surface-variant transition-all hover:text-primary active:scale-95 cursor-pointer"
-                >
-                  Student Arjun
-                </button>
-              </div>
-            </div>
 
           </form>
         </div>
