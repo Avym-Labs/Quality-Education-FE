@@ -31,6 +31,7 @@ import TeacherReports from './pages/teacher/TeacherReports'
 
 import AdminDashboard from './pages/admin/AdminDashboard'
 import UserManagement from './pages/admin/UserManagement'
+import TeacherManagement from './pages/admin/TeacherManagement'
 import NewAnnouncement from './pages/admin/NewAnnouncement'
 import LeaveApproval from './pages/admin/LeaveApproval'
 import AdminSettings from './pages/admin/AdminSettings'
@@ -107,6 +108,7 @@ function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="faculty" element={<TeacherManagement />} />
             <Route path="students" element={<Navigate to="/admin/users" replace />} />
             <Route path="teachers" element={<Navigate to="/admin/users" replace />} />
             <Route path="announcements" element={<NewAnnouncement />} />

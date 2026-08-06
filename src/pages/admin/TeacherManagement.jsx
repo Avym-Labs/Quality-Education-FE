@@ -3,13 +3,16 @@ import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
-const AVAILABLE_CLASSES = ['9-A', '9-B', '9-C', '10-A', '10-B', '10-C', '11-A', '11-B', '11-C', '12-A', '12-B', '12-C']
+const FALLBACK_CLASS_OPTIONS = ['9-A', '9-B', '9-C', '10-A', '10-B', '10-C', '11-A', '11-B', '11-C', '12-A', '12-B', '12-C']
 const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Literature', 'Biology', 'History']
 
 export default function TeacherManagement() {
   const [teachers, setTeachers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [classesList, setClassesList] = useState([])
+
+  const classKeys = classesList.length ? classesList.map(c => `${c.grade}-${c.section}`) : FALLBACK_CLASS_OPTIONS
   
   // Search and filter
   const [search, setSearch] = useState('')
@@ -71,8 +74,18 @@ export default function TeacherManagement() {
     }
   }
 
+  const fetchClasses = async () => {
+    try {
+      const res = await api.get('/classes')
+      setClassesList(res.data || [])
+    } catch (err) {
+      console.error('Failed to load classes:', err)
+    }
+  }
+
   useEffect(() => {
     fetchTeachers()
+    fetchClasses()
   }, [])
 
   const handleSearchKeyPress = (e) => {
@@ -210,51 +223,9 @@ export default function TeacherManagement() {
     }
   }
 
-  // Fallback mock teachers if DB has few items
-  const fallbackTeachers = [
-    {
-      id: 'mock1',
-      full_name: 'Prof. Sarah Mitchell',
-      first_name: 'Sarah',
-      last_name: 'Mitchell',
-      department: 'Mathematics',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRTLguG6i8VOp6bMIaHLDAL_HaHQl2B7LfavDcyMBN8NL_qur-p00uY4nLPBuudk1lm92SX25lXFOd0OuqaNDQ0jOYin4JTawigJSKfWRBIP3rS6jFRVhtgRD-oYlhwWhyOHBwQaXof95A2Uiz0nR9VDtH5gcoq4DUEWsI9o3P1RPhu9GvTQtMXA-KW0xjiyraS6DdWMjWbQuK6J2b6Lp9w_bNRUcjXaOyU4abNPOTQ12gTRHXAV0y4vu2_eeyaWXS3TdCPWmDoI0',
-      assigned_classes: ['10-A', '12-B', '10-B'],
-      email: 'sarah.mitchell@educore.com',
-      phone: '9876543220',
-      qualifications: ['M.Sc. Mathematics', 'Ph.D. in Geometry']
-    },
-    {
-      id: 'mock2',
-      full_name: 'Dr. James Carter',
-      first_name: 'James',
-      last_name: 'Carter',
-      department: 'Physics',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDUGBxw9t67EiyvJBtP31jVmxBx7OUKLmlr5bTCRMomQ59Bo1d6XU6ge73YVPocLYgoiaUUFi3zE4-rN240hKTswVOmSP4YIg8UNlh3LcRWqlrsuTwAMIDiZ-MAG2WSjUsP4O_9lUKc6lUkBdfvEEKrAhJjkOjy58n_rBQ81VCSOPvR4Y29VNGTuk6TUuFoALsMsbGoJ_skrG7CFntPCs_U_OpZ8gOo3cS1D2D5wgblDN7Ck04BhDvKmrREoyy-6-iZO1w7ZnSy-Qc',
-      assigned_classes: ['11-C', '12-A'],
-      email: 'james.carter@educore.com',
-      phone: '9876543221',
-      qualifications: ['Ph.D. in Astrophysics']
-    },
-    {
-      id: 'mock3',
-      full_name: 'Ms. Elena Rodriguez',
-      first_name: 'Elena',
-      last_name: 'Rodriguez',
-      department: 'History',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDUEPQvLHOHnyffT_Cw1uL1T1IjKSM59ghYEATi_0L9eiWIPDpSrUFmx1jQTHR_Wfbd2cZrrvmHTx-cIH1r-W8s6jJEi2cIhstYk-oRlt8X0uYkyLXyEi3-qfSKyZ0j0mXqksk1K6orXDQuClCPy1V67o8FaOYsT8OlqAC4qLPSz5d4BtfC7MXXCLgVN5L13rRaaRbutufH8YBJqi-tgN-gj2Yfr8C6-XrpuZRJGVCSamvvgXnVEdV9X_sg6PUqXlPdHzRLEl3XGQo',
-      assigned_classes: ['9-B', '10-C', '11-A'],
-      email: 'elena.rodriguez@educore.com',
-      phone: '9876543222',
-      qualifications: ['M.A. Modern History']
-    }
-  ]
-
-  // Render combined lists
-  const displayTeachers = [...teachers, ...fallbackTeachers.filter(f => !teachers.some(t => t.email === f.email))]
-
-  const totalFacultyCount = teachers.length || 42
-  const activeClassesCount = displayTeachers.reduce((acc, t) => acc + (t.assigned_classes?.length || 0), 0) || 128
+  const displayTeachers = teachers
+  const totalFacultyCount = teachers.length
+  const activeClassesCount = classesList.length
 
   return (
     <DashboardLayout>
@@ -304,7 +275,7 @@ export default function TeacherManagement() {
           </div>
           <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-[130px]">
             <div>
-              <p className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Active Assignments</p>
+              <p className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Classes</p>
               <h2 className="font-headline-lg text-headline-lg text-on-surface mt-1 font-bold">{activeClassesCount}</h2>
             </div>
             <div className="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
@@ -380,28 +351,24 @@ export default function TeacherManagement() {
                           >
                             View Details
                           </button>
-                          {!teacher.id.startsWith('mock') && (
-                            <>
-                              <button 
-                                onClick={() => {
-                                  handleOpenCredsModal(teacher)
-                                  setMenuOpenId(null)
-                                }}
-                                className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-semibold text-primary"
-                              >
-                                Credentials
-                              </button>
-                              <button 
-                                onClick={() => {
-                                  handleDelete(teacher.id)
-                                  setMenuOpenId(null)
-                                }}
-                                className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-bold text-error"
-                              >
-                                Delete
-                              </button>
-                            </>
-                          )}
+                          <button
+                            onClick={() => {
+                              handleOpenCredsModal(teacher)
+                              setMenuOpenId(null)
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-semibold text-primary"
+                          >
+                            Credentials
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDelete(teacher.id)
+                              setMenuOpenId(null)
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-surface-container transition-colors text-xs font-bold text-error"
+                          >
+                            Delete
+                          </button>
                         </div>
                       )}
                     </div>
@@ -719,7 +686,7 @@ export default function TeacherManagement() {
                   <div>
                     <label className="font-semibold text-xs text-on-surface-variant mb-1.5 block">Assigned Classes</label>
                     <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto border border-outline-variant/15 p-2 rounded-xl bg-surface-container-low">
-                      {AVAILABLE_CLASSES.map((cls) => {
+                      {classKeys.map((cls) => {
                         const active = formData.assigned_classes.includes(cls)
                         return (
                           <button

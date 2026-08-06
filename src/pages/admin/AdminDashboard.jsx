@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [classId, setClassId] = useState('10-A')
   const [teacherId, setTeacherId] = useState('')
   const [teacherOptions, setTeacherOptions] = useState([])
+  const [classOptions, setClassOptions] = useState([])
   const [analyticsData, setAnalyticsData] = useState(null)
 
   // Fetch teachers on mount for the teacher selector dropdown
@@ -31,7 +32,18 @@ export default function AdminDashboard() {
         console.error('Failed to load teachers for dropdown:', err)
       }
     }
+    async function loadClasses() {
+      try {
+        const res = await api.get('/classes')
+        const list = res.data || []
+        setClassOptions(list)
+        if (list.length > 0) setClassId(`${list[0].grade}-${list[0].section}`)
+      } catch (err) {
+        console.error('Failed to load classes for dropdown:', err)
+      }
+    }
     loadTeachers()
+    loadClasses()
   }, [])
 
   // Fetch analytics data based on selected filters
@@ -62,6 +74,7 @@ export default function AdminDashboard() {
   // Map analytics values from backend response (with design mockups as defaults)
   const totalStudents = analyticsData?.total_students ?? 1240
   const totalTeachers = analyticsData?.total_teachers ?? 86
+  const totalClasses = analyticsData?.total_classes ?? classOptions.length
   const attendanceRate = analyticsData?.attendance_rate ?? '94.2'
   const avgResults = analyticsData?.avg_results ?? '78.4'
   const subjectPerformance = analyticsData?.subject_performance ?? [
@@ -136,7 +149,7 @@ export default function AdminDashboard() {
                 value={analyticsType}
                 onChange={(e) => {
                   setAnalyticsType(e.target.value)
-                  if (e.target.value === 'class') setClassId('10-A')
+                  if (e.target.value === 'class' && classOptions.length > 0) setClassId(`${classOptions[0].grade}-${classOptions[0].section}`)
                   if (e.target.value === 'teacher' && teacherOptions.length > 0) setTeacherId(teacherOptions[0].id)
                 }}
                 className="bg-transparent border-none p-0 text-xs font-bold text-primary focus:ring-0 outline-none"
@@ -155,14 +168,10 @@ export default function AdminDashboard() {
                   onChange={(e) => setClassId(e.target.value)}
                   className="bg-transparent border-none p-0 text-xs font-bold text-primary focus:ring-0 outline-none"
                 >
-                  <option value="9-A">9-A</option>
-                  <option value="9-B">9-B</option>
-                  <option value="10-A">10-A</option>
-                  <option value="10-B">10-B</option>
-                  <option value="11-A">11-A</option>
-                  <option value="11-B">11-B</option>
-                  <option value="12-A">12-A</option>
-                  <option value="12-B">12-B</option>
+                  {classOptions.map(c => {
+                    const key = `${c.grade}-${c.section}`
+                    return <option key={c.id} value={key}>{key}</option>
+                  })}
                 </select>
               </div>
             )}
@@ -197,7 +206,7 @@ export default function AdminDashboard() {
             )}
 
             {/* KPI Bento Grid */}
-            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <section className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Total Students */}
               <div 
                 onClick={() => navigate('/admin/students')}
@@ -227,6 +236,22 @@ export default function AdminDashboard() {
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{totalTeachers}</h3>
+                </div>
+              </div>
+
+              {/* Total Classes */}
+              <div
+                onClick={() => navigate('/admin/users')}
+                className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-32 cursor-pointer hover:bg-surface-container-low transition-all duration-300 text-left"
+              >
+                <div className="flex items-center gap-2 z-10 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                    <Icon name="school" className="text-base" />
+                  </div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Classes</span>
+                </div>
+                <div className="mt-auto z-10 w-full">
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{totalClasses}</h3>
                 </div>
               </div>
 
