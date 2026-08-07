@@ -101,22 +101,7 @@ export default function AdminDashboard() {
     { section: 'Sec B', attendance: 88, avg_result: 70 },
     { section: 'Sec C', attendance: 95, avg_result: 85 }
   ]
-  const facultySpotlight = analyticsData?.faculty_spotlight ?? [
-    {
-      name: 'Dr. Julian Scott',
-      department: 'Mathematics',
-      rating: '4.9',
-      success: '92%',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAAZlPTMAy2a8AxS6zYKIPQ_zDC6-ViPa3H6fKzXWKnzGsIOhDmF3UrmpNh3M7-6JKoANp6ZSmp5gHg4Ny-V3etrqutkjbWxj-F7iwGQH0i4S8_rCeoFAo6hLNd-sUrXQ3x8RPMpdUW8hCLRXcy1yb3h1lOPB07sYGMQuD7UGpXZh_nJyInkkEleBiFdZzZsYs5eEEGzxrVQcR3k4BwCUojOZBeitBxOR4Mk6DtE5uEi6GD_kDt75Zqh3hpzk4vxE6PDZQfgSpndc'
-    },
-    {
-      name: 'Prof. Alice Murray',
-      department: 'Literature',
-      rating: '4.8',
-      success: '88%',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbJkEuQKA0Va3ZMLFRegDGBUEMP-Pj-ApY1K1NS4-nbKlvEOSThn1jyauz_eJTEJeQEkRg7maylTqekDH4vWCDZ10NQV2-vWuAskkzf8qDSZup2jSHinDjdjkui-lbo0PurZkYNZ1fpgUDxPmVDBsjclKh9lXlREox1jSK5y2NtjKI3VqJwvngKxp4FBN1Uzo3j-_64kWJhKsbUI4ElfxsGw8sdcdBJ78r5cp-MwdQxrs7BdQ9zsQp9WXEnY1GhsAN9qyC6YXd3u8'
-    }
-  ]
+  const facultySpotlight = analyticsData?.faculty_spotlight ?? []
   const highPerformers = analyticsData?.high_performers ?? [
     { name: 'Liam Wilson', grade: '12th Grade', section: 'Sec A', gpa: '3.98 GPA', initials: 'LW', bg: 'bg-green-100 text-green-700' },
     { name: 'Emma Smith', grade: '11th Grade', section: 'Sec B', gpa: '3.95 GPA', initials: 'ES', bg: 'bg-blue-100 text-blue-700' }
@@ -484,16 +469,26 @@ export default function AdminDashboard() {
                     <h3 className="font-title-lg text-sm text-on-surface font-bold">Faculty Spotlight</h3>
                   </div>
                   <div className="divide-y divide-outline-variant/10">
-                    {facultySpotlight.map((fac, idx) => (
+                    {facultySpotlight.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-on-surface-variant font-semibold">
+                        No faculty data yet
+                      </div>
+                    ) : facultySpotlight.map((fac, idx) => (
                       <div key={idx} className="p-3 flex items-center gap-3 hover:bg-surface-container-low transition-colors duration-200">
-                        <img 
-                          alt={fac.name} 
-                          className="w-9 h-9 rounded-full object-cover border border-outline-variant shrink-0"
-                          src={fac.avatar}
-                        />
+                        {fac.avatar ? (
+                          <img
+                            alt={fac.name}
+                            className="w-9 h-9 rounded-full object-cover border border-outline-variant shrink-0"
+                            src={fac.avatar}
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-outline-variant">
+                            {fac.name?.[0] || 'T'}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-on-surface truncate text-sm">{fac.name}</p>
-                          <p className="text-[11px] text-on-surface-variant font-medium truncate">{fac.department} • {fac.rating} Rating</p>
+                          <p className="text-[11px] text-on-surface-variant font-medium truncate">{fac.department}</p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-primary font-bold text-sm">{fac.success}</p>

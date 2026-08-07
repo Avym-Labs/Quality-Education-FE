@@ -20,6 +20,7 @@ export default function StudentProfile() {
   const [results, setResults] = useState([])
   const [homeworks, setHomeworks] = useState([])
   const [leaves, setLeaves] = useState([])
+  const [studentStats, setStudentStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -31,13 +32,14 @@ export default function StudentProfile() {
       }
       try {
         setError('')
-        const [studentRes, attStatsRes, attRecRes, resultsRes, hwRes, leavesRes] = await Promise.all([
+        const [studentRes, attStatsRes, attRecRes, resultsRes, hwRes, leavesRes, statsRes] = await Promise.all([
           api.get(`/students/${user.student_id}`),
           api.get(`/attendance/stats/${user.id}`).catch(() => ({ data: null })),
           api.get('/attendance', { params: { student_id: user.id } }).catch(() => ({ data: [] })),
           api.get('/results', { params: { student_id: user.id } }).catch(() => ({ data: [] })),
           api.get('/homework', { params: { grade: user.grade, section: user.section } }).catch(() => ({ data: [] })),
           api.get('/leave', { params: { user_id: user.id } }).catch(() => ({ data: [] })),
+          api.get(`/students/${user.student_id}/stats`).catch(() => ({ data: null })),
         ])
 
         setStudentInfo(studentRes.data)
@@ -46,6 +48,7 @@ export default function StudentProfile() {
         setResults(resultsRes.data)
         setHomeworks(hwRes.data)
         setLeaves(leavesRes.data)
+        setStudentStats(statsRes.data)
       } catch (err) {
         console.error(err)
         setError('Failed to fetch profile details.')
@@ -76,14 +79,41 @@ export default function StudentProfile() {
     navigate('/login')
   }
 
-  const attendancePct = attendanceStats?.percentage ?? 94
-  const classRank = studentInfo?.grade === '10' ? '4th' : '2nd'
+  const attendancePct = attendanceStats?.percentage ?? 0
+  const classRank = studentStats?.class_rank
+  const classSize = studentStats?.class_size
   const performancePct = statsAveragePercentage()
+  const isTopFivePercent = classRank && classSize ? (classRank / classSize) <= 0.05 : false
 
   function statsAveragePercentage() {
-    if (!results || results.length === 0) return 88
+    if (!results || results.length === 0) return 0
     const sum = results.reduce((acc, curr) => acc + (curr.percentage || 0), 0)
     return Math.round(sum / results.length)
+  }
+
+  // Real month-wise attendance for the last 4 months (including the current
+  // one), derived from already-fetched attendance records — no fabricated
+  // Sept/Oct/Nov bars.
+  function monthlyAttendance() {
+    const now = new Date()
+    const months = []
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleDateString('en-US', { month: 'short' }) })
+    }
+    const buckets = Object.fromEntries(months.map(m => [m.key, { present: 0, total: 0 }]))
+    attendanceRecords.forEach(r => {
+      const d = new Date(r.date)
+      const key = `${d.getFullYear()}-${d.getMonth()}`
+      if (buckets[key]) {
+        buckets[key].total += 1
+        if (r.status === 'present' || r.status === 'late') buckets[key].present += 1
+      }
+    })
+    return months.map(m => ({
+      label: m.label,
+      pct: buckets[m.key].total > 0 ? Math.round((buckets[m.key].present / buckets[m.key].total) * 100) : 0
+    }))
   }
 
   const formatDate = (dateStr) => {
@@ -190,8 +220,8 @@ export default function StudentProfile() {
               <Icon name="military_tech" className="text-tertiary" />
             </div>
             <div>
-              <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">{classRank}</p>
-              <p className="text-xs font-semibold text-on-surface-variant">Class Rank</p>
+              <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">{classRank ? `#${classRank}` : '—'}</p>
+              <p className="text-xs font-semibold text-on-surface-variant">Class Rank {classSize ? `of ${classSize}` : ''}</p>
             </div>
           </div>
 
@@ -270,36 +300,6 @@ export default function StudentProfile() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center">
-                    <Icon name="cake" className="text-on-surface-variant" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Date of Birth</p>
-                    <p className="text-sm font-semibold text-on-surface">May 14, 2008</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center">
-                    <Icon name="bloodtype" className="text-on-surface-variant" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Blood Group</p>
-                    <p className="text-sm font-semibold text-on-surface">O Positive</p>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
-                    <Icon name="location_on" className="text-on-surface-variant" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Address</p>
-                    <p className="text-sm font-semibold text-on-surface">4522 Academic Way, North Springs, Education District, 90210</p>
-                  </div>
-                </div>
-
               </div>
             </div>
 
@@ -314,13 +314,10 @@ export default function StudentProfile() {
                       <Icon name="man" className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-on-surface">{studentInfo?.father_name || 'Mark Johnson'}</p>
-                      <p className="text-xs text-on-surface-variant">Father • +1 (555) 012-3456</p>
+                      <p className="text-sm font-bold text-on-surface">{studentInfo?.father_name || 'Not provided'}</p>
+                      <p className="text-xs text-on-surface-variant">Father</p>
                     </div>
                   </div>
-                  <a href="tel:+15550123456" className="text-primary cursor-pointer">
-                    <Icon name="call" />
-                  </a>
                 </div>
                 {/* Mother */}
                 <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-lg">
@@ -329,13 +326,10 @@ export default function StudentProfile() {
                       <Icon name="woman" className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-on-surface">{studentInfo?.mother_name || 'Sarah Johnson'}</p>
-                      <p className="text-xs text-on-surface-variant">Mother • +1 (555) 012-7890</p>
+                      <p className="text-sm font-bold text-on-surface">{studentInfo?.mother_name || 'Not provided'}</p>
+                      <p className="text-xs text-on-surface-variant">Mother</p>
                     </div>
                   </div>
-                  <a href="tel:+15550127890" className="text-primary cursor-pointer">
-                    <Icon name="call" />
-                  </a>
                 </div>
               </div>
             </div>
@@ -348,22 +342,12 @@ export default function StudentProfile() {
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-6">
               <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Monthly Attendance</h3>
               <div className="h-48 flex items-end justify-around gap-2 px-4 pt-2">
-                <div className="w-full bg-primary-container/20 rounded-t-lg relative group h-[85%]">
-                  <div className="absolute bottom-0 w-full bg-primary rounded-t-lg h-[90%]"></div>
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-on-surface-variant">Sept</span>
-                </div>
-                <div className="w-full bg-primary-container/20 rounded-t-lg relative group h-[85%]">
-                  <div className="absolute bottom-0 w-full bg-primary rounded-t-lg h-[95%]"></div>
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-on-surface-variant">Oct</span>
-                </div>
-                <div className="w-full bg-primary-container/20 rounded-t-lg relative group h-[85%]">
-                  <div className="absolute bottom-0 w-full bg-primary rounded-t-lg h-[88%]"></div>
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-on-surface-variant">Nov</span>
-                </div>
-                <div className="w-full bg-primary-container/20 rounded-t-lg relative group h-[85%] border-2 border-dashed border-primary">
-                  <div className="absolute bottom-0 w-full bg-primary rounded-t-lg" style={{ height: `${attendancePct}%` }}></div>
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-on-surface-variant font-bold">Current</span>
-                </div>
+                {monthlyAttendance().map((m, idx, arr) => (
+                  <div key={m.label} className={`w-full bg-primary-container/20 rounded-t-lg relative group h-[85%] ${idx === arr.length - 1 ? 'border-2 border-dashed border-primary' : ''}`}>
+                    <div className="absolute bottom-0 w-full bg-primary rounded-t-lg" style={{ height: `${m.pct}%` }}></div>
+                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-on-surface-variant">{m.label}</span>
+                  </div>
+                ))}
               </div>
               <p className="mt-12 text-center text-sm font-semibold text-on-surface-variant">
                 Current term status: <span className="text-primary font-bold">{attendancePct >= 85 ? 'Excellent' : 'Needs Attention'}</span>
@@ -401,20 +385,7 @@ export default function StudentProfile() {
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
               <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Mid-Term Results</h3>
               {results.length === 0 ? (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-3 border-b border-outline-variant/10">
-                    <span className="text-sm font-medium">Mathematics</span>
-                    <span className="font-bold text-primary">92/100</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 border-b border-outline-variant/10">
-                    <span className="text-sm font-medium">Physics</span>
-                    <span className="font-bold text-primary">85/100</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3">
-                    <span className="text-sm font-medium">Literature</span>
-                    <span className="font-bold text-primary">89/100</span>
-                  </div>
-                </div>
+                <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No results recorded yet.</p>
               ) : (
                 <div className="space-y-3">
                   {results.map((res, index) => (
@@ -447,16 +418,7 @@ export default function StudentProfile() {
               </div>
               <div className="space-y-4">
                 {homeworks.length === 0 ? (
-                  <>
-                    <div className="p-4 border border-primary/20 bg-primary/5 rounded-lg">
-                      <p className="text-sm font-bold text-on-surface">World History Essay</p>
-                      <p className="text-xs text-on-surface-variant mt-1">Due: Tomorrow, 10:00 AM</p>
-                    </div>
-                    <div className="p-4 border border-outline-variant/30 rounded-lg opacity-60">
-                      <p className="text-sm font-bold text-on-surface">Chemistry Lab Report</p>
-                      <p className="text-xs text-on-surface-variant mt-1">Due: Dec 15, 2024</p>
-                    </div>
-                  </>
+                  <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No homework assigned yet.</p>
                 ) : (
                   homeworks.map((hw) => (
                     <div key={hw.id} className="p-4 border border-outline-variant/30 hover:border-primary/20 rounded-lg">
@@ -484,13 +446,7 @@ export default function StudentProfile() {
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
               <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Recent Leave Requests</h3>
               {leaves.length === 0 ? (
-                <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border-l-4 border-green-500">
-                  <div>
-                    <p className="text-sm font-bold text-on-surface">Family Wedding</p>
-                    <p className="text-xs text-on-surface-variant">Nov 22 - Nov 24 (Approved)</p>
-                  </div>
-                  <Icon name="check_circle" className="text-green-500" />
-                </div>
+                <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No leave requests yet.</p>
               ) : (
                 <div className="space-y-3">
                   {leaves.map((l) => (
@@ -528,33 +484,34 @@ export default function StudentProfile() {
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
               <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Achievement Gallery</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                {/* Badge 1 */}
-                <div className="flex flex-col items-center text-center p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center mb-3 shadow-md">
-                    <Icon name="workspace_premium" className="text-on-primary-container text-3xl" />
-                  </div>
-                  <p className="font-bold text-on-surface">Consistency King</p>
-                  <p className="text-xs text-on-surface-variant mt-1">Awarded for {attendancePct}% attendance over 3 months</p>
-                </div>
 
-                {/* Badge 2 */}
-                <div className="flex flex-col items-center text-center p-4 rounded-xl bg-tertiary/5 border border-tertiary/10">
-                  <div className="w-16 h-16 rounded-full bg-tertiary-container flex items-center justify-center mb-3 shadow-md">
-                    <Icon name="military_tech" className="text-on-tertiary-container text-3xl" />
+                {/* Consistency King — only awarded on real sustained attendance */}
+                {attendancePct >= 85 && (
+                  <div className="flex flex-col items-center text-center p-4 rounded-xl bg-primary/5 border border-primary/10">
+                    <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center mb-3 shadow-md">
+                      <Icon name="workspace_premium" className="text-on-primary-container text-3xl" />
+                    </div>
+                    <p className="font-bold text-on-surface">Consistency King</p>
+                    <p className="text-xs text-on-surface-variant mt-1">Awarded for {attendancePct}% overall attendance</p>
                   </div>
-                  <p className="font-bold text-on-surface">Top Scorer</p>
-                  <p className="text-xs text-on-surface-variant mt-1">Ranked in the top 5% for Mathematics ({performancePct}%)</p>
-                </div>
+                )}
 
-                {/* Badge 3 */}
-                <div className="flex flex-col items-center text-center p-4 rounded-xl bg-secondary/5 border border-secondary/10">
-                  <div className="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-3 shadow-md">
-                    <Icon name="auto_stories" className="text-on-secondary-container text-3xl" />
+                {/* Top Scorer — only awarded on real top-5% class rank */}
+                {isTopFivePercent && (
+                  <div className="flex flex-col items-center text-center p-4 rounded-xl bg-tertiary/5 border border-tertiary/10">
+                    <div className="w-16 h-16 rounded-full bg-tertiary-container flex items-center justify-center mb-3 shadow-md">
+                      <Icon name="military_tech" className="text-on-tertiary-container text-3xl" />
+                    </div>
+                    <p className="font-bold text-on-surface">Top Scorer</p>
+                    <p className="text-xs text-on-surface-variant mt-1">Ranked #{classRank} of {classSize} in your class ({performancePct}% avg)</p>
                   </div>
-                  <p className="font-bold text-on-surface">Active Learner</p>
-                  <p className="text-xs text-on-surface-variant mt-1">Completed all homework tasks before deadlines</p>
-                </div>
+                )}
+
+                {attendancePct < 85 && !isTopFivePercent && (
+                  <p className="text-sm text-on-surface-variant font-semibold text-center py-6 md:col-span-3">
+                    No achievements unlocked yet. Keep up your attendance and test scores!
+                  </p>
+                )}
 
               </div>
             </div>

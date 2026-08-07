@@ -303,8 +303,6 @@ export default function AttendanceMarking() {
           <div className="space-y-2">
             {filteredStudents.map((student, idx) => {
               const status = attendanceStates[student.user_id] || 'present'
-              // Dummy condition for needs attention
-              const alertStatus = (idx === 1 || idx === 5)
               return (
                 <div 
                   key={student.id} 
@@ -320,9 +318,6 @@ export default function AttendanceMarking() {
                     className="flex-1 font-label-md text-xs font-bold text-on-surface flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
                   >
                     <span>{student.full_name}</span>
-                    {alertStatus && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
-                    )}
                   </div>
 
                   {/* Attendance toggle buttons */}

@@ -13,8 +13,8 @@ export default function StudentReports() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [stats, setStats] = useState({
-    attendance_percentage: 94.2,
-    average_score: 85.0,
+    attendance_percentage: 0,
+    average_score: 0,
     total_tests: 0
   })
 
@@ -49,7 +49,7 @@ export default function StudentReports() {
     ? Math.round(results.reduce((acc, r) => acc + r.percentage, 0) / totalTests) 
     : stats.average_score
 
-  const attendance = stats.attendance_percentage || 94.2
+  const attendance = stats.attendance_percentage ?? 0
 
   const calculateGradeLetter = (pct) => {
     if (pct >= 90) return 'A+'

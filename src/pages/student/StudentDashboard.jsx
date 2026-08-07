@@ -71,8 +71,10 @@ export default function StudentDashboard() {
   const attendancePoints = stats?.attendance_points ?? { total_attendance_points: 0, current_streak: 0 }
   const testPoints = stats?.test_points ?? { total_test_points: 0, test_count: 0, breakdown: [] }
   const totalPoints = stats?.total_points ?? 0
-  const rank = score >= 90 ? '#1' : score >= 80 ? '#2' : '#3'
-  const rankPercentile = score >= 90 ? 'Top 0.5%' : score >= 80 ? 'Top 1%' : 'Top 5%'
+  const rank = stats?.class_rank ? `#${stats.class_rank}` : '—'
+  const rankPercentile = stats?.class_rank && stats?.class_size
+    ? `Top ${Math.max(1, Math.round((stats.class_rank / stats.class_size) * 100))}%`
+    : 'Not ranked yet'
   const tier = score >= 90 ? 'Legend Tier' : score >= 80 ? 'Elite Tier' : 'Aspirant Tier'
 
   const trendData = stats?.performance_trend || []

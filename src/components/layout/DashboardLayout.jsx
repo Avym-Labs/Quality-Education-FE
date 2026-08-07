@@ -41,7 +41,6 @@ const SIDEBAR_ITEMS = {
   admin: [
     { icon: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
     { icon: 'group', label: 'Users', path: '/admin/users' },
-    { icon: 'groups', label: 'Faculty', path: '/admin/faculty' },
     { icon: 'school', label: 'Academics', path: '/admin/academics', children: ACADEMICS_SUBITEMS },
     { icon: 'campaign', label: 'Announce', path: '/admin/announcements' },
     { icon: 'chat', label: 'Chat', path: '/admin/chat' },

@@ -10,23 +10,32 @@ export default function TeacherReports() {
   const navigate = useNavigate()
 
   // Selected Class & Student State
-  const assignedClasses = user?.assigned_classes || ['10-A', '11-B']
-  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '10-A')
-  
+  const assignedClasses = user?.assigned_classes || []
+  const [selectedClass, setSelectedClass] = useState('')
+  useEffect(() => {
+    if (!selectedClass && assignedClasses.length > 0) setSelectedClass(assignedClasses[0])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignedClasses.length])
+
   const [students, setStudents] = useState([])
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [selectedStudent, setSelectedStudent] = useState(null)
 
   // Report details
   const [studentResults, setStudentResults] = useState([])
-  const [attendancePercent, setAttendancePercent] = useState(94.5)
+  const [attendancePercent, setAttendancePercent] = useState(0)
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [loadingReport, setLoadingReport] = useState(false)
 
-  // Class analytics stats
-  const [classAverage, setClassAverage] = useState(82.4)
-  const [classPassRate, setClassPassRate] = useState(96)
-  const [highestScore, setHighestScore] = useState(98.5)
+  // Class analytics stats — real average % and pass rate from this class's
+  // actual recorded results, not fabricated placeholders.
+  const [classResults, setClassResults] = useState([])
+  const classAverage = classResults.length > 0
+    ? Math.round(classResults.reduce((acc, r) => acc + r.percentage, 0) / classResults.length)
+    : 0
+  const classPassRate = classResults.length > 0
+    ? Math.round((classResults.filter(r => r.percentage >= 50).length / classResults.length) * 100)
+    : 0
 
   // Load students for class
   useEffect(() => {
@@ -38,10 +47,12 @@ export default function TeacherReports() {
       setStudentResults([])
       try {
         const [grade, section] = selectedClass.split('-')
-        const { data } = await api.get('/students', {
-          params: { grade, section: section || '' }
-        })
-        setStudents(data || [])
+        const [studentsRes, resultsRes] = await Promise.all([
+          api.get('/students', { params: { grade, section: section || '' } }),
+          api.get('/results', { params: { grade, section: section || '' } }),
+        ])
+        setStudents(studentsRes.data || [])
+        setClassResults(resultsRes.data || [])
       } catch (err) {
         console.error(err)
       } finally {
@@ -67,12 +78,11 @@ export default function TeacherReports() {
       // 2. Fetch student stats for attendance
       const statsRes = await api.get(`/students/${stud.id}/stats`)
       if (statsRes.data) {
-        setAttendancePercent(statsRes.data.attendance_percentage || 94.5)
+        setAttendancePercent(statsRes.data.attendance_percentage ?? 0)
       }
     } catch (err) {
       console.error(err)
-      // Fallback mocks if stats endpoint fails
-      setAttendancePercent(92.0)
+      setAttendancePercent(0)
     } finally {
       setLoadingReport(false)
     }
@@ -112,13 +122,17 @@ export default function TeacherReports() {
           
           <div className="flex flex-col gap-1.5 bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-sm">
             <label className="text-[10px] font-bold text-on-surface-variant uppercase">Select Class</label>
-            <select
-              value={selectedClass}
-              onChange={e => setSelectedClass(e.target.value)}
-              className="px-3 py-2 border border-outline-variant rounded-xl bg-surface-container-low text-xs outline-none focus:border-primary cursor-pointer font-semibold"
-            >
-              {assignedClasses.map(cls => <option key={cls} value={cls}>Class {cls}</option>)}
-            </select>
+            {assignedClasses.length === 0 ? (
+              <p className="text-xs text-on-surface-variant font-semibold py-2">No classes assigned yet</p>
+            ) : (
+              <select
+                value={selectedClass}
+                onChange={e => setSelectedClass(e.target.value)}
+                className="px-3 py-2 border border-outline-variant rounded-xl bg-surface-container-low text-xs outline-none focus:border-primary cursor-pointer font-semibold"
+              >
+                {assignedClasses.map(cls => <option key={cls} value={cls}>Class {cls}</option>)}
+              </select>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5 bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-sm">
@@ -181,7 +195,7 @@ export default function TeacherReports() {
               </div>
               <div>
                 <p className="text-[9px] uppercase font-bold text-gray-400">Roll / Student ID</p>
-                <p className="font-extrabold text-gray-850 mt-0.5">{selectedStudent.student_id?.slice(-8) || 'N/A'}</p>
+                <p className="font-extrabold text-gray-850 mt-0.5">{selectedStudent.roll_number || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-[9px] uppercase font-bold text-gray-400">Attendance</p>

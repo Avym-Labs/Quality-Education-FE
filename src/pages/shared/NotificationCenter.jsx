@@ -10,6 +10,8 @@ export default function NotificationCenter() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const [latestAnnouncement, setLatestAnnouncement] = useState(null)
+
   const fetchNotifications = async () => {
     try {
       setLoading(true)
@@ -25,17 +27,19 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     fetchNotifications()
+    async function fetchLatestAnnouncement() {
+      try {
+        const res = await api.get('/announcements')
+        const list = res.data || []
+        if (list.length > 0) setLatestAnnouncement(list[0])
+      } catch (err) {
+        console.error('Failed to load latest announcement:', err)
+      }
+    }
+    fetchLatestAnnouncement()
   }, [])
 
   const handleMarkRead = async (id) => {
-    // If it's a mock notification, just update state locally
-    if (id.startsWith('mock')) {
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, is_read: true } : n)
-      )
-      return
-    }
-
     try {
       await api.patch(`/notifications/${id}/read`)
       fetchNotifications()
@@ -56,62 +60,7 @@ export default function NotificationCenter() {
     }
   }
 
-  // Fallback mock notifications matching the design mockup
-  const fallbackNotifications = [
-    {
-      id: 'mock1',
-      type: 'assessment',
-      title: 'Mathematics Marks Published',
-      message: 'Mid-term results for Chapter 4: Linear Equations are now available. Check your grade in the academic portal.',
-      is_read: false,
-      created_at: new Date().toISOString(), // Today
-      icon: 'assessment',
-      color: 'text-primary bg-primary-container/10'
-    },
-    {
-      id: 'mock2',
-      type: 'assignment',
-      title: 'New Physics Assignment',
-      message: 'Thermodynamics Lab Report is due on Oct 20. Please refer to the rubric provided in class.',
-      is_read: false,
-      created_at: new Date().toISOString(), // Today
-      icon: 'assignment',
-      color: 'text-primary bg-primary-container/10'
-    },
-    {
-      id: 'mock3',
-      type: 'study_material',
-      title: 'Advanced Calculus Notes',
-      message: 'Dr. Mitchell has uploaded the comprehensive review notes for the upcoming final examinations.',
-      is_read: true,
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
-      icon: 'auto_stories',
-      color: 'text-on-surface-variant bg-surface-container-highest'
-    },
-    {
-      id: 'mock4',
-      type: 'announcement',
-      title: 'School Assembly',
-      message: 'Reminder: Mandatory morning assembly tomorrow at 8:00 AM in the Main Hall for all senior students.',
-      is_read: true,
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
-      icon: 'campaign',
-      color: 'text-on-surface-variant bg-surface-container-highest'
-    },
-    {
-      id: 'mock5',
-      type: 'leave',
-      title: 'Leave Request Approved',
-      message: 'Your leave request for Oct 12-14 has been Approved by the Principal\'s office.',
-      is_read: true,
-      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // Earlier
-      icon: 'event_available',
-      color: 'text-tertiary bg-tertiary-fixed'
-    }
-  ]
-
-  // Combine database notifications with fallback mocks
-  const allNotifs = [...notifications, ...fallbackNotifications.filter(f => !notifications.some(n => n.title === f.title))]
+  const allNotifs = notifications
 
   // Categorize notifications
   const categorizeNotifs = () => {
@@ -217,6 +166,13 @@ export default function NotificationCenter() {
           )}
         </div>
 
+        {!loading && allNotifs.length === 0 && (
+          <div className="bg-surface-container-low border border-outline-variant/20 rounded-3xl p-10 text-center text-on-surface-variant text-sm flex flex-col items-center gap-3">
+            <Icon name="notifications_off" className="text-4xl text-outline" />
+            <p className="font-semibold">No notifications yet.</p>
+          </div>
+        )}
+
         {/* Today Notifications */}
         {today.length > 0 && (
           <section className="space-y-stack-md">
@@ -317,31 +273,27 @@ export default function NotificationCenter() {
           </section>
         )}
 
-        {/* Bento Promotion Card */}
-        <section className="mt-8">
-          <div className="relative overflow-hidden rounded-3xl bg-primary-container p-6 text-on-primary-container shadow-md">
-            <div className="absolute top-0 right-0 p-4 opacity-15">
-              <Icon name="school" className="text-[80px]" />
-            </div>
-            <div className="relative z-10 space-y-2">
-              <div className="bg-on-primary-container/20 w-fit px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase">
-                Robotics Fest
+        {/* Latest Announcement Card — real, from the most recent school announcement */}
+        {latestAnnouncement && (
+          <section className="mt-8">
+            <div className="relative overflow-hidden rounded-3xl bg-primary-container p-6 text-on-primary-container shadow-md">
+              <div className="absolute top-0 right-0 p-4 opacity-15">
+                <Icon name="campaign" className="text-[80px]" />
               </div>
-              <h3 className="font-headline-lg-mobile text-lg leading-tight font-bold">
-                Inter-School Robotics Competition Registration is Open!
-              </h3>
-              <p className="text-xs max-w-[85%] opacity-90 leading-relaxed">
-                Showcase your innovation, team up with your peers, and win exciting state championships. Apply before next Friday.
-              </p>
-              <button 
-                onClick={() => navigate('/admin/announcements')}
-                className="mt-4 px-5 py-2 bg-surface text-primary font-bold text-xs rounded-full shadow-md active:scale-95 transition-transform"
-              >
-                Create Broadcast
-              </button>
+              <div className="relative z-10 space-y-2">
+                <div className="bg-on-primary-container/20 w-fit px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase">
+                  Latest Announcement
+                </div>
+                <h3 className="font-headline-lg-mobile text-lg leading-tight font-bold">
+                  {latestAnnouncement.title}
+                </h3>
+                <p className="text-xs max-w-[85%] opacity-90 leading-relaxed line-clamp-3">
+                  {latestAnnouncement.content}
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
       </div>
     </DashboardLayout>

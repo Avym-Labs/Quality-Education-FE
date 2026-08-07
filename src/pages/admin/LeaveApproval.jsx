@@ -61,52 +61,7 @@ export default function LeaveApproval() {
     }))
   }
 
-  // Fallback mock leaves for premium visual design if DB is empty
-  const fallbackLeaves = [
-    {
-      id: 'mock1',
-      leave_type: 'sick',
-      start_date: '2026-10-12',
-      end_date: '2026-10-14',
-      reason: 'Attending elder sister\'s wedding ceremony in Munich. I have requested my peers for notes during my absence.',
-      status: 'pending',
-      created_at: '2026-06-25T12:00:00Z',
-      user: {
-        id: 'user1',
-        full_name: 'Julian Schmidt',
-        first_name: 'Julian',
-        last_name: 'Schmidt',
-        role: 'student',
-        email: 'julian.schmidt@school.com',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBzT_DuZtQ1K_FC7GUJC_IbYFwWfVFwe6q31-ktRTy-i6CKmEtXqu5XVpo7514xJLydXeu4EzyI9JhFJLe-3nmSI9xonS7b5S71fgiItLOOOupUCnmIkcUcxq2YTEPGU-GJ1lUJh-VknYCzxsGXIzn66BjJAAvzZ77oLhEry8rd7IiKKDXNVxhLCiCQiwIjvolBgqkds-KxwBoDT8aiQt0PBXz9uZkJ7iYUDlrPFrR2b3J4E6evuyPvXL1biwV120r-Ec3EC2Mm41Q',
-      },
-      class_info: 'Class 10-B | Roll #24',
-      attendance_rate: '94.2%'
-    },
-    {
-      id: 'mock2',
-      leave_type: 'casual',
-      start_date: '2026-10-15',
-      end_date: '2026-10-15',
-      reason: 'Appointment with specialist doctor for recurring migraine issues. Medical certificate will be submitted upon return.',
-      status: 'pending',
-      created_at: '2026-06-25T11:30:00Z',
-      user: {
-        id: 'user2',
-        full_name: 'Amara Lawson',
-        first_name: 'Amara',
-        last_name: 'Lawson',
-        role: 'student',
-        email: 'amara.lawson@school.com',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDWnZrCL1w8wUdLUr58s5W7mUcBhMqyScD4iPKAoPcEOrUxbXIuRW7Bznu7HHTS63stNW24wpwGcFKjzd9hjFBTGwsZIOJm9QCkOJkCOtgFB4c5jA8Uzz_k8gZEXvm9znN995L9zHjeByb_bj8dwc3xasxsKONRoHL771FJUGY6WS_wYMXKUbAOsZlWLiAoTusBD_VKXbl5AD2izESKQ-K4FtAalju8OnTTpJztdsjxxqQ9nxWICWS5M4u57bV-UrRQPp02OvuHVAE',
-      },
-      class_info: 'Class 12-A | Roll #07',
-      attendance_rate: '88.5%'
-    }
-  ]
-
-  // Combine database leaves with fallback mocks (preventing duplicates)
-  const allLeaves = [...leaves, ...fallbackLeaves.filter(f => !leaves.some(l => l.reason === f.reason))]
+  const allLeaves = leaves
 
   // Compute tab counts
   const pendingLeaves = allLeaves.filter(l => l.status === 'pending')
@@ -197,8 +152,8 @@ export default function LeaveApproval() {
                 const name = requester.full_name || `${requester.first_name || ''} ${requester.last_name || ''}`.trim() || 'Academic Requester'
                 const roleLabel = requester.role === 'teacher' ? 'Faculty Member' : 'Student'
                 
-                const classLabel = request.class_info || (requester.role === 'teacher' ? 'Science Dept.' : 'Class 10-A')
-                const attendanceRate = request.attendance_rate || '92.4%'
+                const classLabel = request.class_info || (requester.role === 'teacher' ? 'Department not set' : 'Class not set')
+                const attendanceRate = request.attendance_rate
                 const daysLabel = calculateDays(request.start_date, request.end_date)
                 
                 return (
@@ -222,7 +177,7 @@ export default function LeaveApproval() {
                           <p className="font-label-md text-xs text-on-surface-variant font-medium">
                             {roleLabel} • {classLabel}
                           </p>
-                          {requester.role !== 'teacher' && (
+                          {requester.role !== 'teacher' && attendanceRate && (
                             <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-[10px] font-bold mt-1">
                               Attendance: {attendanceRate}
                             </div>

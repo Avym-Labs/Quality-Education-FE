@@ -10,6 +10,7 @@ export default function StudentResultReport() {
   const navigate = useNavigate()
   
   const [results, setResults] = useState([])
+  const [studentStats, setStudentStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [testLimit, setTestLimit] = useState(5)
@@ -18,10 +19,13 @@ export default function StudentResultReport() {
     async function fetchResults() {
       if (!user?.id) return
       try {
-        const { data } = await api.get('/results', { params: { student_id: user.id } })
-        if (data) {
-          setResults(data)
+        const requests = [api.get('/results', { params: { student_id: user.id } })]
+        if (user.student_id) {
+          requests.push(api.get(`/students/${user.student_id}/stats`).catch(() => ({ data: null })))
         }
+        const [resultsRes, statsRes] = await Promise.all(requests)
+        if (resultsRes.data) setResults(resultsRes.data)
+        if (statsRes?.data) setStudentStats(statsRes.data)
       } catch (err) {
         console.error('Failed to load student results:', err)
       } finally {
@@ -43,12 +47,34 @@ export default function StudentResultReport() {
 
   // Calculate statistics
   const totalTests = results.length
-  const avgMarks = totalTests > 0 ? Math.round(results.reduce((acc, r) => acc + r.percentage, 0) / totalTests) : 88.5
-  const highestScore = totalTests > 0 ? Math.max(...results.map(r => r.percentage)) : 98
-  const currentRank = avgMarks >= 90 ? '#1' : avgMarks >= 80 ? '#2' : '#3'
-  const rankPercentile = avgMarks >= 90 ? 'Top 0.5% of Class' : avgMarks >= 80 ? 'Top 1% of Class' : 'Top 5% of Class'
+  const avgMarks = totalTests > 0 ? Math.round(results.reduce((acc, r) => acc + r.percentage, 0) / totalTests) : 0
+  const highestScore = totalTests > 0 ? Math.max(...results.map(r => r.percentage)) : 0
+  const classRank = studentStats?.class_rank
+  const classSize = studentStats?.class_size
+  const currentRank = classRank ? `#${classRank}` : '—'
+  const rankPercentile = classRank && classSize
+    ? `Top ${Math.max(1, Math.round((classRank / classSize) * 100))}% of Class`
+    : 'Not ranked yet'
+  const performanceTrend = studentStats?.performance_trend || []
 
-  const filteredResults = results.filter((r) => 
+  // Real per-subject breakdown from already-fetched results — no fabricated chapters.
+  const subjectBreakdown = (() => {
+    const bySubject = {}
+    results.forEach(r => {
+      if (!r.subject) return
+      bySubject[r.subject] = bySubject[r.subject] || []
+      bySubject[r.subject].push(r.percentage)
+    })
+    return Object.entries(bySubject).map(([subject, pcts]) => ({
+      subject,
+      avg: Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length)
+    }))
+  })()
+
+  // Most recent result that actually has a teacher-written remark — no fabricated quotes.
+  const latestRemark = results.find(r => r.remarks && r.remarks.trim().length > 0)
+
+  const filteredResults = results.filter((r) =>
     (r.subject || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
     (r.test_title || '').toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, testLimit)
@@ -164,7 +190,6 @@ export default function StudentResultReport() {
                 <Icon name="analytics" className="text-primary mb-2" />
                 <p className="text-on-surface-variant text-xs font-semibold">Avg Marks</p>
                 <h3 className="font-bold text-lg">{avgMarks}%</h3>
-                <p className="text-green-600 text-[10px] font-bold">+2.4% vs last mo</p>
               </div>
 
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
@@ -184,8 +209,7 @@ export default function StudentResultReport() {
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <Icon name="history_edu" className="text-primary mb-2" />
                 <p className="text-on-surface-variant text-xs font-semibold">Total Tests</p>
-                <h3 className="font-bold text-lg">{totalTests || 12}</h3>
-                <p className="text-on-surface-variant text-[10px]">Academic Year 2026</p>
+                <h3 className="font-bold text-lg">{totalTests}</h3>
               </div>
             </div>
 
@@ -212,93 +236,54 @@ export default function StudentResultReport() {
               </div>
             </div>
             
-            <div className="h-64 flex items-end justify-between gap-2 px-2 relative">
-              {/* Fake Line Chart using SVG clip-path/gradient for a SaaS look */}
-              <div className="absolute inset-0 bottom-8 flex items-end px-12 pt-6">
-                <svg className="w-full h-full overflow-visible" viewBox="0 0 400 150" preserveAspectRatio="none">
-                  <path d="M0,120 Q50,100 100,110 T200,60 T300,40 T400,20" fill="none" stroke="#3525cd" strokeLinecap="round" strokeWidth="4"></path>
-                  <path d="M0,140 Q50,130 100,135 T200,110 T300,105 T400,90" fill="none" stroke="#c7c4d8" strokeDasharray="4" strokeLinecap="round" strokeWidth="2"></path>
-                  <circle cx="0" cy="120" fill="#3525cd" r="4"></circle>
-                  <circle cx="100" cy="110" fill="#3525cd" r="4"></circle>
-                  <circle cx="200" cy="60" fill="#3525cd" r="4"></circle>
-                  <circle cx="300" cy="40" fill="#3525cd" r="4"></circle>
-                  <circle cx="400" cy="20" fill="#3525cd" r="4"></circle>
-                </svg>
+            {performanceTrend.length === 0 ? (
+              <div className="h-64 flex items-center justify-center text-sm text-on-surface-variant font-semibold">
+                No test results recorded yet
               </div>
-              <div className="z-10 flex flex-col items-center gap-1 w-full"><div className="text-[10px] font-bold text-on-surface-variant">Test 1</div></div>
-              <div className="z-10 flex flex-col items-center gap-1 w-full"><div className="text-[10px] font-bold text-on-surface-variant">Test 2</div></div>
-              <div className="z-10 flex flex-col items-center gap-1 w-full"><div className="text-[10px] font-bold text-on-surface-variant">Test 3</div></div>
-              <div className="z-10 flex flex-col items-center gap-1 w-full"><div className="text-[10px] font-bold text-on-surface-variant">Test 4</div></div>
-              <div className="z-10 flex flex-col items-center gap-1 w-full"><div className="text-[10px] font-bold text-on-surface-variant">Latest</div></div>
-            </div>
+            ) : (
+              <div className="h-64 flex flex-col justify-between">
+                <svg className="w-full flex-1 overflow-visible" viewBox="0 0 400 150" preserveAspectRatio="none">
+                  <polyline
+                    fill="none" stroke="#c7c4d8" strokeDasharray="4" strokeLinecap="round" strokeWidth="2"
+                    points={performanceTrend.map((t, idx) => `${(idx / Math.max(1, performanceTrend.length - 1)) * 400},${150 - (t.class_average * 1.3)}`).join(' ')}
+                  />
+                  <polyline
+                    fill="none" stroke="#3525cd" strokeLinecap="round" strokeWidth="4"
+                    points={performanceTrend.map((t, idx) => `${(idx / Math.max(1, performanceTrend.length - 1)) * 400},${150 - (t.personal * 1.3)}`).join(' ')}
+                  />
+                  {performanceTrend.map((t, idx) => (
+                    <circle key={idx} cx={(idx / Math.max(1, performanceTrend.length - 1)) * 400} cy={150 - (t.personal * 1.3)} fill="#3525cd" r="4" />
+                  ))}
+                </svg>
+                <div className="flex justify-between px-2 mt-2">
+                  {performanceTrend.map((t, idx) => (
+                    <div key={idx} className="text-[10px] font-bold text-on-surface-variant truncate max-w-[80px]">{t.test_title}</div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Chapter Performance */}
           <div className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant flex flex-col justify-between">
-            <h3 className="font-title-lg text-title-lg font-bold">Chapter Analysis</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-1 text-sm font-semibold">
-                  <span>Calculus</span>
-                  <span className="text-primary font-bold">92%</span>
-                </div>
-                <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: '92%' }}></div>
-                </div>
+            <h3 className="font-title-lg text-title-lg font-bold">Subject Analysis</h3>
+            {subjectBreakdown.length === 0 ? (
+              <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No results recorded yet</p>
+            ) : (
+              <div className="space-y-4">
+                {subjectBreakdown.map((s) => (
+                  <div key={s.subject}>
+                    <div className="flex justify-between mb-1 text-sm font-semibold">
+                      <span>{s.subject}</span>
+                      <span className="text-primary font-bold">{s.avg}%</span>
+                    </div>
+                    <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${s.avg}%` }}></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <div className="flex justify-between mb-1 text-sm font-semibold">
-                  <span>Algebra</span>
-                  <span className="text-primary font-bold">85%</span>
-                </div>
-                <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: '85%' }}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-1 text-sm font-semibold">
-                  <span>Geometry</span>
-                  <span className="text-primary font-bold">78%</span>
-                </div>
-                <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: '78%' }}></div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-primary-fixed p-4 rounded-xl mt-4 border border-primary-container">
-              <div className="flex gap-2">
-                <Icon name="insights" className="text-primary" />
-                <p className="text-[12px] font-semibold text-on-primary-fixed-variant leading-tight">
-                  You excel in conceptual calculations but show a slight plateau in geometric spatial reasoning. Focus on geometric proofs.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Topper Section Highlight */}
-          <div className="lg:col-span-1 bg-gradient-to-br from-primary to-secondary rounded-[24px] p-6 shadow-lg text-on-primary relative overflow-hidden flex flex-col justify-between">
-            <div className="absolute -right-4 -top-4 opacity-20">
-              <Icon name="workspace_premium" className="text-[120px]" filled />
-            </div>
-            <div className="relative z-10 space-y-4">
-              <div>
-                <h3 className="font-title-lg text-title-lg font-bold">Achievement Badge</h3>
-                <p className="text-on-primary-container text-xs">Top Performer of the Month</p>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider font-bold opacity-80">Top Score In</span>
-                <span className="font-headline-lg-mobile text-lg font-bold">Calculus Midterm</span>
-                <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-4xl font-bold leading-none">98</span>
-                  <span className="text-sm opacity-80">/100</span>
-                </div>
-              </div>
-            </div>
-            <div className="inline-flex items-center gap-2 bg-on-primary/20 backdrop-blur-md rounded-full px-4 py-1 self-start mt-4 relative z-10">
-              <Icon name="stars" className="text-sm" />
-              <span className="text-xs font-bold uppercase tracking-wider">RANK #1</span>
-            </div>
+            )}
           </div>
 
           {/* Test Performance Table */}
@@ -314,7 +299,7 @@ export default function StudentResultReport() {
                     <th className="pb-3 font-bold text-xs text-on-surface-variant">Date</th>
                     <th className="pb-3 font-bold text-xs text-on-surface-variant text-right">Marks</th>
                     <th className="pb-3 font-bold text-xs text-on-surface-variant text-right">Class Avg</th>
-                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-center">Rank</th>
+                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-center">Grade</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
@@ -323,62 +308,52 @@ export default function StudentResultReport() {
                       <td colSpan="5" className="py-4 text-center text-on-surface-variant text-sm">Loading test records...</td>
                     </tr>
                   ) : filteredResults.length === 0 ? (
-                    <>
-                      <tr className="hover:bg-surface-container-low transition-colors group">
-                        <td className="py-4 text-sm font-bold">Calculus Intro</td>
-                        <td className="py-4 text-on-surface-variant text-xs font-semibold">Oct 12, 2026</td>
-                        <td className="py-4 text-right font-bold text-sm">92/100</td>
-                        <td className="py-4 text-right text-on-surface-variant text-sm">84.0</td>
-                        <td className="py-4 text-center"><span className="bg-primary-fixed text-on-primary-fixed-variant px-2 py-1 rounded text-[10px] font-bold">#3</span></td>
-                      </tr>
-                      <tr className="hover:bg-surface-container-low transition-colors group">
-                        <td className="py-4 text-sm font-bold">Linear Equations</td>
-                        <td className="py-4 text-on-surface-variant text-xs font-semibold">Oct 05, 2026</td>
-                        <td className="py-4 text-right font-bold text-sm">88/100</td>
-                        <td className="py-4 text-right text-on-surface-variant text-sm">78.5</td>
-                        <td className="py-4 text-center"><span className="bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-[10px] font-bold">#5</span></td>
-                      </tr>
-                    </>
+                    <tr>
+                      <td colSpan="5" className="py-4 text-center text-on-surface-variant text-sm">No test records found.</td>
+                    </tr>
                   ) : (
-                    filteredResults.map((r, idx) => (
-                      <tr key={r.id || idx} className="hover:bg-surface-container-low transition-colors group">
-                        <td className="py-4 text-sm font-bold">{r.test_title}</td>
-                        <td className="py-4 text-on-surface-variant text-xs font-semibold">{formatDate(r.test_date || r.created_at)}</td>
-                        <td className="py-4 text-right font-bold text-sm">{r.marks_obtained}/{r.total_marks}</td>
-                        <td className="py-4 text-right text-on-surface-variant text-sm">
-                          {Math.round((r.total_marks * (avgMarks - 3)) / 100)}
-                        </td>
-                        <td className="py-4 text-center">
-                          <span className="bg-primary-fixed text-on-primary-fixed-variant px-2 py-1 rounded text-[10px] font-bold">
-                            {r.grade_letter || '#3'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                    filteredResults.map((r, idx) => {
+                      const trendMatch = performanceTrend.find(t => t.test_title === r.test_title && t.subject === r.subject)
+                      return (
+                        <tr key={r.id || idx} className="hover:bg-surface-container-low transition-colors group">
+                          <td className="py-4 text-sm font-bold">{r.test_title}</td>
+                          <td className="py-4 text-on-surface-variant text-xs font-semibold">{formatDate(r.test_date || r.created_at)}</td>
+                          <td className="py-4 text-right font-bold text-sm">{r.marks_obtained}/{r.total_marks}</td>
+                          <td className="py-4 text-right text-on-surface-variant text-sm">
+                            {trendMatch ? `${trendMatch.class_average}%` : '—'}
+                          </td>
+                          <td className="py-4 text-center">
+                            <span className="bg-primary-fixed text-on-primary-fixed-variant px-2 py-1 rounded text-[10px] font-bold">
+                              {r.grade_letter || '—'}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })
                   )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Teacher Remarks */}
-          <div className="lg:col-span-3 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant space-y-4">
-            <div className="flex items-center gap-4">
-              <img 
-                className="w-12 h-12 rounded-full border border-outline-variant object-cover" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCymFVGU10krsQtKuyA-yrqdqZlzMLV_r59NkWaCXEjvqsSKvP_sctQ1id8YxrbwcyS6zT1dKf63em8tf_WXYJeSik1is6-mmVQLRxLN2EBrFR2DC9P7nNXpQbEIrv7LCIqRKz8Z4St4pZuTVnaLuDBYFJLcMeGqCLaNSJivjUxv_XJLOEz6UsByM7RO-e3HjxORbA2DNEvU_TAkDK8HAERzYQZLVZKQFwoqbgvMtGMF41T6T87_EfqYKRwlCtj4SDWclISY-GG2y0"
-                alt="Teacher"
-              />
-              <div>
-                <h4 className="font-title-lg text-base font-bold leading-tight">Teacher&apos;s Remarks</h4>
-                <p className="text-on-surface-variant text-xs">Mrs. Sarah Jenkins • Mathematics Dept.</p>
+          {/* Teacher Remarks — real, from the most recent result that actually has a remark on it */}
+          {latestRemark && (
+            <div className="lg:col-span-3 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary-fixed border border-outline-variant flex items-center justify-center font-bold text-primary">
+                  {latestRemark.created_by_name?.[0] || 'T'}
+                </div>
+                <div>
+                  <h4 className="font-title-lg text-base font-bold leading-tight">Teacher&apos;s Remarks</h4>
+                  <p className="text-on-surface-variant text-xs">{latestRemark.created_by_name || 'Teacher'} • {latestRemark.subject}</p>
+                </div>
               </div>
+              <blockquote className="bg-surface p-4 rounded-xl italic border-l-4 border-primary text-xs text-on-surface-variant leading-relaxed">
+                &quot;{latestRemark.remarks}&quot;
+              </blockquote>
+              <p className="text-right text-[10px] text-outline">On: {latestRemark.test_title}</p>
             </div>
-            <blockquote className="bg-surface p-4 rounded-xl italic border-l-4 border-primary text-xs text-on-surface-variant leading-relaxed">
-              &quot;Arjun has shown remarkable progress in analytical problem-solving this term. His performance in the Calculus midterm was exceptional, demonstrating deep conceptual clarity. I recommend he focuses on refining his geometric proofs to maintain his current rank.&quot;
-            </blockquote>
-            <p className="text-right text-[10px] text-outline">Latest Remark: Oct 14, 2026</p>
-          </div>
+          )}
 
         </section>
 

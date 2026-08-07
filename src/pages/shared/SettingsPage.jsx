@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import AccountSidebar from '../../components/layout/AccountSidebar'
 import Icon from '../../components/common/Icon'
@@ -30,13 +31,28 @@ export default function SettingsPage() {
   const [savedAccounts, setSavedAccounts] = useState([])
 
   // Academic Profile details (For teachers)
-  const qualifications = user?.qualifications || [
-    'PhD in Theoretical Mathematics (Stanford University, 2015)',
-    'M.Sc. in Mathematics & Computing (IIT Bombay, 2011)'
-  ]
-  const department = user?.department || 'Mathematics Department'
-  const assignedClasses = user?.assigned_classes || ['10-A', '11-B']
-  const subjects = user?.subjects || ['Mathematics', 'Science']
+  const qualifications = user?.qualifications || []
+  const department = user?.department || 'Department not set'
+  const assignedClasses = user?.assigned_classes || []
+  const subjects = user?.subjects || []
+
+  const [teacherStats, setTeacherStats] = useState(null)
+  useEffect(() => {
+    if (user?.role !== 'teacher') return
+    async function fetchStats() {
+      try {
+        const res = await api.get('/teachers/stats')
+        if (res.data) setTeacherStats(res.data)
+      } catch (err) {
+        console.error('Failed to load teacher profile stats:', err)
+      }
+    }
+    fetchStats()
+  }, [user])
+
+  const memberSince = teacherStats?.member_since
+    ? new Date(teacherStats.member_since).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : null
 
   useEffect(() => {
     if (user) {
@@ -382,20 +398,12 @@ export default function SettingsPage() {
               </div>
               <div className="mt-4 md:mt-0 flex-1">
                 <h3 className="font-headline-lg-mobile text-base text-on-surface font-bold">
-                  {user?.full_name || 'Prof. Sarah Mitchell'}
+                  {user?.full_name || 'Teacher'}
                 </h3>
                 <p className="text-on-surface-variant text-xs font-semibold flex items-center justify-center md:justify-start gap-1 mt-1">
                   <Icon name="functions" className="text-primary text-[16px]" />
                   <span>{department}</span>
                 </p>
-                <div className="mt-3.5 flex flex-wrap justify-center md:justify-start gap-2">
-                  <span className="px-3 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[10px] rounded-full uppercase tracking-wider">
-                    Senior Faculty
-                  </span>
-                  <span className="px-3 py-0.5 bg-secondary-container text-on-secondary-container font-bold text-[10px] rounded-full uppercase tracking-wider">
-                    Curriculum Lead
-                  </span>
-                </div>
               </div>
             </section>
 
@@ -403,15 +411,17 @@ export default function SettingsPage() {
             <section className="space-y-3">
               <h4 className="font-title-lg text-xs text-on-surface font-bold">Assigned Classes</h4>
               <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
-                {assignedClasses.map((cls, idx) => (
-                  <div 
+                {assignedClasses.length === 0 ? (
+                  <p className="text-xs text-on-surface-variant font-semibold py-2">No classes assigned yet</p>
+                ) : assignedClasses.map((cls, idx) => (
+                  <div
                     key={cls}
                     onClick={() => navigate('/teacher/attendance/mark')}
                     className="flex-shrink-0 bg-surface-container-lowest border border-outline-variant/30 p-4 rounded-2xl shadow-sm hover:border-primary transition-all cursor-pointer group min-w-[140px]"
                   >
                     <p className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider">Class {cls}</p>
                     <h5 className="font-numeric-bold text-xs font-bold text-on-surface mt-1">
-                      {subjects[idx] || subjects[0] || 'Mathematics'}
+                      {subjects[idx] || subjects[0] || ''}
                     </h5>
                     <div className="mt-2.5 flex items-center gap-1 text-primary group-hover:gap-1.5 transition-all text-[11px] font-bold">
                       <span>Mark Attendance</span>
@@ -430,7 +440,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Students Handled</p>
-                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">42</p>
+                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">{teacherStats?.total_students ?? 0}</p>
                 </div>
               </div>
               <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between h-28">
@@ -439,7 +449,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Results Uploaded</p>
-                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">14</p>
+                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">{teacherStats?.results_uploaded_count ?? 0}</p>
                 </div>
               </div>
               <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between h-28">
@@ -448,7 +458,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Homeworks Assigned</p>
-                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">5</p>
+                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">{teacherStats?.homework_assigned_count ?? 0}</p>
                 </div>
               </div>
               <div className="bg-surface-container-low p-4 rounded-3xl border border-outline-variant/20 shadow-sm flex flex-col justify-between h-28">
@@ -457,33 +467,27 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-[8px] uppercase tracking-wider font-bold">Personal Attendance</p>
-                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">98%</p>
+                  <p className="font-numeric-bold text-base font-bold text-on-surface mt-0.5">{teacherStats?.attendance_rate ?? 0}%</p>
                 </div>
               </div>
             </section>
 
-            {/* Performance Summary & Chart */}
-            <section className="grid md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant/40 p-5 rounded-3xl shadow-sm space-y-3">
-                <h4 className="font-title-lg text-[10px] text-on-surface font-bold uppercase tracking-wider">Performance Summary</h4>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Consistently demonstrates exceptional instructional leadership in Pure Mathematics and Statistics. Her students have shown a 15% increase in standardized test scores this semester. She actively contributes to the digital transformation of teaching materials, maintaining one of the highest repository engagement rates in the department.
-                </p>
-              </div>
-
-              <div className="bg-primary-container/10 border border-primary-container/20 p-5 rounded-3xl flex flex-col justify-between h-48">
-                <h4 className="font-title-lg text-[10px] text-primary font-bold uppercase tracking-wider">Result Trends</h4>
-                <div className="flex items-end gap-1.5 h-16 mt-2">
-                  <div className="w-full bg-primary/45 rounded-t transition-all hover:bg-primary" style={{ height: '60%' }}></div>
-                  <div className="w-full bg-primary/45 rounded-t transition-all hover:bg-primary" style={{ height: '75%' }}></div>
-                  <div className="w-full bg-primary/45 rounded-t transition-all hover:bg-primary" style={{ height: '65%' }}></div>
-                  <div className="w-full bg-primary/45 rounded-t transition-all hover:bg-primary" style={{ height: '85%' }}></div>
-                  <div className="w-full bg-primary rounded-t transition-all hover:bg-primary" style={{ height: '95%' }}></div>
+            {/* Subject Performance — average score per subject, from results this teacher has personally recorded */}
+            <section className="bg-surface-container-lowest border border-outline-variant/40 p-5 rounded-3xl shadow-sm space-y-3">
+              <h4 className="font-title-lg text-[10px] text-on-surface font-bold uppercase tracking-wider">Subject Performance</h4>
+              {(!teacherStats?.subject_performance || teacherStats.subject_performance.length === 0) ? (
+                <p className="text-xs text-on-surface-variant font-semibold py-4 text-center">No results recorded yet</p>
+              ) : (
+                <div className="flex items-end gap-3 h-24 pt-2">
+                  {teacherStats.subject_performance.map((s, idx) => (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                      <span className="text-[10px] font-bold text-on-surface-variant">{s.score}%</span>
+                      <div className="w-full max-w-[36px] bg-primary rounded-t transition-all" style={{ height: `${s.score}%` }}></div>
+                      <span className="text-[9px] font-bold text-on-surface-variant uppercase truncate">{s.name}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="mt-2">
-                  <p className="text-[10px] text-primary font-bold">Semesters 1 - 5</p>
-                </div>
-              </div>
+              )}
             </section>
 
             {/* Credentials Panel */}
@@ -499,7 +503,9 @@ export default function SettingsPage() {
                   <div>
                     <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Academic Qualifications</p>
                     <div className="space-y-1 mt-1 text-xs font-semibold text-on-surface">
-                      {qualifications.map((q, idx) => (
+                      {qualifications.length === 0 ? (
+                        <p className="text-on-surface-variant font-semibold">Not provided</p>
+                      ) : qualifications.map((q, idx) => (
                         <p key={idx}>{q}</p>
                       ))}
                     </div>
@@ -512,10 +518,21 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Contact Information</p>
-                    <p className="text-xs font-bold text-on-surface mt-1">{user?.email || 'teacher@educore.com'}</p>
-                    <p className="text-xs font-semibold text-on-surface-variant mt-0.5">{user?.phone || '+91 98765 43210'}</p>
+                    <p className="text-xs font-bold text-on-surface mt-1">{user?.email || 'Not provided'}</p>
+                    <p className="text-xs font-semibold text-on-surface-variant mt-0.5">{user?.phone || 'Not provided'}</p>
                   </div>
                 </div>
+                {memberSince && (
+                  <div className="flex gap-3">
+                    <div className="shrink-0 w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
+                      <Icon name="history" className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Platform Tenure</p>
+                      <p className="text-xs font-bold text-on-surface mt-1">Member since {memberSince}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 

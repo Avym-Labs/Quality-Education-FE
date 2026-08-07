@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import { formatDateDMY } from '../../utils/dateFormat'
 
 export default function AdminReports() {
   const navigate = useNavigate()
@@ -11,10 +12,10 @@ export default function AdminReports() {
 
   // General Metadata
   const [stats, setStats] = useState({
-    totalStudents: 1240,
-    totalTeachers: 86,
-    attendanceRate: 94.2,
-    overallAverage: 78.4
+    totalStudents: 0,
+    totalTeachers: 0,
+    attendanceRate: 0,
+    overallAverage: 0
   })
 
   // s for dropdown selectors
@@ -27,24 +28,9 @@ export default function AdminReports() {
   const [studentStats, setStudentStats] = useState(null)
   const [loadingStudent, setLoadingStudent] = useState(false)
 
-  // Scoped Data Lists
-  const classReports = [
-    { grade: '9-A', average: 76.5, attendance: 92.4, topStudent: 'Sarah Jenkins', status: 'Optimal' },
-    { grade: '9-C', average: 69.2, attendance: 88.5, topStudent: 'Ryan Baker', status: 'Needs Improvement' },
-    { grade: '10-A', average: 81.2, attendance: 95.4, topStudent: 'Liam Wilson', status: 'Optimal' },
-    { grade: '10-B', average: 78.9, attendance: 92.4, topStudent: 'Arjun H.', status: 'Optimal' },
-    { grade: '11-B', average: 75.8, attendance: 93.1, topStudent: 'Emma Smith', status: 'Optimal' },
-    { grade: '12-A', average: 84.5, attendance: 96.0, topStudent: 'Sofia Rodriguez', status: 'Optimal' }
-  ]
-
-  const subjectReports = [
-    { subject: 'Mathematics', faculty: 'Dr. Julian Scott, Prof. Sarah Mitchell', avgScore: 82, passRate: 94 },
-    { subject: 'Physics', faculty: 'Dr. James Carter', avgScore: 76, passRate: 89 },
-    { subject: 'Chemistry', faculty: 'Prof. Helen Clark', avgScore: 78, passRate: 91 },
-    { subject: 'Biology', faculty: 'Dr. Lisa Vance', avgScore: 80, passRate: 93 },
-    { subject: 'History', faculty: 'Ms. Elena Rodriguez', avgScore: 68, passRate: 85 },
-    { subject: 'English Literature', faculty: 'Prof. Alice Murray', avgScore: 89, passRate: 97 }
-  ]
+  // Scoped Data Lists — real per-class / per-subject aggregates from the backend
+  const [classReports, setClassReports] = useState([])
+  const [subjectReports, setSubjectReports] = useState([])
 
   // Helper helper to return letter grades
   const getLetterGrade = (percentage) => {
@@ -59,22 +45,27 @@ export default function AdminReports() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [analyticsRes, teachersRes, studentsRes] = await Promise.all([
+        const [analyticsRes, teachersRes, studentsRes, breakdownRes] = await Promise.all([
           api.get('/admin/analytics', { params: { type: 'overall' } }),
           api.get('/teachers'),
-          api.get('/students')
+          api.get('/students'),
+          api.get('/admin/reports/breakdown')
         ])
-        
+
         if (analyticsRes.data) {
           setStats({
-            totalStudents: analyticsRes.data.total_students || 1240,
-            totalTeachers: analyticsRes.data.total_teachers || 86,
-            attendanceRate: analyticsRes.data.attendance_rate || 94.2,
-            overallAverage: analyticsRes.data.avg_results || 78.4
+            totalStudents: analyticsRes.data.total_students ?? 0,
+            totalTeachers: analyticsRes.data.total_teachers ?? 0,
+            attendanceRate: analyticsRes.data.attendance_rate ?? 0,
+            overallAverage: analyticsRes.data.avg_results ?? 0
           })
         }
         setTeachers(teachersRes.data || [])
         setStudents(studentsRes.data || [])
+        if (breakdownRes.data) {
+          setClassReports(breakdownRes.data.class_reports || [])
+          setSubjectReports(breakdownRes.data.subject_reports || [])
+        }
       } catch (err) {
         console.error('Failed to load reports metadata:', err)
       } finally {
@@ -210,7 +201,7 @@ export default function AdminReports() {
                 <div className="flex justify-between items-start border-b-2 border-gray-800 pb-5">
                   <div>
                     <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">EduCore Institutional Reports</h1>
-                    <p className="text-xs text-gray-400 mt-0.5">Generated: {new Date().toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Generated: {formatDateDMY(new Date())}</p>
                   </div>
                   <div className="text-right">
                   </div>
@@ -252,16 +243,22 @@ export default function AdminReports() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant/15 font-semibold text-on-surface">
-                          {classReports.map((cls, idx) => (
+                          {classReports.length === 0 ? (
+                            <tr>
+                              <td colSpan="5" className="p-4 text-center text-on-surface-variant font-semibold text-xs">
+                                No classes found for this school.
+                              </td>
+                            </tr>
+                          ) : classReports.map((cls, idx) => (
                             <tr key={idx} className="hover:bg-surface-container-low/30">
                               <td className="p-3">Class {cls.grade}</td>
                               <td className="p-3">{cls.average}%</td>
                               <td className="p-3 text-emerald-700">{cls.attendance}%</td>
-                              <td className="p-3 text-primary">{cls.topStudent}</td>
+                              <td className="p-3 text-primary">{cls.top_student || '—'}</td>
                               <td className="p-3 text-right">
                                 <span className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded-full ${
-                                  cls.status.includes('Improvement') 
-                                    ? 'bg-amber-100 text-amber-800' 
+                                  cls.status.includes('Improvement')
+                                    ? 'bg-amber-100 text-amber-800'
                                     : 'bg-green-100 text-green-800'
                                 }`}>
                                   {cls.status}
@@ -319,12 +316,18 @@ export default function AdminReports() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant/15 font-semibold text-on-surface">
-                          {subjectReports.map((sub, idx) => (
+                          {subjectReports.length === 0 ? (
+                            <tr>
+                              <td colSpan="4" className="p-4 text-center text-on-surface-variant font-semibold text-xs">
+                                No subjects with recorded results yet.
+                              </td>
+                            </tr>
+                          ) : subjectReports.map((sub, idx) => (
                             <tr key={idx} className="hover:bg-surface-container-low/30">
                               <td className="p-3 font-bold text-gray-900">{sub.subject}</td>
                               <td className="p-3 text-on-surface-variant text-[11px] font-medium">{sub.faculty}</td>
-                              <td className="p-3 font-bold text-primary">{sub.avgScore}%</td>
-                              <td className="p-3 text-right text-emerald-700 font-bold">{sub.passRate}%</td>
+                              <td className="p-3 font-bold text-primary">{sub.avg_score}%</td>
+                              <td className="p-3 text-right text-emerald-700 font-bold">{sub.pass_rate}%</td>
                             </tr>
                           ))}
                         </tbody>
@@ -408,7 +411,7 @@ export default function AdminReports() {
                             <div className="flex items-center gap-3">
                               <Icon name="how_to_reg" className="text-emerald-700 text-2xl" />
                               <div>
-                                <p className="font-black text-gray-900 text-sm">{studentStats?.attendance_percentage ?? 94.5}%</p>
+                                <p className="font-black text-gray-900 text-sm">{studentStats?.attendance_percentage ?? 0}%</p>
                                 <p className="text-[10px] text-gray-500 font-semibold">Total Conducted Tests: {studentStats?.total_tests ?? studentResults.length}</p>
                               </div>
                             </div>

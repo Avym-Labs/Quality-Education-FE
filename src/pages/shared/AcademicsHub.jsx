@@ -7,6 +7,7 @@ import SchedulePage from './SchedulePage'
 import StudentHomework from '../student/StudentHomework'
 import HomeworkAssignment from '../teacher/HomeworkAssignment'
 import Icon from '../../components/common/Icon'
+import { formatDateDMY, formatIsoDateDMY } from '../../utils/dateFormat'
 
 export default function AcademicsHub() {
   const { user } = useAuth()
@@ -55,10 +56,6 @@ export default function AcademicsHub() {
   const [filteredResults, setFilteredResults] = useState([])
   const [loadingResults, setLoadingResults] = useState(false)
 
-  // Selected student's individual attendance (for Reports)
-  const [selectedStudentAttendance, setSelectedStudentAttendance] = useState(null)
-  const [classAverageAttendance, setClassAverageAttendance] = useState(94.2)
-
   // Results Marks Recorder Form (Only for Teacher/Admin)
   const [isRecordScoresOpen, setIsRecordScoresOpen] = useState(false)
   const [recordSubject, setRecordSubject] = useState(user?.subjects?.[0] || 'Mathematics')
@@ -71,14 +68,30 @@ export default function AcademicsHub() {
   // =========================================================================
   // NEW REPORTS DASHBOARD STATES & HELPERS
   // =========================================================================
-  const assignedClasses = user?.assigned_classes || ['10-A']
-  const availableStandards = [
-    ...assignedClasses.map(c => `Standard ${c}`),
-    'Standard 11 (3 students)'
-  ]
-  const [reportsSelectedClass, setReportsSelectedClass] = useState(availableStandards[0])
-  const [reportsStartDate, setReportsStartDate] = useState('2026-06-13')
-  const [reportsEndDate, setReportsEndDate] = useState('2026-07-13')
+  // Real tenant classes (not a hardcoded default) — used for both the Class
+  // Reports selector and the Individual Reports modal's Standard selector.
+  const [reportsClasses, setReportsClasses] = useState([])
+  useEffect(() => {
+    async function loadReportsClasses() {
+      if (!user || role === 'student') return
+      try {
+        const { data } = await api.get('/classes')
+        setReportsClasses(data || [])
+      } catch (err) {
+        console.error('Failed to load classes for reports:', err)
+      }
+    }
+    loadReportsClasses()
+  }, [user, role])
+  const availableStandards = reportsClasses.map(c => `Standard ${c.grade}-${c.section}`)
+
+  const [reportsSelectedClass, setReportsSelectedClass] = useState('')
+  const [reportsStartDate, setReportsStartDate] = useState(() => {
+    const d = new Date()
+    d.setMonth(d.getMonth() - 1)
+    return d.toISOString().split('T')[0]
+  })
+  const [reportsEndDate, setReportsEndDate] = useState(() => new Date().toISOString().split('T')[0])
   const [reportsViewMode, setReportsViewMode] = useState('config')
   const [reportsExportMessage, setReportsExportMessage] = useState('')
 
@@ -88,24 +101,29 @@ export default function AcademicsHub() {
 
   // Individual Student Modal States
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false)
-  const [reportsModalStandard, setReportsModalStandard] = useState(availableStandards[0])
+  const [reportsModalStandard, setReportsModalStandard] = useState('')
   const [reportsModalStudents, setReportsModalStudents] = useState([])
   const [reportsModalSelectedStudentId, setReportsModalSelectedStudentId] = useState('')
-  const [reportsModalStartDate, setReportsModalStartDate] = useState('2026-04-14')
-  const [reportsModalEndDate, setReportsModalEndDate] = useState('2026-07-13')
+  const [reportsModalStartDate, setReportsModalStartDate] = useState(() => {
+    const d = new Date()
+    d.setMonth(d.getMonth() - 3)
+    return d.toISOString().split('T')[0]
+  })
+  const [reportsModalEndDate, setReportsModalEndDate] = useState(() => new Date().toISOString().split('T')[0])
 
-  // Load students list dynamically for modalStandard when changed
+  // Default the class selectors to the first real class once classes load
+  useEffect(() => {
+    if (availableStandards.length === 0) return
+    if (!reportsSelectedClass) setReportsSelectedClass(availableStandards[0])
+    if (!reportsModalStandard) setReportsModalStandard(availableStandards[0])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableStandards.length])
+
+  // Load students list dynamically for modalStandard when changed — every
+  // standard (including 11) goes through the same real /students fetch.
   useEffect(() => {
     async function fetchModalStudents() {
-      if (!user) return
-      if (reportsModalStandard.includes('11')) {
-        setReportsModalStudents([
-          { id: 'rohit', user_id: 'rohit', full_name: 'rohit', phone: '+91 99999 99999' },
-          { id: 'nihar', user_id: 'nihar', full_name: 'nihar', phone: '+91 98989 89898' },
-          { id: 'vijay', user_id: 'vijay', full_name: 'vijay', phone: '+91 97777 77777' }
-        ])
-        return
-      }
+      if (!user || !reportsModalStandard) { setReportsModalStudents([]); return }
       try {
         const classToLoad = reportsModalStandard.replace('Standard ', '')
         const [grade, section] = classToLoad.split('-')
@@ -120,86 +138,182 @@ export default function AcademicsHub() {
     fetchModalStudents()
   }, [reportsModalStandard, user])
 
-  // Mock static data for Standard 11 report
-  const standard11ReportData = {
-    standardName: 'Standard 11',
-    totalStudents: 3,
-    schoolDays: 31,
-    totalPresent: 9,
-    overallRate: 9.7,
-    distribution: {
-      excellent: 0,
-      good: 0,
-      attention: 3
-    },
-    students: [
-      {
-        id: 'nihar',
-        name: 'nihar',
-        role: 'Standard 11',
-        markedRate: 100.0,
-        overallRate: 12.9,
-        present: 4,
-        absent: 0,
-        noRecord: 27,
-        phone: '+91 98989 89898',
-        pattern: Array(27).fill('norecord').concat(['present', 'present', 'present', 'present'])
-      },
-      {
-        id: 'vijay',
-        name: 'vijay',
-        role: 'Standard 11',
-        markedRate: 75.0,
-        overallRate: 9.7,
-        present: 3,
-        absent: 1,
-        noRecord: 27,
-        phone: '+91 97777 77777',
-        pattern: Array(27).fill('norecord').concat(['present', 'present', 'present', 'absent'])
-      },
-      {
-        id: 'rohit',
-        name: 'rohit',
-        role: 'Standard 11',
-        markedRate: 50.0,
-        overallRate: 6.5,
-        present: 2,
-        absent: 2,
-        noRecord: 27,
-        phone: '+91 99999 99999',
-        pattern: Array(27).fill('norecord').concat(['present', 'present', 'absent', 'absent'])
+  // Real per-student, per-class attendance for the Class Reports view
+  const [reportsClassStudents, setReportsClassStudents] = useState([])
+  const [reportsClassAttendance, setReportsClassAttendance] = useState([])
+  useEffect(() => {
+    async function loadReportsClassData() {
+      if (!reportsSelectedClass) { setReportsClassStudents([]); setReportsClassAttendance([]); return }
+      try {
+        const classKey = reportsSelectedClass.replace('Standard ', '')
+        const [grade, section] = classKey.split('-')
+        const [studentsRes, attendanceRes] = await Promise.all([
+          api.get('/students', { params: { grade, section: section || '' } }),
+          api.get('/attendance', { params: { grade, section: section || '' } }),
+        ])
+        setReportsClassStudents(studentsRes.data || [])
+        setReportsClassAttendance(attendanceRes.data || [])
+      } catch (err) {
+        console.error('Failed to load class reports data:', err)
       }
-    ]
+    }
+    loadReportsClassData()
+  }, [reportsSelectedClass])
+
+  // Real attendance for the specific student selected in the Individual
+  // Reports modal
+  const [modalStudentAttendance, setModalStudentAttendance] = useState([])
+  useEffect(() => {
+    async function loadModalStudentAttendance() {
+      if (!reportsModalSelectedStudentId) { setModalStudentAttendance([]); return }
+      try {
+        const { data } = await api.get('/attendance', { params: { student_id: reportsModalSelectedStudentId } })
+        setModalStudentAttendance(data || [])
+      } catch (err) {
+        console.error('Failed to load student attendance for report:', err)
+      }
+    }
+    loadModalStudentAttendance()
+  }, [reportsModalSelectedStudentId])
+
+  // Real attendance for the logged-in student's own report
+  const [myFullAttendance, setMyFullAttendance] = useState([])
+  useEffect(() => {
+    async function loadMyAttendance() {
+      if (!user || role !== 'student') return
+      try {
+        const { data } = await api.get('/attendance', { params: { student_id: user.id } })
+        setMyFullAttendance(data || [])
+      } catch (err) {
+        console.error('Failed to load my attendance for reports:', err)
+      }
+    }
+    loadMyAttendance()
+  }, [user, role])
+
+  // The student's real account-creation date — the report period can never
+  // start earlier than this, and "Since Joining" uses it as the real start.
+  const [myJoinDate, setMyJoinDate] = useState(null)
+  useEffect(() => {
+    async function loadMyJoinDate() {
+      if (!user?.student_id || role !== 'student') return
+      try {
+        const { data } = await api.get(`/students/${user.student_id}`)
+        if (data?.member_since) setMyJoinDate(data.member_since.split('T')[0])
+      } catch (err) {
+        console.error('Failed to load join date for reports:', err)
+      }
+    }
+    loadMyJoinDate()
+  }, [user, role])
+
+  // Preset date-range picker shared by the student's own report and the
+  // teacher/admin individual report modal (both read/write
+  // reportsModalStartDate / reportsModalEndDate).
+  const DATE_PRESETS = [
+    { value: 'week', label: 'Last Week' },
+    { value: 'month', label: 'Last Month' },
+    { value: '3months', label: 'Last 3 Months' },
+    { value: 'joining', label: 'Since Joining' },
+    { value: 'custom', label: 'Custom Range' },
+  ]
+  const computePresetRange = (preset) => {
+    const end = new Date()
+    const start = new Date()
+    if (preset === 'week') start.setDate(start.getDate() - 7)
+    else if (preset === 'month') start.setMonth(start.getMonth() - 1)
+    else if (preset === '3months') start.setMonth(start.getMonth() - 3)
+    else if (preset === 'joining') return { start: myJoinDate || end.toISOString().split('T')[0], end: end.toISOString().split('T')[0] }
+    return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] }
   }
+  const [myReportPreset, setMyReportPreset] = useState('joining')
+  const applyMyReportPreset = (preset) => {
+    setMyReportPreset(preset)
+    if (preset === 'custom') return
+    const { start, end } = computePresetRange(preset)
+    setReportsModalStartDate(start)
+    setReportsModalEndDate(end)
+  }
+
+  // Same preset picker, reused for the Class Reports date filters
+  const [classReportPreset, setClassReportPreset] = useState('month')
+  const applyClassReportPreset = (preset) => {
+    setClassReportPreset(preset)
+    if (preset === 'custom') return
+    const { start, end } = computePresetRange(preset)
+    setReportsStartDate(start)
+    setReportsEndDate(end)
+  }
+
+  // Same preset picker, reused for the teacher/admin Individual Report modal
+  // ("Since Joining" doesn't apply here — we don't track another student's
+  // join date in this view — so that option is left out).
+  const MODAL_DATE_PRESETS = DATE_PRESETS.filter(p => p.value !== 'joining')
+  const [modalReportPreset, setModalReportPreset] = useState('3months')
+  const applyModalReportPreset = (preset) => {
+    setModalReportPreset(preset)
+    if (preset === 'custom') return
+    const { start, end } = computePresetRange(preset)
+    setReportsModalStartDate(start)
+    setReportsModalEndDate(end)
+  }
+  // Once the real join date loads, apply the default "Since Joining" range
+  useEffect(() => {
+    if (myJoinDate && myReportPreset === 'joining') {
+      setReportsModalStartDate(myJoinDate)
+      setReportsModalEndDate(new Date().toISOString().split('T')[0])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myJoinDate])
 
   // Helper to round to one decimal place
   const roundToOneDecimal = (num) => Math.round(num * 10) / 10
 
-  // Calculate reports data dynamically
-  const getAcademicsReportData = () => {
-    if (reportsSelectedClass.includes('11')) {
-      return standard11ReportData
-    }
+  // Collapses possibly-multiple same-day attendance records (e.g. one per
+  // subject/period) into a single real present/absent status per date —
+  // no fabricated patterns.
+  const buildDayStatusMap = (records) => {
+    const byDate = {}
+    records.forEach(r => {
+      byDate[r.date] = byDate[r.date] || []
+      byDate[r.date].push(r.status)
+    })
+    const statusByDate = {}
+    Object.entries(byDate).forEach(([date, statuses]) => {
+      statusByDate[date] = statuses.some(s => s === 'present' || s === 'late') ? 'present' : 'absent'
+    })
+    return statusByDate
+  }
 
-    // Dynamic processing from DB
-    const totalStudentsCount = studentsList.length
+  // Calculate class reports data from real fetched students + attendance
+  const getAcademicsReportData = () => {
     const start = new Date(reportsStartDate)
     const end = new Date(reportsEndDate)
     const schoolDaysCount = Math.max(1, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1)
-    
-    // Create random but sensible patterns for other classes
-    const calculatedStudents = studentsList.map((s, idx) => {
-      const studentPresent = Math.round(schoolDaysCount * (0.6 + (idx % 4) * 0.1))
-      const studentAbsent = Math.round((schoolDaysCount - studentPresent) * 0.4)
+
+    const inRange = reportsClassAttendance.filter(r => {
+      const d = new Date(r.date)
+      return d >= start && d <= end
+    })
+
+    const calculatedStudents = reportsClassStudents.map((s) => {
+      const studentRecords = inRange.filter(r => r.student_id === s.user_id)
+      const statusByDate = buildDayStatusMap(studentRecords)
+      const studentPresent = Object.values(statusByDate).filter(st => st === 'present').length
+      const studentAbsent = Object.values(statusByDate).filter(st => st === 'absent').length
       const studentNoRecord = schoolDaysCount - (studentPresent + studentAbsent)
       const overallRate = roundToOneDecimal((studentPresent / schoolDaysCount) * 100)
-      const markedRate = roundToOneDecimal((studentPresent / Math.max(1, studentPresent + studentAbsent)) * 100)
+      const markedRate = (studentPresent + studentAbsent) > 0
+        ? roundToOneDecimal((studentPresent / (studentPresent + studentAbsent)) * 100)
+        : 0
 
-      // Generate visual block pattern
       const pattern = []
-      for (let i = 0; i < studentNoRecord; i++) pattern.push('norecord')
-      for (let i = 0; i < studentPresent; i++) pattern.push('present')
-      for (let i = 0; i < studentAbsent; i++) pattern.push('absent')
+      const cur = new Date(start)
+      while (cur <= end) {
+        const key = cur.toISOString().split('T')[0]
+        pattern.push(statusByDate[key] || 'norecord')
+        cur.setDate(cur.getDate() + 1)
+      }
 
       return {
         id: s.id,
@@ -210,14 +324,14 @@ export default function AcademicsHub() {
         present: studentPresent,
         absent: studentAbsent,
         noRecord: studentNoRecord,
-        phone: s.phone || '+91 99999 99999',
+        phone: s.phone || 'Not provided',
         pattern
       }
     })
 
     const totalPresentSum = calculatedStudents.reduce((sum, s) => sum + s.present, 0)
-    const overallRateAvg = calculatedStudents.length > 0 
-      ? roundToOneDecimal(calculatedStudents.reduce((sum, s) => sum + s.overallRate, 0) / calculatedStudents.length) 
+    const overallRateAvg = calculatedStudents.length > 0
+      ? roundToOneDecimal(calculatedStudents.reduce((sum, s) => sum + s.overallRate, 0) / calculatedStudents.length)
       : 0.0
 
     const distribution = {
@@ -228,7 +342,7 @@ export default function AcademicsHub() {
 
     return {
       standardName: reportsSelectedClass,
-      totalStudents: totalStudentsCount,
+      totalStudents: reportsClassStudents.length,
       schoolDays: schoolDaysCount,
       totalPresent: totalPresentSum,
       overallRate: overallRateAvg,
@@ -298,13 +412,11 @@ export default function AcademicsHub() {
       const start = new Date(reportsModalStartDate)
       const end = new Date(reportsModalEndDate)
       let cur = new Date(start)
-      let idx = 0
       while (cur <= end) {
         const dateStr = cur.toISOString().split('T')[0]
-        const status = report.pattern[idx] || 'norecord'
+        const status = report.dateStatusMap?.[dateStr] || 'norecord'
         csvContent += `"${dateStr}","${status}"\n`
         cur.setDate(cur.getDate() + 1)
-        idx++
       }
       
       const filename = `${report.name}_attendance_report_${reportsModalStartDate}_to_${reportsModalEndDate}.csv`
@@ -318,85 +430,61 @@ export default function AcademicsHub() {
     }
   }
 
-  // Modal Student Calculations
+  // Modal Student Calculations — from real fetched attendance for the
+  // selected student, no per-name special-casing or fabricated patterns.
   const getModalStudentReport = () => {
     const stud = reportsModalStudents.find(s => s.user_id === reportsModalSelectedStudentId)
     if (!stud) return null
 
-    // Date calculations
     const start = new Date(reportsModalStartDate)
     const end = new Date(reportsModalEndDate)
     const totalDays = Math.max(1, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1)
-    
-    // Setup matching data based on Rohit, Nihar, Vijay, or DB student
-    if (stud.user_id === 'rohit') {
-      return {
-        name: 'rohit',
-        phone: '+91 99999 99999',
-        schoolDays: totalDays,
-        present: 2,
-        absent: 2,
-        noRecord: totalDays - 4,
-        rate: 6.5,
-        pattern: Array(totalDays - 4).fill('norecord').concat(['present', 'present', 'absent', 'absent'])
-      }
-    } else if (stud.user_id === 'nihar') {
-      return {
-        name: 'nihar',
-        phone: '+91 98989 89898',
-        schoolDays: totalDays,
-        present: 4,
-        absent: 0,
-        noRecord: totalDays - 4,
-        rate: 12.9,
-        pattern: Array(totalDays - 4).fill('norecord').concat(['present', 'present', 'present', 'present'])
-      }
-    } else if (stud.user_id === 'vijay') {
-      return {
-        name: 'vijay',
-        phone: '+91 97777 77777',
-        schoolDays: totalDays,
-        present: 3,
-        absent: 1,
-        noRecord: totalDays - 4,
-        rate: 9.7,
-        pattern: Array(totalDays - 4).fill('norecord').concat(['present', 'present', 'present', 'absent'])
-      }
-    } else {
-      // DB Student mock
-      const present = Math.round(totalDays * 0.8)
-      const absent = Math.round((totalDays - present) * 0.5)
-      const noRecord = totalDays - (present + absent)
-      return {
-        name: stud.full_name,
-        phone: stud.phone || '+91 99999 99999',
-        schoolDays: totalDays,
-        present,
-        absent,
-        noRecord,
-        rate: roundToOneDecimal((present / totalDays) * 100),
-        pattern: Array(noRecord).fill('norecord').concat(Array(present).fill('present')).concat(Array(absent).fill('absent'))
-      }
+
+    const inRange = modalStudentAttendance.filter(r => {
+      const d = new Date(r.date)
+      return d >= start && d <= end
+    })
+    const dateStatusMap = buildDayStatusMap(inRange)
+    const present = Object.values(dateStatusMap).filter(s => s === 'present').length
+    const absent = Object.values(dateStatusMap).filter(s => s === 'absent').length
+    const noRecord = totalDays - (present + absent)
+
+    return {
+      name: stud.full_name,
+      phone: stud.phone || 'Not provided',
+      schoolDays: totalDays,
+      present,
+      absent,
+      noRecord,
+      rate: totalDays > 0 ? roundToOneDecimal((present / totalDays) * 100) : 0,
+      dateStatusMap
     }
   }
 
+  // The logged-in student's own report — from their real fetched attendance.
+  // The period is clamped to never start before the student's real account
+  // creation date, so "Total Days" can't count days before they existed.
   const getStudentRoleReport = () => {
-    const name = user?.full_name || 'Arjun H.';
-    const phone = user?.phone || '+91 99999 99999';
-    
-    const start = new Date(reportsModalStartDate);
-    const end = new Date(reportsModalEndDate);
-    const totalDays = Math.max(1, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1);
-    
-    const rate = selectedStudentAttendance !== null ? selectedStudentAttendance : 94.2;
-    const present = Math.round(totalDays * (rate / 100));
-    const absent = Math.round(totalDays * ((100 - rate) / 100) * 0.5);
-    const noRecord = totalDays - (present + absent);
-    
-    const pattern = Array(noRecord).fill('norecord')
-      .concat(Array(present).fill('present'))
-      .concat(Array(absent).fill('absent'));
-      
+    const name = user?.full_name || 'Student'
+    const phone = user?.phone || 'Not provided'
+
+    let start = new Date(reportsModalStartDate)
+    const end = new Date(reportsModalEndDate)
+    if (myJoinDate) {
+      const joinDate = new Date(myJoinDate)
+      if (start < joinDate) start = joinDate
+    }
+    const totalDays = Math.max(1, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1)
+
+    const inRange = myFullAttendance.filter(r => {
+      const d = new Date(r.date)
+      return d >= start && d <= end
+    })
+    const dateStatusMap = buildDayStatusMap(inRange)
+    const present = Object.values(dateStatusMap).filter(s => s === 'present').length
+    const absent = Object.values(dateStatusMap).filter(s => s === 'absent').length
+    const noRecord = totalDays - (present + absent)
+
     return {
       name,
       phone,
@@ -404,9 +492,9 @@ export default function AcademicsHub() {
       present,
       absent,
       noRecord,
-      rate,
-      pattern
-    };
+      rate: totalDays > 0 ? roundToOneDecimal((present / totalDays) * 100) : 0,
+      dateStatusMap
+    }
   }
 
   const activeModalStudentReport = getModalStudentReport()
@@ -443,26 +531,14 @@ export default function AcademicsHub() {
       
       let present = 0;
       let absent = 0;
-      
+
       let temp = new Date(rangeStart);
       while (temp <= rangeEnd) {
-        let status = 'norecord';
-        if (report.name === 'nihar') {
-          const dayDiff = Math.ceil((end - temp) / (1000 * 60 * 60 * 24));
-          if (dayDiff >= 0 && dayDiff < 4) status = 'present';
-        } else if (report.name === 'vijay') {
-          const dayDiff = Math.ceil((end - temp) / (1000 * 60 * 60 * 24));
-          if (dayDiff >= 1 && dayDiff < 4) status = 'present';
-          else if (dayDiff === 0) status = 'absent';
-        } else if (report.name === 'rohit') {
-          const dayDiff = Math.ceil((end - temp) / (1000 * 60 * 60 * 24));
-          if (dayDiff >= 2 && dayDiff < 4) status = 'present';
-          else if (dayDiff >= 0 && dayDiff < 2) status = 'absent';
-        }
-        
+        const key = temp.toISOString().split('T')[0];
+        const status = report.dateStatusMap?.[key];
         if (status === 'present') present++;
         else if (status === 'absent') absent++;
-        
+
         temp.setDate(temp.getDate() + 1);
       }
       
@@ -497,26 +573,15 @@ export default function AcademicsHub() {
     }
     
     dates.forEach(d => {
-      let status = 'norecord';
-      if (report.name === 'nihar') {
-        const dayDiff = Math.ceil((end - d) / (1000 * 60 * 60 * 24));
-        if (dayDiff >= 0 && dayDiff < 4) status = 'present';
-      } else if (report.name === 'vijay') {
-        const dayDiff = Math.ceil((end - d) / (1000 * 60 * 60 * 24));
-        if (dayDiff >= 1 && dayDiff < 4) status = 'present';
-        else if (dayDiff === 0) status = 'absent';
-      } else if (report.name === 'rohit') {
-        const dayDiff = Math.ceil((end - d) / (1000 * 60 * 60 * 24));
-        if (dayDiff >= 2 && dayDiff < 4) status = 'present';
-        else if (dayDiff >= 0 && dayDiff < 2) status = 'absent';
-      }
-      
+      const key = d.toISOString().split('T')[0];
+      const status = report.dateStatusMap?.[key] || 'norecord';
+
       cells.push({
         isPadding: false,
         dayNum: d.getDate(),
         monthLabel: d.getDate() === 1 ? d.toLocaleString('en-US', { month: 'short' }) : '',
         status,
-        dateStr: d.toLocaleDateString()
+        dateStr: formatDateDMY(d)
       });
     });
     
@@ -620,35 +685,6 @@ export default function AcademicsHub() {
     }
     fetchClassStudents()
   }, [filterClass])
-
-  // Load attendance data (for Reports view comparison)
-  useEffect(() => {
-    async function loadAttendanceStats() {
-      if (!user) return
-      try {
-        if (role === 'student' && user.student_id) {
-          const { data } = await api.get(`/students/${user.student_id}/stats`)
-          setSelectedStudentAttendance(data?.attendance_percentage || 94.2)
-        } else if (filterStudentId !== 'All') {
-          const match = studentsList.find(s => s.user_id === filterStudentId)
-          if (match) {
-            const { data } = await api.get(`/students/${match.id}/stats`)
-            setSelectedStudentAttendance(data?.attendance_percentage || 92.5)
-          } else {
-            setSelectedStudentAttendance(null)
-          }
-        } else {
-          setSelectedStudentAttendance(null)
-          // Default class average attendance simulations based on class
-          const codeVal = filterClass.charCodeAt(0) || 65
-          setClassAverageAttendance(codeVal % 2 === 0 ? 93.8 : 95.1)
-        }
-      } catch (err) {
-        console.error(err)
-      }
-    }
-    loadAttendanceStats()
-  }, [user, filterStudentId, filterClass, studentsList])
 
   // Shared date-range-preset -> {start_date, end_date} params, used by every /results fetch
   const getDateRangeParams = () => {
@@ -812,23 +848,6 @@ export default function AcademicsHub() {
       })
     })
     studentLeaderboard.sort((a, b) => b.average - a.average)
-  }
-
-  // Student specific subject comparative averages
-  const studentSubjectComparisons = []
-  if (role === 'student' && filteredResults.length > 0) {
-    const subjects = [...new Set(filteredResults.map(r => r.subject))]
-    subjects.forEach(sub => {
-      const mine = filteredResults.filter(r => r.subject === sub)
-      const myAvg = Math.round(mine.reduce((acc, r) => acc + r.percentage, 0) / mine.length)
-      // Benchmark class average simulation based on subject
-      const benchmarkAvg = sub === 'Mathematics' ? 82 : sub === 'Physics' ? 76 : 80
-      studentSubjectComparisons.push({
-        subject: sub,
-        myAvg,
-        classAvg: benchmarkAvg
-      })
-    })
   }
 
   // ----------------------------------------------------
@@ -1095,7 +1114,7 @@ export default function AcademicsHub() {
       r.student_name || studentsList.find(s => s.user_id === r.student_id)?.full_name || 'Student',
       r.test_title,
       r.subject,
-      new Date(r.test_date || r.created_at).toLocaleDateString(),
+      formatDateDMY(r.test_date || r.created_at),
       r.marks_obtained,
       r.total_marks,
       `${r.percentage}%`,
@@ -1122,15 +1141,7 @@ export default function AcademicsHub() {
     return `${backendHost}${url}`
   }
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return ''
-    try {
-      const date = new Date(dateStr)
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
-    } catch {
-      return dateStr
-    }
-  }
+  const formatDate = (dateStr) => formatDateDMY(dateStr)
 
   const getSubjectBadge = (subject) => {
     const sub = subject || 'General'
@@ -2036,18 +2047,57 @@ export default function AcademicsHub() {
                 </div>
 
                 {/* Student Profile Card */}
-                <div className="bg-surface-container-lowest border border-outline-variant/35 rounded-2xl p-5 flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl uppercase shadow-sm">
-                    {user?.full_name?.[0] || 'S'}
+                <div className="bg-surface-container-lowest border border-outline-variant/35 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl uppercase shadow-sm shrink-0">
+                      {user?.full_name?.[0] || 'S'}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-on-surface capitalize">{user?.full_name}</h4>
+                      <p className="text-xs text-on-surface-variant font-semibold">
+                        Grade {user?.grade}-{user?.section} &bull; Roll #{user?.roll_number}
+                      </p>
+                      <p className="text-[10px] text-outline font-semibold mt-1">
+                        Report Period: {formatIsoDateDMY(reportsModalStartDate)} - {formatIsoDateDMY(reportsModalEndDate)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-base font-black text-on-surface capitalize">{user?.full_name}</h4>
-                    <p className="text-xs text-on-surface-variant font-semibold">
-                      Grade {user?.grade}-{user?.section} &bull; Roll #{user?.roll_number}
-                    </p>
-                    <p className="text-[10px] text-outline font-semibold mt-1">
-                      Report Period: {new Date(reportsModalStartDate).toLocaleDateString('en-US')} - {new Date(reportsModalEndDate).toLocaleString('en-US')}
-                    </p>
+
+                  {/* Date range filter */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Period</label>
+                      <select
+                        value={myReportPreset}
+                        onChange={e => applyMyReportPreset(e.target.value)}
+                        className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary cursor-pointer"
+                      >
+                        {DATE_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                      </select>
+                    </div>
+                    {myReportPreset === 'custom' && (
+                      <>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[9px] font-bold text-outline uppercase tracking-wider">From</label>
+                          <input
+                            type="date"
+                            value={reportsModalStartDate}
+                            min={myJoinDate || undefined}
+                            onChange={e => setReportsModalStartDate(e.target.value)}
+                            className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[9px] font-bold text-outline uppercase tracking-wider">To</label>
+                          <input
+                            type="date"
+                            value={reportsModalEndDate}
+                            onChange={e => setReportsModalEndDate(e.target.value)}
+                            className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -2253,24 +2303,39 @@ export default function AcademicsHub() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
                         <div className="sm:col-span-3 flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Start Date</label>
-                          <input 
-                            type="date"
-                            value={reportsStartDate}
-                            onChange={e => setReportsStartDate(e.target.value)}
-                            className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2 px-3 focus:outline-none focus:border-primary text-xs font-semibold"
-                          />
+                          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Period</label>
+                          <select
+                            value={classReportPreset}
+                            onChange={e => applyClassReportPreset(e.target.value)}
+                            className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-3 focus:outline-none focus:border-primary text-xs font-semibold cursor-pointer"
+                          >
+                            {MODAL_DATE_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                          </select>
                         </div>
 
-                        <div className="sm:col-span-3 flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">End Date</label>
-                          <input 
-                            type="date"
-                            value={reportsEndDate}
-                            onChange={e => setReportsEndDate(e.target.value)}
-                            className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2 px-3 focus:outline-none focus:border-primary text-xs font-semibold"
-                          />
-                        </div>
+                        {classReportPreset === 'custom' && (
+                          <>
+                            <div className="sm:col-span-3 flex flex-col gap-1">
+                              <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Start Date</label>
+                              <input
+                                type="date"
+                                value={reportsStartDate}
+                                onChange={e => setReportsStartDate(e.target.value)}
+                                className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2 px-3 focus:outline-none focus:border-primary text-xs font-semibold"
+                              />
+                            </div>
+
+                            <div className="sm:col-span-3 flex flex-col gap-1">
+                              <label className="text-[10px] font-bold text-outline uppercase tracking-wider">End Date</label>
+                              <input
+                                type="date"
+                                value={reportsEndDate}
+                                onChange={e => setReportsEndDate(e.target.value)}
+                                className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2 px-3 focus:outline-none focus:border-primary text-xs font-semibold"
+                              />
+                            </div>
+                          </>
+                        )}
 
                         <div className="sm:col-span-4 flex flex-col gap-1">
                           <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Standard</label>
@@ -2320,7 +2385,7 @@ export default function AcademicsHub() {
                             <span>Detailed Attendance Report</span>
                           </h2>
                           <p className="text-xs text-outline font-semibold uppercase tracking-wider mt-0.5">
-                            {reportsSelectedClass.split(' (')[0]} &bull; {new Date(reportsStartDate).toLocaleDateString('en-US')} to {new Date(reportsEndDate).toLocaleDateString('en-US')}
+                            {reportsSelectedClass.split(' (')[0]} &bull; {formatIsoDateDMY(reportsStartDate)} to {formatIsoDateDMY(reportsEndDate)}
                           </p>
                         </div>
                       </div>
@@ -2728,24 +2793,39 @@ export default function AcademicsHub() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Start Date</label>
-                  <input 
-                    type="date"
-                    value={reportsModalStartDate}
-                    onChange={e => setReportsModalStartDate(e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2 focus:outline-none focus:border-primary text-xs font-semibold"
-                  />
+                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Period</label>
+                  <select
+                    value={modalReportPreset}
+                    onChange={e => applyModalReportPreset(e.target.value)}
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2.5 focus:outline-none focus:border-primary text-xs font-semibold cursor-pointer"
+                  >
+                    {MODAL_DATE_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                  </select>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">End Date</label>
-                  <input 
-                    type="date"
-                    value={reportsModalEndDate}
-                    onChange={e => setReportsModalEndDate(e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2 focus:outline-none focus:border-primary text-xs font-semibold"
-                  />
-                </div>
+                {modalReportPreset === 'custom' && (
+                  <>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Start Date</label>
+                      <input
+                        type="date"
+                        value={reportsModalStartDate}
+                        onChange={e => setReportsModalStartDate(e.target.value)}
+                        className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2 focus:outline-none focus:border-primary text-xs font-semibold"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">End Date</label>
+                      <input
+                        type="date"
+                        value={reportsModalEndDate}
+                        onChange={e => setReportsModalEndDate(e.target.value)}
+                        className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2 focus:outline-none focus:border-primary text-xs font-semibold"
+                      />
+                    </div>
+                  </>
+                )}
 
               </div>
 
@@ -2785,10 +2865,10 @@ export default function AcademicsHub() {
                             </span>
                           </div>
                           <p className="text-[9px] text-outline font-semibold mt-1">
-                            Report Period: {new Date(reportsModalStartDate).toLocaleDateString('en-US')} - {new Date(reportsModalEndDate).toLocaleDateString('en-US')}
+                            Report Period: {formatIsoDateDMY(reportsModalStartDate)} - {formatIsoDateDMY(reportsModalEndDate)}
                           </p>
                           <p className="text-[9px] text-outline font-semibold">
-                            Generated: {new Date().toLocaleDateString('en-US')} at {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            Generated: {formatDateDMY(new Date())} at {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}
                           </p>
                         </div>
                       </div>
