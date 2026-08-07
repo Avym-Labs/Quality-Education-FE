@@ -14,7 +14,7 @@ export default function StudentAttendanceDetails() {
     present: 0,
     absent: 0,
     late: 0,
-    percentage: 94.2
+    percentage: 0
   })
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
@@ -42,7 +42,7 @@ export default function StudentAttendanceDetails() {
     fetchAttendanceData()
   }, [user])
 
-  const attendancePct = stats?.percentage ?? 94.2
+  const attendancePct = stats?.percentage ?? 0
   const attendanceScore = Math.round(attendancePct * 9)
   const classRank = attendancePct >= 95 ? '#1' : attendancePct >= 90 ? '#2' : '#3'
 
@@ -55,6 +55,40 @@ export default function StudentAttendanceDetails() {
       return dateStr
     }
   }
+
+  // Derived client-side from already-fetched records — no extra API call.
+  const subjectAttendance = (() => {
+    const bySubject = {}
+    records.forEach(r => {
+      const subject = r.subject && r.subject.trim() ? r.subject : 'General'
+      if (!bySubject[subject]) bySubject[subject] = []
+      bySubject[subject].push(r)
+    })
+    return Object.keys(bySubject).map(subject => {
+      const recs = bySubject[subject]
+      const present = recs.filter(r => r.status === 'present' || r.status === 'late').length
+      const pct = recs.length > 0 ? Math.round((present / recs.length) * 1000) / 10 : 0
+      return { subject, pct }
+    })
+  })()
+
+  const monthlyTrend = (() => {
+    const byMonth = {}
+    records.forEach(r => {
+      if (!r.date || r.date.length < 7) return
+      const key = r.date.substring(0, 7)
+      if (!byMonth[key]) byMonth[key] = []
+      byMonth[key].push(r)
+    })
+    const months = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+    return Object.keys(byMonth).sort().slice(-6).map(key => {
+      const recs = byMonth[key]
+      const present = recs.filter(r => r.status === 'present' || r.status === 'late').length
+      const pct = recs.length > 0 ? Math.round((present / recs.length) * 1000) / 10 : 0
+      const monthNum = parseInt(key.substring(5, 7), 10)
+      return { label: months[monthNum] || key, pct }
+    })
+  })()
 
   return (
     <DashboardLayout hideTopBar={true}>
@@ -131,86 +165,56 @@ export default function StudentAttendanceDetails() {
           <div className="lg:col-span-3 bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-title-lg text-title-lg text-on-surface font-bold">Monthly Attendance Trend</h2>
-              <span className="font-label-md text-sm font-semibold text-primary">Last 6 Months</span>
+              <span className="font-label-md text-sm font-semibold text-primary">Last {monthlyTrend.length} Month{monthlyTrend.length === 1 ? '' : 's'}</span>
             </div>
+            {monthlyTrend.length === 0 ? (
+              <div className="h-48 flex items-center justify-center text-sm text-on-surface-variant font-semibold">
+                No attendance history yet
+              </div>
+            ) : (
             <div className="h-48 w-full relative flex items-end justify-between px-2 pt-4 group">
               <div className="absolute inset-x-0 bottom-0 h-px bg-outline-variant"></div>
-              
-              <div className="relative w-8 bg-primary-container/20 rounded-t-lg h-[80%] flex flex-col items-center justify-end hover:bg-primary-container/40 transition-all duration-300">
-                <div className="w-2 h-2 rounded-full bg-primary mb-[-4px] z-10"></div>
-                <span className="absolute -bottom-6 font-label-md text-[10px] text-on-surface-variant font-bold">SEP</span>
-              </div>
-              <div className="relative w-8 bg-primary-container/20 rounded-t-lg h-[85%] flex flex-col items-center justify-end hover:bg-primary-container/40 transition-all duration-300">
-                <div className="w-2 h-2 rounded-full bg-primary mb-[-4px] z-10"></div>
-                <span className="absolute -bottom-6 font-label-md text-[10px] text-on-surface-variant font-bold">OCT</span>
-              </div>
-              <div className="relative w-8 bg-primary-container/40 rounded-t-lg h-[92%] flex flex-col items-center justify-end hover:bg-primary-container/60 transition-all duration-300">
-                <div className="w-2 h-2 rounded-full bg-primary mb-[-4px] z-10"></div>
-                <span className="absolute -bottom-6 font-label-md text-[10px] text-on-surface-variant font-bold">NOV</span>
-              </div>
-              <div className="relative w-8 bg-primary-container/20 rounded-t-lg h-[75%] flex flex-col items-center justify-end hover:bg-primary-container/40 transition-all duration-300">
-                <div className="w-2 h-2 rounded-full bg-primary mb-[-4px] z-10"></div>
-                <span className="absolute -bottom-6 font-label-md text-[10px] text-on-surface-variant font-bold">DEC</span>
-              </div>
-              <div className="relative w-8 bg-primary-container/20 rounded-t-lg h-[88%] flex flex-col items-center justify-end hover:bg-primary-container/40 transition-all duration-300">
-                <div className="w-2 h-2 rounded-full bg-primary mb-[-4px] z-10"></div>
-                <span className="absolute -bottom-6 font-label-md text-[10px] text-on-surface-variant font-bold">JAN</span>
-              </div>
-              <div className="relative w-8 bg-primary rounded-t-lg h-[94%] flex flex-col items-center justify-end transition-all duration-300">
-                <div className="w-2 h-2 rounded-full bg-primary mb-[-4px] z-10 ring-4 ring-primary/20"></div>
-                <span className="absolute -bottom-6 font-label-md text-[10px] text-primary font-bold">FEB</span>
-              </div>
+              {monthlyTrend.map((m, idx) => {
+                const isLast = idx === monthlyTrend.length - 1
+                return (
+                  <div
+                    key={idx}
+                    className={`relative w-8 rounded-t-lg flex flex-col items-center justify-end transition-all duration-300 ${
+                      isLast ? 'bg-primary' : 'bg-primary-container/20 hover:bg-primary-container/40'
+                    }`}
+                    style={{ height: `${Math.max(m.pct, 2)}%` }}
+                  >
+                    <div className={`w-2 h-2 rounded-full bg-primary mb-[-4px] z-10 ${isLast ? 'ring-4 ring-primary/20' : ''}`}></div>
+                    <span className={`absolute -bottom-6 font-label-md text-[10px] font-bold ${isLast ? 'text-primary' : 'text-on-surface-variant'}`}>{m.label}</span>
+                  </div>
+                )
+              })}
             </div>
+            )}
           </div>
 
           {/* Subject-wise Attendance */}
           <div className="lg:col-span-2 bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant shadow-sm space-y-stack-md">
             <h2 className="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Subject Performance</h2>
+            {subjectAttendance.length === 0 ? (
+              <div className="text-sm text-on-surface-variant font-semibold py-6 text-center">
+                No attendance history yet
+              </div>
+            ) : (
             <div className="space-y-4">
-              {/* Mathematics */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>Mathematics</span>
-                  <span className="text-primary font-bold">98%</span>
+              {subjectAttendance.map((s, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="flex justify-between text-sm font-semibold">
+                    <span>{s.subject}</span>
+                    <span className="text-primary font-bold">{s.pct}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-primary-fixed rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${s.pct}%` }}></div>
+                  </div>
                 </div>
-                <div className="h-2 w-full bg-primary-fixed rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: '98%' }}></div>
-                </div>
-              </div>
-
-              {/* Physics */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>Physics</span>
-                  <span className="text-primary font-bold">92%</span>
-                </div>
-                <div className="h-2 w-full bg-primary-fixed rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: '92%' }}></div>
-                </div>
-              </div>
-
-              {/* Chemistry */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>Chemistry</span>
-                  <span className="text-primary font-bold">85%</span>
-                </div>
-                <div className="h-2 w-full bg-primary-fixed rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: '85%' }}></div>
-                </div>
-              </div>
-
-              {/* English */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>English Literature</span>
-                  <span className="text-primary font-bold">95%</span>
-                </div>
-                <div className="h-2 w-full bg-primary-fixed rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: '95%' }}></div>
-                </div>
-              </div>
+              ))}
             </div>
+            )}
           </div>
         </section>
 
@@ -236,7 +240,6 @@ export default function StudentAttendanceDetails() {
                   <tr className="bg-surface-container-highest">
                     <th className="px-6 py-4 font-bold text-sm text-on-surface-variant">Date</th>
                     <th className="px-6 py-4 font-bold text-sm text-on-surface-variant">Subject</th>
-                    <th className="px-6 py-4 font-bold text-sm text-on-surface-variant">Period</th>
                     <th className="px-6 py-4 font-bold text-sm text-on-surface-variant text-right">Status</th>
                   </tr>
                 </thead>
@@ -245,7 +248,6 @@ export default function StudentAttendanceDetails() {
                     <tr key={r.id || index} className="hover:bg-surface-container-low transition-colors">
                       <td className="px-6 py-4 text-sm font-semibold">{formatDate(r.date)}</td>
                       <td className="px-6 py-4 text-sm font-semibold">{r.subject || 'Class Session'}</td>
-                      <td className="px-6 py-4 text-sm text-on-surface-variant">Period {index + 1}</td>
                       <td className="px-6 py-4 text-right">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold border ${
                           r.status === 'present' ? 'bg-green-100 text-green-700 border-green-200' :

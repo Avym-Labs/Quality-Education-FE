@@ -11,14 +11,17 @@ export default function StudentDashboard() {
   const navigate = useNavigate()
   
   const [stats, setStats] = useState({
-    attendance_percentage: 94.2,
-    average_score: 85.0,
-    total_tests: 8,
+    attendance_percentage: 0,
+    average_score: 0,
+    total_tests: 0,
     attendance_points: { total_attendance_points: 0, current_streak: 0 },
     test_points: { total_test_points: 0, test_count: 0, breakdown: [] },
-    total_points: 0
+    total_points: 0,
+    weekly_attendance: [],
+    performance_trend: []
   })
-  const [homeworkCount, setHomeworkCount] = useState(3)
+  const [leaderboard, setLeaderboard] = useState([])
+  const [homeworkCount, setHomeworkCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   // Mobile only: auto-cycle between the two charts in the same spot every 5s
@@ -37,15 +40,19 @@ export default function StudentDashboard() {
         return
       }
       try {
-        const [statsRes, hwRes] = await Promise.all([
+        const [statsRes, hwRes, lbRes] = await Promise.all([
           api.get(`/students/${user.student_id}/stats`),
           api.get('/homework', { params: { grade: user.grade, section: user.section } }),
+          api.get('/students/leaderboard'),
         ])
         if (statsRes.data) {
           setStats(statsRes.data)
         }
         if (hwRes.data) {
           setHomeworkCount(hwRes.data.length)
+        }
+        if (lbRes.data) {
+          setLeaderboard(lbRes.data)
         }
       } catch (err) {
         console.error('Failed to load real dashboard stats:', err)
@@ -57,27 +64,19 @@ export default function StudentDashboard() {
   }, [user])
 
   // Dynamic values
-  const attendance = stats?.attendance_percentage ?? 94.2
-  const score = stats?.average_score ?? 85.0
-  const testsCount = stats?.total_tests ?? 8
+  const attendance = stats?.attendance_percentage ?? 0
+  const score = stats?.average_score ?? 0
+  const testsCount = stats?.total_tests ?? 0
 
   const attendancePoints = stats?.attendance_points ?? { total_attendance_points: 0, current_streak: 0 }
   const testPoints = stats?.test_points ?? { total_test_points: 0, test_count: 0, breakdown: [] }
   const totalPoints = stats?.total_points ?? 0
-  const streakDays = attendancePoints.current_streak ?? 0
   const rank = score >= 90 ? '#1' : score >= 80 ? '#2' : '#3'
   const rankPercentile = score >= 90 ? 'Top 0.5%' : score >= 80 ? 'Top 1%' : 'Top 5%'
   const tier = score >= 90 ? 'Legend Tier' : score >= 80 ? 'Elite Tier' : 'Aspirant Tier'
 
-  const trendData = stats?.performance_trend && stats.performance_trend.length > 0
-    ? stats.performance_trend
-    : [
-        { test_title: 'Test 1', personal: 76, class_average: 70, topper: 90 },
-        { test_title: 'Test 2', personal: 82, class_average: 72, topper: 92 },
-        { test_title: 'Test 3', personal: 80, class_average: 74, topper: 95 },
-        { test_title: 'Test 4', personal: 88, class_average: 75, topper: 96 },
-        { test_title: 'Test 5', personal: score, class_average: 77, topper: 98 }
-      ]
+  const trendData = stats?.performance_trend || []
+  const weeklyAttendance = stats?.weekly_attendance || []
 
   const getPoints = (key) => {
     if (!trendData || trendData.length === 0) return ''
@@ -204,30 +203,25 @@ export default function StudentDashboard() {
                 </div>
 
                 <div className="flex-1 transition-all duration-300 lg:min-h-0">
+                  {weeklyAttendance.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-xs text-on-surface-variant font-semibold">
+                      No attendance recorded yet
+                    </div>
+                  ) : (
                   <div className="h-full flex flex-col justify-between">
                     <div className="flex items-end justify-between px-2 gap-3 pt-2 flex-grow min-h-0">
-                      <div className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
-                        <div className="w-full max-w-[32px] bg-primary rounded-t-md transition-all duration-500 hover:opacity-90" style={{ height: '90%' }}></div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Mon</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
-                        <div className="w-full max-w-[32px] bg-primary rounded-t-md transition-all duration-500 hover:opacity-90" style={{ height: '100%' }}></div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Tue</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
-                        <div className="w-full max-w-[32px] bg-[#e2dfff] rounded-t-md transition-all duration-500 hover:opacity-90" style={{ height: '20%' }}></div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Wed</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
-                        <div className="w-full max-w-[32px] bg-primary rounded-t-md transition-all duration-500 hover:opacity-90" style={{ height: '85%' }}></div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Thu</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
-                        <div className="w-full max-w-[32px] bg-primary rounded-t-md transition-all duration-500 hover:opacity-90" style={{ height: '95%' }}></div>
-                        <span className="text-[10px] font-bold text-on-surface-variant">Fri</span>
-                      </div>
+                      {weeklyAttendance.map((d, idx) => (
+                        <div key={idx} className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
+                          <div
+                            className={`w-full max-w-[32px] rounded-t-md transition-all duration-500 hover:opacity-90 ${d.rate < 50 ? 'bg-[#e2dfff]' : 'bg-primary'}`}
+                            style={{ height: `${d.rate}%` }}
+                          ></div>
+                          <span className="text-[10px] font-bold text-on-surface-variant">{d.day}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                  )}
                 </div>
               </div>
 
@@ -238,6 +232,11 @@ export default function StudentDashboard() {
                 </div>
 
                 <div className="flex-1 transition-all duration-300 lg:min-h-0">
+                  {trendData.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-xs text-on-surface-variant font-semibold">
+                      No test results recorded yet
+                    </div>
+                  ) : (
                   <div className="h-full flex flex-col justify-between">
                     {/* Legend for the 3 lines */}
                     <div className="flex items-center gap-4 justify-start mb-2 px-1 text-[9px] font-bold uppercase tracking-wider">
@@ -285,11 +284,12 @@ export default function StudentDashboard() {
                         </svg>
                       </div>
                       <div className="flex justify-between mt-2 font-semibold">
-                        <span className="text-[10px] text-on-surface-variant">{trendData[0]?.test_title || 'Test 1'}</span>
-                        <span className="text-[10px] text-on-surface-variant">{trendData[trendData.length - 1]?.test_title || 'Latest'}</span>
+                        <span className="text-[10px] text-on-surface-variant">{trendData[0]?.test_title}</span>
+                        <span className="text-[10px] text-on-surface-variant">{trendData[trendData.length - 1]?.test_title}</span>
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
               </div>
 
@@ -376,95 +376,53 @@ export default function StudentDashboard() {
               </div>
               
               <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar space-y-2">
-                {/* Rank 1 */}
-                <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-outline-variant/10">
-                  <div className="flex items-center gap-3">
-                    <div className="relative shrink-0">
-                      <img 
-                        alt="Sara M." 
-                        className="w-10 h-10 rounded-full object-cover" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwllW5K6RZn9ox5hHeLicw2iz0mhux5XyX2KhoVvq9h672Rdj-y4RYUk3uKyCUl4tHZHP1nQfvpce9IyKhcYBBTH5nHJbzrlM9ybpGrJu0QwvGVGQ6IC3oM1t1EJeg8VEugBS4QpeM_2A1CVhmdgLORNG9-y7pKKqPbHG9YwYKH2cRZuBBRHS7w5wugEW3oyvqQrwmhY0ZsTkB-hA8atxzFJzh-epZAGtVRW-qQrLx4LCC7AafdRKqkCcx3G5yKlPCHHPJteSJPCU"
-                      />
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full border border-white flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-white font-numeric-bold">1</span>
-                      </div>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold text-on-surface">Sara M.</p>
-                      <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold">
-                        <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
-                        24 Day Streak
-                      </p>
-                    </div>
+                {leaderboard.length === 0 ? (
+                  <div className="text-center py-4 text-xs text-on-surface-variant font-semibold">
+                    No classmates to rank yet
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-on-surface font-numeric-bold">99.8%</p>
-                    <p className="text-[8px] uppercase font-bold text-on-surface-variant">1,240 pts</p>
-                  </div>
-                </div>
-
-                {/* Rank 2 (User) */}
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary-fixed/20 hover:bg-primary-fixed/30 transition-colors border border-primary/10">
-                  <div className="flex items-center gap-3">
-                    <div className="relative shrink-0">
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt={user.full_name} className="w-10 h-10 rounded-full object-cover border border-primary" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-primary-fixed border border-primary flex items-center justify-center">
-                          <span className="text-primary font-bold text-xs">
-                            {user?.first_name?.[0]}{user?.last_name?.[0]}
-                          </span>
+                ) : leaderboard.map((entry, idx) => {
+                  const rank = idx + 1
+                  const badgeColor = rank === 1 ? 'bg-yellow-400' : rank === 3 ? 'bg-orange-400' : 'bg-slate-400'
+                  const isMe = entry.is_me
+                  return (
+                    <div
+                      key={entry.user_id || idx}
+                      className={`flex items-center justify-between p-2.5 rounded-xl transition-colors border ${
+                        isMe ? 'bg-primary-fixed/20 hover:bg-primary-fixed/30 border-primary/10' : 'hover:bg-slate-50 border-outline-variant/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative shrink-0">
+                          {entry.avatar ? (
+                            <img src={entry.avatar} alt={entry.name} className="w-10 h-10 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-primary-fixed border border-primary flex items-center justify-center">
+                              <span className="text-primary font-bold text-xs">{entry.name?.[0] || '?'}</span>
+                            </div>
+                          )}
+                          <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${badgeColor} rounded-full border border-white flex items-center justify-center`}>
+                            <span className="text-[9px] font-bold text-white font-numeric-bold">{rank}</span>
+                          </div>
                         </div>
-                      )}
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-slate-400 rounded-full border border-white flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-white font-numeric-bold">2</span>
+                        <div className="text-left">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-on-surface">
+                              {isMe ? `${entry.name?.split(' ')[0] || 'You'} (You)` : entry.name}
+                            </span>
+                          </div>
+                          <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold mt-0.5">
+                            <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
+                            {entry.streak_days} Day Streak
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-on-surface font-numeric-bold">{entry.attendance_pct}%</p>
+                        <p className="text-[8px] uppercase font-bold text-on-surface-variant">{entry.total_points} pts</p>
                       </div>
                     </div>
-                    <div className="text-left">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-on-surface">{user?.full_name?.split(' ')[0] || 'Arjun'} (You)</span>
-                        <span className="bg-primary text-white text-[8px] px-1.5 py-0.5 rounded-full uppercase tracking-wider font-black shrink-0 leading-none">
-                          Rising
-                        </span>
-                      </div>
-                      <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold mt-0.5">
-                        <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
-                        {streakDays} Day Streak
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-on-surface font-numeric-bold">{attendance}%</p>
-                    <p className="text-[8px] uppercase font-bold text-on-surface-variant">{totalPoints} pts</p>
-                  </div>
-                </div>
-
-                {/* Rank 3 */}
-                <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-outline-variant/10">
-                  <div className="flex items-center gap-3">
-                    <div className="relative shrink-0">
-                      <img 
-                        alt="Leo K." 
-                        className="w-10 h-10 rounded-full object-cover" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTQvIo_mCoQh0zhKOauSP-pWWnkDK-t4UAaPM0uT6i5SSucEzuww9McfEvpAfANzK3-J3dR2PV6NAIYJtqYryA0llODiaiHBHaRxtffhA4rVC9kYpe8sL_Sinc19ERGUQPkqLoTzou1lwvueB3eDUY86CeAq3tPYsreYuD9UDDipPKDXjFa-DB9IrzAq0T8e17FBgWso3JLK7UCWfGUmu2JfngsO3j2Jf_980jBAKJmA172BiogZLuo90mIm8Bvmxq3XuOrB0zT9c"
-                      />
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-orange-400 rounded-full border border-white flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-white font-numeric-bold">3</span>
-                      </div>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold text-on-surface">Leo K.</p>
-                      <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold">
-                        <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
-                        8 Day Streak
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-on-surface font-numeric-bold">92.1%</p>
-                    <p className="text-[8px] uppercase font-bold text-on-surface-variant">720 pts</p>
-                  </div>
-                </div>
+                  )
+                })}
               </div>
             </section>
 
