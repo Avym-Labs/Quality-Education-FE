@@ -8,24 +8,34 @@ import Icon from '../../components/common/Icon'
 export default function TeacherDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [homeworkCount, setHomeworkCount] = useState(5)
+  const [homeworkCount, setHomeworkCount] = useState(0)
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
-  const [presentCount, setPresentCount] = useState(38)
-  const [absentCount, setAbsentCount] = useState(4)
+  const [presentCount, setPresentCount] = useState(0)
+  const [absentCount, setAbsentCount] = useState(0)
   const [activeChart, setActiveChart] = useState('performance')
 
-  const [performerClass, setPerformerClass] = useState('10-A')
-  const [performerSubject, setPerformerSubject] = useState('Mathematics')
+  const classOptions = user?.assigned_classes || []
+  const subjectOptions = user?.subjects || []
+  const [performerClass, setPerformerClass] = useState(null)
+  const [performerSubject, setPerformerSubject] = useState(null)
   const [topPerformers, setTopPerformers] = useState([])
   const [bottomPerformers, setBottomPerformers] = useState([])
 
+  const [teacherStats, setTeacherStats] = useState(null)
+
   useEffect(() => {
+    if (classOptions.length > 0 && !performerClass) setPerformerClass(classOptions[0])
+    if (subjectOptions.length > 0 && !performerSubject) setPerformerSubject(subjectOptions[0])
+  }, [user])
+
+  useEffect(() => {
+    if (!performerClass || !performerSubject) return
     async function fetchPerformers() {
       try {
         const parts = performerClass.split('-')
         const grade = parts[0]
         const section = parts[1]
-        
+
         const res = await api.get('/results', {
           params: {
             grade,
@@ -33,7 +43,7 @@ export default function TeacherDashboard() {
             subject: performerSubject
           }
         })
-        
+
         if (res.data && res.data.length > 0) {
           const studentScores = {}
           res.data.forEach(r => {
@@ -45,7 +55,7 @@ export default function TeacherDashboard() {
               studentScores[name].push(r.percentage)
             }
           })
-          
+
           const sortedStudents = Object.keys(studentScores).map(name => {
             const scores = studentScores[name]
             const avg = scores.reduce((a, b) => a + b, 0) / scores.length
@@ -54,37 +64,17 @@ export default function TeacherDashboard() {
               score: Math.round(avg * 10) / 10
             }
           }).sort((a, b) => b.score - a.score)
-          
-          if (sortedStudents.length > 0) {
-            setTopPerformers(sortedStudents.slice(0, 3))
-            setBottomPerformers([...sortedStudents].reverse().slice(0, 3))
-            return
-          }
+
+          setTopPerformers(sortedStudents.slice(0, 3))
+          setBottomPerformers([...sortedStudents].reverse().slice(0, 3))
+        } else {
+          setTopPerformers([])
+          setBottomPerformers([])
         }
-        
-        // Fallback mock data
-        setTopPerformers([
-          { name: 'Leo Harrison', score: 96.5 },
-          { name: 'Mia Thompson', score: 94.0 },
-          { name: 'Oliver Smith', score: 91.2 }
-        ])
-        setBottomPerformers([
-          { name: 'Liam Carter', score: 62.4 },
-          { name: 'Sophia Davis', score: 65.8 },
-          { name: 'Jack Taylor', score: 68.2 }
-        ])
       } catch (err) {
         console.error('Failed to load performance rankings:', err)
-        setTopPerformers([
-          { name: 'Leo Harrison', score: 96.5 },
-          { name: 'Mia Thompson', score: 94.0 },
-          { name: 'Oliver Smith', score: 91.2 }
-        ])
-        setBottomPerformers([
-          { name: 'Liam Carter', score: 62.4 },
-          { name: 'Sophia Davis', score: 65.8 },
-          { name: 'Jack Taylor', score: 68.2 }
-        ])
+        setTopPerformers([])
+        setBottomPerformers([])
       }
     }
     fetchPerformers()
@@ -174,12 +164,40 @@ export default function TeacherDashboard() {
           setPresentCount(summaryRes.data.present)
           setAbsentCount(summaryRes.data.absent)
         }
+
+        // Fetch real teacher stats (total students, attendance rate, today's
+        // schedule, weekly attendance, subject performance, attendance warnings)
+        const statsRes = await api.get('/teachers/stats')
+        if (statsRes.data) {
+          setTeacherStats(statsRes.data)
+        }
       } catch (err) {
         console.error('Failed to load teacher stats:', err)
       }
     }
     fetchDashboardStats()
   }, [user])
+
+  const formatTime = (isoString) => {
+    if (!isoString) return ''
+    const d = new Date(isoString)
+    let hrs = d.getHours()
+    const mins = d.getMinutes()
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12
+    if (hrs === 0) hrs = 12
+    return `${hrs}:${mins.toString().padStart(2, '0')} ${ampm}`
+  }
+
+  const todayClasses = (teacherStats?.today_schedule || []).map(e => ({
+    time: formatTime(e.start_time),
+    grade: e.grade,
+    subject: e.subject,
+    room: e.room,
+  }))
+  const subjectPerformance = teacherStats?.subject_performance || []
+  const weeklyAttendance = teacherStats?.weekly_attendance || []
+  const attendanceWarnings = teacherStats?.attendance_warnings || []
 
   const todayDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -194,13 +212,6 @@ export default function TeacherDashboard() {
     if (hrs >= 12 && hrs < 18) return 'Good Afternoon'
     return 'Good Evening'
   }
-
-  // Mock schedule
-  const todayClasses = [
-    { time: '09:00 AM', grade: '10-A', subject: 'Mathematics', room: 'Room 302' },
-    { time: '11:30 AM', grade: '11-B', subject: 'Mathematics', room: 'Room 104' },
-    { time: '02:00 PM', grade: '12-A', subject: 'Advanced Calculus', room: 'Lab 2' },
-  ]
 
   return (
     <DashboardLayout>
@@ -245,7 +256,7 @@ export default function TeacherDashboard() {
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Students</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
-                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">42</h3>
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{teacherStats?.total_students ?? 0}</h3>
                 </div>
               </div>
 
@@ -261,7 +272,7 @@ export default function TeacherDashboard() {
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Present Today</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
-                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">38</h3>
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{presentCount}</h3>
                 </div>
               </div>
 
@@ -277,7 +288,7 @@ export default function TeacherDashboard() {
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Average Attd.</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
-                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">92.5%</h3>
+                  <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{teacherStats?.attendance_rate ?? 0}%</h3>
                 </div>
               </div>
 
@@ -319,52 +330,56 @@ export default function TeacherDashboard() {
 
               <div className="flex-1 transition-all duration-300 lg:min-h-0">
                 {activeChart === 'performance' ? (
+                  subjectPerformance.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-xs text-on-surface-variant font-semibold">
+                      No recorded results yet
+                    </div>
+                  ) : (
                   <div className="animate-fadeIn h-full flex flex-col justify-between">
                     {/* Custom Bar Graph */}
                     <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-4 min-h-0">
-                      {[60, 75, 94, 70, 50].map((val, idx) => (
+                      {subjectPerformance.map((s, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group" name={`bar-group-${idx}`}>
                           <div className="relative w-full h-full flex items-end justify-center">
-                            <div 
-                              className={`w-full max-w-[40px] rounded-t-lg transition-all duration-500 hover:opacity-90 ${
-                                idx === 2 ? 'bg-[#6351E0]' : 'bg-[#e2dfff]'
-                              }`}
-                              style={{ height: `${val}%` }}
+                            <div
+                              className="w-full max-w-[40px] rounded-t-lg transition-all duration-500 hover:opacity-90 bg-[#6351E0]"
+                              style={{ height: `${s.score}%` }}
                             ></div>
                             <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
-                              {val}%
+                              {s.score}%
                             </span>
                           </div>
                         </div>
                       ))}
                     </div>
                     <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                      {['Algebra', 'Geometry', 'Trig', 'Calculus', 'Stats'].map((subj, idx) => (
-                        <span key={idx} className="flex-1 text-center truncate">{subj}</span>
+                      {subjectPerformance.map((s, idx) => (
+                        <span key={idx} className="flex-1 text-center truncate">{s.name}</span>
                       ))}
                     </div>
                   </div>
+                  )
                 ) : (
                   <div className="animate-fadeIn h-full flex flex-col justify-between">
                     {/* Weekly Attendance Bars */}
                     <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-4 min-h-0">
-                      {[92, 95, 88, 96, 91].map((val, idx) => (
+                      {weeklyAttendance.map((d, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
                           <div className="relative w-full h-full flex items-end justify-center">
-                            <div 
+                            <div
                               className="w-full max-w-[40px] rounded-t-lg bg-emerald-500 transition-all duration-500 hover:opacity-90"
-                              style={{ height: `${val}%` }}
+                              style={{ height: `${d.rate}%` }}
                             ></div>
                             <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
-                              {val}%
+                              {d.rate}%
                             </span>
                           </div>
                         </div>
                       ))}
                     </div>
                     <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, idx) => (
-                        <span key={idx} className="flex-1 text-center truncate">{day}</span>
+                      {weeklyAttendance.map((d, idx) => (
+                        <span key={idx} className="flex-1 text-center truncate">{d.day}</span>
                       ))}
                     </div>
                   </div>
@@ -381,7 +396,11 @@ export default function TeacherDashboard() {
             <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col lg:flex-1 lg:min-h-0 space-y-3">
               <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Today's Class Schedule</h3>
               <div className="space-y-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
-                {todayClasses.map((cls, idx) => (
+                {todayClasses.length === 0 ? (
+                  <div className="text-center py-4 text-xs text-on-surface-variant font-semibold">
+                    No classes scheduled today
+                  </div>
+                ) : todayClasses.map((cls, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F2]/40 border border-outline-variant/20 hover:border-primary/30 transition-all duration-200 shadow-xs">
                     <div className="w-10 h-10 rounded-full bg-[#e2dfff] flex flex-col items-center justify-center font-bold text-primary text-[10px] uppercase shrink-0">
                       <span>{cls.grade}</span>
@@ -399,28 +418,30 @@ export default function TeacherDashboard() {
             <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 space-y-3 flex-shrink-0">
               <div className="flex justify-between items-center">
                 <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Student Performers</h3>
+                {classOptions.length > 0 && subjectOptions.length > 0 && (
                 <div className="flex gap-1.5">
                   {/* Class selector */}
                   <select
-                    value={performerClass}
+                    value={performerClass || ''}
                     onChange={(e) => setPerformerClass(e.target.value)}
                     className="px-1.5 py-0.5 rounded border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface"
                   >
-                    {['10-A', '10-B', '11-A', '11-B', '12-A'].map(cls => (
+                    {classOptions.map(cls => (
                       <option key={cls} value={cls}>{cls}</option>
                     ))}
                   </select>
                   {/* Subject selector */}
                   <select
-                    value={performerSubject}
+                    value={performerSubject || ''}
                     onChange={(e) => setPerformerSubject(e.target.value)}
                     className="px-1.5 py-0.5 rounded border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface max-w-[80px]"
                   >
-                    {['Mathematics', 'Physics', 'Chemistry', 'Science', 'English'].map(sub => (
+                    {subjectOptions.map(sub => (
                       <option key={sub} value={sub}>{sub}</option>
                     ))}
                   </select>
                 </div>
+                )}
               </div>
 
               {/* Top 3 & Bottom 3 display */}
@@ -432,6 +453,9 @@ export default function TeacherDashboard() {
                     <span>Top 3 Students</span>
                   </div>
                   <div className="space-y-1">
+                    {topPerformers.length === 0 && (
+                      <div className="text-[10px] text-on-surface-variant font-semibold py-1">No results recorded yet</div>
+                    )}
                     {topPerformers.map((student, idx) => (
                       <div key={idx} className="flex justify-between items-center text-xs p-1.5 bg-emerald-50/40 rounded-lg border border-emerald-100/30">
                         <span className="font-medium text-on-surface flex items-center gap-1.5 truncate">
@@ -453,6 +477,9 @@ export default function TeacherDashboard() {
                     <span>Bottom 3 Students</span>
                   </div>
                   <div className="space-y-1">
+                    {bottomPerformers.length === 0 && (
+                      <div className="text-[10px] text-on-surface-variant font-semibold py-1">No results recorded yet</div>
+                    )}
                     {bottomPerformers.map((student, idx) => (
                       <div key={idx} className="flex justify-between items-center text-xs p-1.5 bg-rose-50/40 rounded-lg border border-rose-100/30">
                         <span className="font-medium text-on-surface flex items-center gap-1.5 truncate">
@@ -481,30 +508,37 @@ export default function TeacherDashboard() {
                 </span>
               </div>
               <div className="space-y-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
-                <div className="flex items-center justify-between p-2.5 bg-error-container/10 border border-error/15 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center text-xs font-bold shrink-0">
-                      LH
-                    </div>
-                    <div className="text-left">
-                      <h4 className="font-bold text-xs text-on-surface">Leo Harrison</h4>
-                      <p className="text-[10px] text-on-surface-variant font-medium">68% Overall Attendance</p>
-                    </div>
+                {attendanceWarnings.length === 0 ? (
+                  <div className="text-center py-4 text-xs text-on-surface-variant font-semibold">
+                    No attendance warnings
                   </div>
-                  <div className="text-error font-bold text-xs uppercase tracking-wider">Critical</div>
-                </div>
-                <div className="flex items-center justify-between p-2.5 bg-orange-50 border border-orange-100 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-800 flex items-center justify-center text-xs font-bold shrink-0">
-                      MT
+                ) : attendanceWarnings.map((w, idx) => {
+                  const pct = parseFloat(w.rate)
+                  const critical = pct < 60
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                        critical ? 'bg-error-container/10 border-error/15' : 'bg-orange-50 border-orange-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                          critical ? 'bg-error-container text-on-error-container' : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {w.initials}
+                        </div>
+                        <div className="text-left">
+                          <h4 className="font-bold text-xs text-on-surface">{w.name}</h4>
+                          <p className="text-[10px] text-on-surface-variant font-medium">{w.rate} Overall Attendance</p>
+                        </div>
+                      </div>
+                      <div className={`font-bold text-xs uppercase tracking-wider ${critical ? 'text-error' : 'text-orange-500'}`}>
+                        {critical ? 'Critical' : 'Warning'}
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <h4 className="font-bold text-xs text-on-surface">Mia Thompson</h4>
-                      <p className="text-[10px] text-on-surface-variant font-medium">74% Overall Attendance</p>
-                    </div>
-                  </div>
-                  <div className="text-orange-500 font-bold text-xs uppercase tracking-wider">Warning</div>
-                </div>
+                  )
+                })}
               </div>
             </div>
 
