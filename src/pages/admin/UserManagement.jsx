@@ -3,9 +3,6 @@ import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
-const FALLBACK_CLASS_OPTIONS = ['9-A', '9-B', '9-C', '10-A', '10-B', '10-C', '11-A', '11-B', '11-C', '12-A', '12-B', '12-C']
-const FALLBACK_GRADES = ['9', '10', '11', '12']
-const FALLBACK_SECTIONS = ['A', 'B', 'C']
 const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Literature', 'Biology', 'History']
 
 export default function UserManagement() {
@@ -25,9 +22,12 @@ export default function UserManagement() {
   const [classFormError, setClassFormError] = useState(null)
   const [classSubmitting, setClassSubmitting] = useState(false)
 
-  const classKeys = classesList.length ? classesList.map(c => `${c.grade}-${c.section}`) : FALLBACK_CLASS_OPTIONS
-  const gradeOptions = classesList.length ? [...new Set(classesList.map(c => c.grade))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0)) : FALLBACK_GRADES
-  const sectionOptions = classesList.length ? [...new Set(classesList.map(c => c.section))].sort() : FALLBACK_SECTIONS
+  // No hardcoded fallback here on purpose: showing class options that don't
+  // actually exist in Academics is exactly what let a teacher end up
+  // "assigned" to phantom classes before. Empty means empty.
+  const classKeys = classesList.map(c => `${c.grade}-${c.section}`)
+  const gradeOptions = [...new Set(classesList.map(c => c.grade))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0))
+  const sectionOptions = [...new Set(classesList.map(c => c.section))].sort()
   
   // Student Filters
   const [gradeFilter, setGradeFilter] = useState('')
@@ -193,8 +193,8 @@ export default function UserManagement() {
       password: '',
       first_name: '',
       last_name: '',
-      grade: '10',
-      section: 'A',
+      grade: classesList[0]?.grade || '',
+      section: classesList[0]?.section || '',
       roll_number: '',
       father_name: '',
       mother_name: '',
@@ -220,8 +220,8 @@ export default function UserManagement() {
         email: item.email || '',
         phone: item.phone || '',
         password: '', // Hidden on edit
-        grade: item.grade || '10',
-        section: item.section || 'A',
+        grade: item.grade || classesList[0]?.grade || '',
+        section: item.section || classesList[0]?.section || '',
         roll_number: item.roll_number || '',
         father_name: item.father_name || '',
         mother_name: item.mother_name || '',
@@ -345,6 +345,12 @@ export default function UserManagement() {
         setIsSubmitting(false)
         return
       }
+    }
+
+    if (activeRole === 'student' && (!formData.grade || !formData.section)) {
+      setFormError('Create a class in the Classes tab first, then assign the student to it.')
+      setIsSubmitting(false)
+      return
     }
 
     try {
@@ -868,7 +874,7 @@ export default function UserManagement() {
                     type="text"
                     placeholder="e.g. C"
                     value={newClassSection}
-                    onChange={(e) => setNewClassSection(e.target.value)}
+                    onChange={(e) => setNewClassSection(e.target.value.toUpperCase())}
                     className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
                     required
                   />
@@ -1075,23 +1081,27 @@ export default function UserManagement() {
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] text-outline font-bold uppercase">Grade</label>
                         <select
-                          disabled={modalMode === 'view'}
+                          disabled={modalMode === 'view' || gradeOptions.length === 0}
                           value={formData.grade}
                           onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
                           className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                         >
-                          {gradeOptions.map(g => <option key={g} value={g}>Grade {g}</option>)}
+                          {gradeOptions.length === 0
+                            ? <option value="">No classes yet</option>
+                            : gradeOptions.map(g => <option key={g} value={g}>Grade {g}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] text-outline font-bold uppercase">Section</label>
                         <select
-                          disabled={modalMode === 'view'}
+                          disabled={modalMode === 'view' || sectionOptions.length === 0}
                           value={formData.section}
                           onChange={(e) => setFormData(prev => ({ ...prev, section: e.target.value }))}
                           className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                         >
-                          {sectionOptions.map(s => <option key={s} value={s}>Section {s}</option>)}
+                          {sectionOptions.length === 0
+                            ? <option value="">No classes yet</option>
+                            : sectionOptions.map(s => <option key={s} value={s}>Section {s}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -1215,6 +1225,11 @@ export default function UserManagement() {
                       <div className="flex flex-col gap-1.5 text-left">
                         <label className="text-[10px] text-outline font-bold uppercase">Assigned Lecturing Classes</label>
                         <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-surface-container-low/30 border border-outline-variant/20 max-h-[150px] overflow-y-auto">
+                          {classKeys.length === 0 && (
+                            <p className="text-[10px] text-outline-variant italic">
+                              No classes created yet — add one in the Classes tab first.
+                            </p>
+                          )}
                           {classKeys.map((cls) => {
                             const isAssigned = formData.assigned_classes.includes(cls)
                             return (

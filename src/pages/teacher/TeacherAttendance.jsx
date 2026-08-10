@@ -315,10 +315,50 @@ export default function TeacherAttendance() {
   }, [user, viewMode])
 
   // Leave Requests tab: partition the teacher's own leave history into
-  // current (pending), approved, and past (rejected) requests.
+  // current (pending), approved, and rejected requests.
   const currentLeaveRequests = leaves.filter(l => l.status === 'pending')
   const approvedLeaveRequests = leaves.filter(l => l.status === 'approved')
   const pastLeaveRequests = leaves.filter(l => l.status === 'rejected')
+
+  // Leave Requests tab also has a "Student Leave Applications" sub-view —
+  // same Current/Approved/Rejected layout as the teacher's own leaves above,
+  // but for students, with approve/reject actions on pending requests.
+  const [leaveSubTab, setLeaveSubTab] = useState('my') // my | students
+  const [studentLeaves, setStudentLeaves] = useState([])
+  const [studentLeavesLoading, setStudentLeavesLoading] = useState(false)
+
+  async function loadStudentLeaveApplications() {
+    if (!user?.id) return
+    setStudentLeavesLoading(true)
+    try {
+      const res = await api.get('/leave')
+      const filtered = (res.data || []).filter(item => item.user?.role === 'student')
+      setStudentLeaves(filtered)
+    } catch (err) {
+      console.error('Failed to load student leave applications:', err)
+    } finally {
+      setStudentLeavesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (viewMode === 'teacher' && leaveSubTab === 'students') {
+      loadStudentLeaveApplications()
+    }
+  }, [viewMode, leaveSubTab, user])
+
+  const handleStudentLeaveAction = async (leaveId, actionStatus) => {
+    try {
+      await api.patch(`/leave/${leaveId}`, { status: actionStatus })
+      loadStudentLeaveApplications()
+    } catch (err) {
+      console.error('Failed to update student leave status:', err)
+    }
+  }
+
+  const currentStudentLeaveRequests = studentLeaves.filter(l => l.status === 'pending')
+  const approvedStudentLeaveRequests = studentLeaves.filter(l => l.status === 'approved')
+  const rejectedStudentLeaveRequests = studentLeaves.filter(l => l.status === 'rejected')
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -865,7 +905,129 @@ export default function TeacherAttendance() {
             ========================================================================= */}
         {viewMode === 'teacher' && (
           <div className="space-y-5 animate-fadeIn max-w-2xl mx-auto w-full">
-            {personalLoading ? (
+            {/* My Leaves / Student Applications sub-tabs */}
+            <div className="bg-surface-container-low rounded-2xl p-1 flex gap-1 border border-outline-variant/25 max-w-md mx-auto">
+              <button
+                onClick={() => setLeaveSubTab('my')}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  leaveSubTab === 'my'
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                My Leaves
+              </button>
+              <button
+                onClick={() => setLeaveSubTab('students')}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  leaveSubTab === 'students'
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                Student Applications
+              </button>
+            </div>
+
+            {leaveSubTab === 'my' ? (
+              personalLoading ? (
+                <div className="flex justify-center items-center py-16">
+                  <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+                </div>
+              ) : (
+                <>
+                  {/* Current Requests */}
+                  <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-5 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icon name="pending" className="text-base text-primary" />
+                        <h3 className="font-title-lg text-sm text-on-surface font-bold">Current Requests</h3>
+                      </div>
+                      <span className="text-[10px] font-bold text-primary bg-primary-container/20 px-2 py-0.5 rounded-full">{currentLeaveRequests.length}</span>
+                    </div>
+                    {currentLeaveRequests.length === 0 ? (
+                      <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
+                        No pending leave requests.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {currentLeaveRequests.map(item => (
+                          <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
+                              <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                                {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
+                              </span>
+                            </div>
+                            <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* Approved Requests */}
+                  <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-5 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icon name="check_circle" className="text-base text-emerald-600" />
+                        <h3 className="font-title-lg text-sm text-on-surface font-bold">Approved Requests</h3>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">{approvedLeaveRequests.length}</span>
+                    </div>
+                    {approvedLeaveRequests.length === 0 ? (
+                      <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
+                        No approved leave requests.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {approvedLeaveRequests.map(item => (
+                          <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
+                              <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                                {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
+                              </span>
+                            </div>
+                            <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* Rejected Requests */}
+                  <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-5 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icon name="cancel" className="text-base text-on-surface-variant" />
+                        <h3 className="font-title-lg text-sm text-on-surface font-bold">Rejected Requests</h3>
+                      </div>
+                      <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded-full">{pastLeaveRequests.length}</span>
+                    </div>
+                    {pastLeaveRequests.length === 0 ? (
+                      <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
+                        No rejected leave requests.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {pastLeaveRequests.map(item => (
+                          <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
+                              <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                                {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
+                              </span>
+                            </div>
+                            <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                </>
+              )
+            ) : studentLeavesLoading ? (
               <div className="flex justify-center items-center py-16">
                 <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
               </div>
@@ -878,23 +1040,49 @@ export default function TeacherAttendance() {
                       <Icon name="pending" className="text-base text-primary" />
                       <h3 className="font-title-lg text-sm text-on-surface font-bold">Current Requests</h3>
                     </div>
-                    <span className="text-[10px] font-bold text-primary bg-primary-container/20 px-2 py-0.5 rounded-full">{currentLeaveRequests.length}</span>
+                    <span className="text-[10px] font-bold text-primary bg-primary-container/20 px-2 py-0.5 rounded-full">{currentStudentLeaveRequests.length}</span>
                   </div>
-                  {currentLeaveRequests.length === 0 ? (
+                  {currentStudentLeaveRequests.length === 0 ? (
                     <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
-                      No pending leave requests.
+                      No pending student leave requests.
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {currentLeaveRequests.map(item => (
+                      {currentStudentLeaveRequests.map(item => (
                         <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
                           <div className="flex justify-between items-start gap-2">
-                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
-                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {item.user?.avatar ? (
+                                <img src={item.user.avatar} alt="" className="w-6 h-6 rounded-lg object-cover border border-outline-variant shrink-0" />
+                              ) : (
+                                <div className="w-6 h-6 rounded-lg bg-primary-fixed text-primary flex items-center justify-center font-bold text-[9px] shrink-0">
+                                  {item.user?.first_name?.[0]}{item.user?.last_name?.[0]}
+                                </div>
+                              )}
+                              <span className="text-xs font-bold text-on-surface truncate">{item.user?.full_name || `${item.user?.first_name} ${item.user?.last_name}`}</span>
+                            </div>
+                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right shrink-0">
                               {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
                             </span>
                           </div>
+                          <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider self-start">{item.leave_type}</span>
                           <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
+                          <div className="flex gap-2 justify-end pt-1">
+                            <button
+                              onClick={() => handleStudentLeaveAction(item.id, 'rejected')}
+                              className="flex items-center gap-1 px-3.5 py-2 bg-red-50 text-error rounded-xl font-bold text-xs hover:bg-red-100 active:scale-95 transition-all"
+                            >
+                              <Icon name="close" className="text-sm" />
+                              <span>Reject</span>
+                            </button>
+                            <button
+                              onClick={() => handleStudentLeaveAction(item.id, 'approved')}
+                              className="flex items-center gap-1 px-3.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs hover:bg-emerald-100 active:scale-95 transition-all"
+                            >
+                              <Icon name="check" className="text-sm" />
+                              <span>Approve</span>
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -908,22 +1096,32 @@ export default function TeacherAttendance() {
                       <Icon name="check_circle" className="text-base text-emerald-600" />
                       <h3 className="font-title-lg text-sm text-on-surface font-bold">Approved Requests</h3>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">{approvedLeaveRequests.length}</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">{approvedStudentLeaveRequests.length}</span>
                   </div>
-                  {approvedLeaveRequests.length === 0 ? (
+                  {approvedStudentLeaveRequests.length === 0 ? (
                     <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
-                      No approved leave requests.
+                      No approved student leave requests.
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {approvedLeaveRequests.map(item => (
+                      {approvedStudentLeaveRequests.map(item => (
                         <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
                           <div className="flex justify-between items-start gap-2">
-                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
-                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {item.user?.avatar ? (
+                                <img src={item.user.avatar} alt="" className="w-6 h-6 rounded-lg object-cover border border-outline-variant shrink-0" />
+                              ) : (
+                                <div className="w-6 h-6 rounded-lg bg-primary-fixed text-primary flex items-center justify-center font-bold text-[9px] shrink-0">
+                                  {item.user?.first_name?.[0]}{item.user?.last_name?.[0]}
+                                </div>
+                              )}
+                              <span className="text-xs font-bold text-on-surface truncate">{item.user?.full_name || `${item.user?.first_name} ${item.user?.last_name}`}</span>
+                            </div>
+                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right shrink-0">
                               {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
                             </span>
                           </div>
+                          <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider self-start">{item.leave_type}</span>
                           <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
                         </div>
                       ))}
@@ -931,29 +1129,39 @@ export default function TeacherAttendance() {
                   )}
                 </section>
 
-                {/* Past Requests */}
+                {/* Rejected Requests */}
                 <section className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-5 shadow-sm space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Icon name="history" className="text-base text-on-surface-variant" />
-                      <h3 className="font-title-lg text-sm text-on-surface font-bold">Past Requests</h3>
+                      <Icon name="cancel" className="text-base text-on-surface-variant" />
+                      <h3 className="font-title-lg text-sm text-on-surface font-bold">Rejected Requests</h3>
                     </div>
-                    <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded-full">{pastLeaveRequests.length}</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded-full">{rejectedStudentLeaveRequests.length}</span>
                   </div>
-                  {pastLeaveRequests.length === 0 ? (
+                  {rejectedStudentLeaveRequests.length === 0 ? (
                     <div className="text-center py-8 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant">
-                      No past leave requests.
+                      No rejected student leave requests.
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {pastLeaveRequests.map(item => (
+                      {rejectedStudentLeaveRequests.map(item => (
                         <div key={item.id} className="bg-surface-container-low rounded-[20px] border border-outline-variant/25 p-4 flex flex-col gap-2">
                           <div className="flex justify-between items-start gap-2">
-                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider">{item.leave_type}</span>
-                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {item.user?.avatar ? (
+                                <img src={item.user.avatar} alt="" className="w-6 h-6 rounded-lg object-cover border border-outline-variant shrink-0" />
+                              ) : (
+                                <div className="w-6 h-6 rounded-lg bg-primary-fixed text-primary flex items-center justify-center font-bold text-[9px] shrink-0">
+                                  {item.user?.first_name?.[0]}{item.user?.last_name?.[0]}
+                                </div>
+                              )}
+                              <span className="text-xs font-bold text-on-surface truncate">{item.user?.full_name || `${item.user?.first_name} ${item.user?.last_name}`}</span>
+                            </div>
+                            <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right shrink-0">
                               {item.start_date === item.end_date ? item.start_date : `${item.start_date} - ${item.end_date}`}
                             </span>
                           </div>
+                          <span className="px-2 py-0.5 rounded-full bg-secondary-container/15 text-primary text-[9px] font-bold uppercase tracking-wider self-start">{item.leave_type}</span>
                           <p className="text-on-surface text-xs font-medium leading-relaxed">{item.reason}</p>
                         </div>
                       ))}

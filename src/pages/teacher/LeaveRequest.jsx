@@ -270,15 +270,17 @@ export default function LeaveRequest() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleLeaveAction(item.id, 'rejected')}
-                                className="px-2.5 py-1 bg-red-50 text-error rounded-xl font-bold text-[10px] hover:bg-red-100 active:scale-95 transition-all"
+                                className="flex items-center gap-1 px-3.5 py-2 bg-red-50 text-error rounded-xl font-bold text-xs hover:bg-red-100 active:scale-95 transition-all"
                               >
-                                Reject
+                                <Icon name="close" className="text-sm" />
+                                <span>Reject</span>
                               </button>
                               <button
                                 onClick={() => handleLeaveAction(item.id, 'approved')}
-                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-[10px] hover:bg-emerald-100 active:scale-95 transition-all"
+                                className="flex items-center gap-1 px-3.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs hover:bg-emerald-100 active:scale-95 transition-all"
                               >
-                                Approve
+                                <Icon name="check" className="text-sm" />
+                                <span>Approve</span>
                               </button>
                             </div>
                           ) : (
