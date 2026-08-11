@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
@@ -296,6 +296,26 @@ export default function UserManagement() {
       }
     })
   }
+
+  // Lecturing Classes dropdown (multi-select, since a teacher can
+  // teach more than one class) — closes when clicking anywhere outside it.
+  const [classDropdownOpen, setClassDropdownOpen] = useState(false)
+  const classDropdownRef = useRef(null)
+
+  useEffect(() => {
+    if (!classDropdownOpen) return
+    const handleClickOutside = (e) => {
+      if (classDropdownRef.current && !classDropdownRef.current.contains(e.target)) {
+        setClassDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [classDropdownOpen])
+
+  useEffect(() => {
+    if (!modalOpen) setClassDropdownOpen(false)
+  }, [modalOpen])
 
   // Qualifications list mapping
   const handleAddQualification = () => {
@@ -1222,33 +1242,54 @@ export default function UserManagement() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[10px] text-outline font-bold uppercase">Assigned Lecturing Classes</label>
-                        <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-surface-container-low/30 border border-outline-variant/20 max-h-[150px] overflow-y-auto">
-                          {classKeys.length === 0 && (
-                            <p className="text-[10px] text-outline-variant italic">
-                              No classes created yet — add one in the Classes tab first.
-                            </p>
-                          )}
-                          {classKeys.map((cls) => {
-                            const isAssigned = formData.assigned_classes.includes(cls)
-                            return (
-                              <button
-                                key={cls}
-                                type="button"
-                                disabled={modalMode === 'view'}
-                                onClick={() => handleToggleClass(cls)}
-                                className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition-all border cursor-pointer ${
-                                  isAssigned 
-                                    ? 'bg-tertiary text-on-tertiary border-tertiary' 
-                                    : 'bg-surface-container-lowest text-on-surface border-outline-variant/30 hover:bg-surface-container-low'
-                                }`}
-                              >
-                                Class {cls}
-                              </button>
-                            )
-                          })}
-                        </div>
+                      <div className="flex flex-col gap-1.5 text-left relative self-start" ref={classDropdownRef}>
+                        <label className="text-[10px] text-outline font-bold uppercase">Lecturing Classes</label>
+
+                        <button
+                          type="button"
+                          disabled={modalMode === 'view' || classKeys.length === 0}
+                          onClick={() => setClassDropdownOpen(prev => !prev)}
+                          className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold outline-none focus:border-primary text-on-surface disabled:opacity-60"
+                        >
+                          <span className="truncate text-left">
+                            {classKeys.length === 0
+                              ? 'No classes created yet'
+                              : formData.assigned_classes.length === 0
+                                ? 'Select classes...'
+                                : formData.assigned_classes.length === 1
+                                  ? `Class ${formData.assigned_classes[0]}`
+                                  : `${formData.assigned_classes.length} classes selected`}
+                          </span>
+                          <Icon name={classDropdownOpen ? 'expand_less' : 'expand_more'} className="text-base text-outline shrink-0" />
+                        </button>
+
+                        {classDropdownOpen && classKeys.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-1 z-20 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-lg p-2 max-h-[200px] overflow-y-auto animate-scaleIn">
+                            {classKeys.map((cls) => {
+                              const isAssigned = formData.assigned_classes.includes(cls)
+                              return (
+                                <label
+                                  key={cls}
+                                  className="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold text-on-surface hover:bg-surface-container-low cursor-pointer"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAssigned}
+                                    onChange={() => handleToggleClass(cls)}
+                                    className="w-3.5 h-3.5 accent-tertiary shrink-0"
+                                  />
+                                  <span>Class {cls}</span>
+                                </label>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {classKeys.length === 0 && (
+                          <p className="text-[10px] text-outline-variant italic px-1">
+                            No classes created yet — add one in the Classes tab first.
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -1312,7 +1353,7 @@ export default function UserManagement() {
                       disabled={isSubmitting}
                       className="px-5 py-2.5 bg-primary text-on-primary hover:opacity-95 disabled:opacity-40 rounded-xl text-xs font-bold cursor-pointer border-none shadow-sm flex items-center gap-1"
                     >
-                      {isSubmitting ? 'Saving...' : 'Onboard Profile'}
+                      {isSubmitting ? 'Saving...' : 'Save Profile'}
                     </button>
                   )}
                 </div>
