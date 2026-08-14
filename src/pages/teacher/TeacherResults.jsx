@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 
 export default function TeacherResults() {
   const { user } = useAuth()
@@ -267,9 +268,9 @@ export default function TeacherResults() {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Test / Exam Title</label>
-                    <input 
-                      type="text" 
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Test / Exam Title <span className="text-error">*</span></label>
+                    <input
+                      type="text"
                       placeholder="e.g. Unit 3 Trigonometry"
                       value={testTitle}
                       onChange={e => setTestTitle(e.target.value)}
@@ -303,8 +304,7 @@ export default function TeacherResults() {
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="font-bold text-[10px] text-on-surface-variant uppercase">Test Date</label>
-                      <input 
-                        type="date" 
+                      <DateInput
                         value={testDate}
                         onChange={e => setTestDate(e.target.value)}
                         className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold text-center"

@@ -428,7 +428,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                   {/* Target Scope Selection */}
                   {broadcastScope === 'class' && (
                     <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Class</label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Class <span className="text-error">*</span></label>
                       <select
                         value={broadcastTarget}
                         onChange={(e) => setBroadcastTarget(e.target.value)}
@@ -445,7 +445,7 @@ export default function ConversationSidebar({ activeConversationId }) {
 
                   {broadcastScope === 'subject' && (
                     <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Subject</label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Subject <span className="text-error">*</span></label>
                       <select
                         value={broadcastTarget}
                         onChange={(e) => setBroadcastTarget(e.target.value)}
@@ -462,7 +462,7 @@ export default function ConversationSidebar({ activeConversationId }) {
 
                   {broadcastScope === 'department' && (
                     <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Department</label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Department <span className="text-error">*</span></label>
                       <select
                         value={broadcastTarget}
                         onChange={(e) => setBroadcastTarget(e.target.value)}
@@ -513,7 +513,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                   {/* Message Content */}
                   <div className="flex flex-col gap-1 text-left">
                     <div className="flex justify-between items-center">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Content</label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Content <span className="text-error">*</span></label>
                       {broadcastContent.trim() && (
                         <button
                           type="button"

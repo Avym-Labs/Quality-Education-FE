@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 
 export default function HomeworkAssignment({ embed = false }) {
   const { user } = useAuth()
@@ -247,8 +248,8 @@ export default function HomeworkAssignment({ embed = false }) {
 
                 {/* Title */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Homework Title</label>
-                  <input 
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Homework Title <span className="text-error">*</span></label>
+                  <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -271,9 +272,8 @@ export default function HomeworkAssignment({ embed = false }) {
 
                  {/* Due Date */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Due Date</label>
-                  <input 
-                    type="date"
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Due Date <span className="text-error">*</span></label>
+                  <DateInput
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"

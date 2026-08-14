@@ -114,7 +114,7 @@ export default function ResetPasswordPage() {
               {/* New Password */}
               <div className="space-y-base">
                 <label className="text-label-md text-on-surface-variant ml-1" htmlFor="newPassword">
-                  New Password
+                  New Password <span className="text-error">*</span>
                 </label>
                 <div className="relative group">
                   <Icon name="lock" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
@@ -140,7 +140,7 @@ export default function ResetPasswordPage() {
               {/* Confirm Password */}
               <div className="space-y-base">
                 <label className="text-label-md text-on-surface-variant ml-1" htmlFor="confirmPassword">
-                  Confirm Password
+                  Confirm Password <span className="text-error">*</span>
                 </label>
                 <div className="relative group">
                   <Icon name="lock" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />

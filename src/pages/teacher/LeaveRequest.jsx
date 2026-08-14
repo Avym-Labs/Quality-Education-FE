@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 
 export default function LeaveRequest() {
   const { user } = useAuth()
@@ -332,18 +333,16 @@ export default function LeaveRequest() {
                 {leaveMode === 'full' ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">From Date</label>
-                      <input 
-                        type="date"
+                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">From Date <span className="text-error">*</span></label>
+                      <DateInput
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">To Date</label>
-                      <input 
-                        type="date"
+                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">To Date <span className="text-error">*</span></label>
+                      <DateInput
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
@@ -354,9 +353,8 @@ export default function LeaveRequest() {
                   /* Partial Leave fields */
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Date</label>
-                      <input 
-                        type="date"
+                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Date <span className="text-error">*</span></label>
+                      <DateInput
                         value={singleDate}
                         onChange={(e) => setSingleDate(e.target.value)}
                         className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
@@ -389,7 +387,7 @@ export default function LeaveRequest() {
 
                 {/* Reason */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Reason for Leave</label>
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Reason for Leave <span className="text-error">*</span></label>
                   <textarea 
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}

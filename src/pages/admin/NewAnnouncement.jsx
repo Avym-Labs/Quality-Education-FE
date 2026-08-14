@@ -112,7 +112,7 @@ export default function NewAnnouncement() {
               </div>
               
               <div className="flex flex-col gap-unit">
-                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="title">Announcement Title *</label>
+                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="title">Announcement Title <span className="text-error">*</span></label>
                 <input 
                   id="title"
                   value={title}
@@ -146,7 +146,7 @@ export default function NewAnnouncement() {
               </div>
 
               <div className="flex flex-col gap-unit mt-2">
-                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="message">Message Body *</label>
+                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="message">Message Body <span className="text-error">*</span></label>
                 <textarea 
                   id="message"
                   value={content}
@@ -168,7 +168,7 @@ export default function NewAnnouncement() {
               
               {/* Target Roles Checkbox Chips */}
               <div className="flex flex-col gap-unit">
-                <label className="font-semibold text-xs text-on-surface-variant">Recipient Roles *</label>
+                <label className="font-semibold text-xs text-on-surface-variant">Recipient Roles <span className="text-error">*</span></label>
                 <div className="flex flex-wrap gap-stack-sm mt-1">
                   <button
                     type="button"

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 
 export default function SchedulePage({ embed = false }) {
   const { user } = useAuth()
@@ -818,8 +819,8 @@ export default function SchedulePage({ embed = false }) {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-bold text-[10px] uppercase text-outline">Event Title</label>
-                <input 
+                <label className="font-bold text-[10px] uppercase text-outline">Event Title <span className="text-error">*</span></label>
+                <input
                   type="text"
                   placeholder="e.g. Calculus Basics Intro"
                   value={formTitle}
@@ -857,9 +858,8 @@ export default function SchedulePage({ embed = false }) {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-bold text-[10px] uppercase text-outline">Scheduled Date</label>
-                <input 
-                  type="date"
+                <label className="font-bold text-[10px] uppercase text-outline">Scheduled Date <span className="text-error">*</span></label>
+                <DateInput
                   value={formDate}
                   onChange={e => setFormDate(e.target.value)}
                   className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -869,8 +869,8 @@ export default function SchedulePage({ embed = false }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">Start Time</label>
-                  <input 
+                  <label className="font-bold text-[10px] uppercase text-outline">Start Time <span className="text-error">*</span></label>
+                  <input
                     type="time"
                     value={formStartTime}
                     onChange={e => setFormStartTime(e.target.value)}
@@ -879,7 +879,7 @@ export default function SchedulePage({ embed = false }) {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">End Time</label>
+                  <label className="font-bold text-[10px] uppercase text-outline">End Time <span className="text-error">*</span></label>
                   <input 
                     type="time"
                     value={formEndTime}

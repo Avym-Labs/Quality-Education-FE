@@ -7,6 +7,7 @@ import SchedulePage from './SchedulePage'
 import StudentHomework from '../student/StudentHomework'
 import HomeworkAssignment from '../teacher/HomeworkAssignment'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 import { formatDateDMY, formatIsoDateDMY } from '../../utils/dateFormat'
 
 export default function AcademicsHub() {
@@ -31,6 +32,9 @@ export default function AcademicsHub() {
   const [materialClass, setMaterialClass] = useState(user?.assigned_classes?.[0] || '10-A')
   const [materialSubject, setMaterialSubject] = useState(user?.subjects?.[0] || 'Mathematics')
   const [materialFile, setMaterialFile] = useState(null)
+  const [materialLinkUrl, setMaterialLinkUrl] = useState('')
+  const [linkPreview, setLinkPreview] = useState(null) // { url, title, description, image }
+  const [fetchingLinkPreview, setFetchingLinkPreview] = useState(false)
   const [uploadingMaterial, setUploadingMaterial] = useState(false)
 
   const [testTitle, setTestTitle] = useState('')
@@ -853,29 +857,69 @@ export default function AcademicsHub() {
   // ----------------------------------------------------
   // ACTION HANDLERS
   // ----------------------------------------------------
+  const fetchLinkPreview = async () => {
+    const url = materialLinkUrl.trim()
+    if (!url) {
+      setLinkPreview(null)
+      return
+    }
+    setFetchingLinkPreview(true)
+    try {
+      const res = await api.get('/academics/link-preview', { params: { url } })
+      setLinkPreview(res.data)
+    } catch (err) {
+      console.error(err)
+      setLinkPreview(null)
+    } finally {
+      setFetchingLinkPreview(false)
+    }
+  }
+
+  const getDomainFromUrl = (url) => {
+    if (!url) return ''
+    try {
+      return new URL(url).hostname.replace(/^www\./, '')
+    } catch {
+      return url
+    }
+  }
+
   const handleUploadMaterial = async (e) => {
     e.preventDefault()
-    if (!materialTitle.trim() || !materialFile) return
+    const trimmedLink = materialLinkUrl.trim()
+    if (!materialTitle.trim() || (!materialFile && !trimmedLink)) return
     setUploadingMaterial(true)
     setError('')
     setSuccess('')
     try {
-      const formData = new FormData()
-      formData.append('file', materialFile)
-      const uploadRes = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      if (!uploadRes.data.url) throw new Error('File upload failed')
+      let fileUrl = ''
+      let fileName = ''
+      if (materialFile) {
+        const formData = new FormData()
+        formData.append('file', materialFile)
+        const uploadRes = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        if (!uploadRes.data.url) throw new Error('File upload failed')
+        fileUrl = uploadRes.data.url
+        fileName = uploadRes.data.filename || materialFile.name
+      }
       await api.post('/academics/study-materials', {
         title: materialTitle,
         grade: materialClass,
         subject: materialSubject,
-        file_url: uploadRes.data.url,
-        filename: uploadRes.data.filename || materialFile.name
+        file_url: fileUrl,
+        filename: fileName,
+        link_url: trimmedLink,
+        link_title: linkPreview?.title || '',
+        link_description: linkPreview?.description || '',
+        link_image: linkPreview?.image || ''
       })
       setSuccess('Study material uploaded successfully!')
       setMaterialTitle('')
       setMaterialFile(null)
+      setMaterialLinkUrl('')
+      setLinkPreview(null)
       loadAcademicAssets()
     } catch (err) {
       console.error(err)
@@ -1291,8 +1335,8 @@ export default function AcademicsHub() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Resource Title</label>
-                    <input 
+                    <label className="font-bold text-[10px] uppercase text-outline">Resource Title <span className="text-error">*</span></label>
+                    <input
                       type="text"
                       placeholder="e.g. Calculus Introduction Slides"
                       value={materialTitle}
@@ -1327,16 +1371,64 @@ export default function AcademicsHub() {
                   </div>
                 </div>
                 
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-t border-outline-variant/10 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-outline-variant/10 pt-4">
                   <div className="flex flex-col gap-1">
                     <label className="font-bold text-[10px] uppercase text-outline">Resource File (PDF, PPT, DOC, JPG, etc)</label>
-                    <input 
-                      type="file" 
+                    <input
+                      type="file"
                       onChange={e => setMaterialFile(e.target.files[0])}
                       className="text-xs font-semibold text-outline file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary-fixed file:text-primary file:cursor-pointer"
-                      required
                     />
                   </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="font-bold text-[10px] uppercase text-outline">Or Paste a Link</label>
+                    <input
+                      type="url"
+                      placeholder="https://example.com/article"
+                      value={materialLinkUrl}
+                      onChange={e => setMaterialLinkUrl(e.target.value)}
+                      onBlur={fetchLinkPreview}
+                      className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[9px] text-outline font-semibold -mt-2">
+                  Provide a file, a link, or both. <span className="text-error">*</span> at least one is required.
+                </p>
+
+                {fetchingLinkPreview && (
+                  <div className="text-[10px] text-outline font-semibold flex items-center gap-1.5">
+                    <Icon name="refresh" className="text-xs animate-spin" />
+                    Fetching link preview...
+                  </div>
+                )}
+
+                {!fetchingLinkPreview && linkPreview && materialLinkUrl.trim() && (
+                  <div className="rounded-2xl border border-outline-variant/30 bg-surface-container-low/30 overflow-hidden flex flex-col sm:flex-row">
+                    {linkPreview.image ? (
+                      <img
+                        src={linkPreview.image}
+                        alt=""
+                        className="w-full sm:w-36 h-32 sm:h-auto object-cover"
+                        onError={e => { e.target.style.display = 'none' }}
+                      />
+                    ) : (
+                      <div className="w-full sm:w-36 h-20 sm:h-auto flex items-center justify-center bg-surface-container-high text-outline">
+                        <Icon name="link" className="text-2xl" />
+                      </div>
+                    )}
+                    <div className="p-3 flex flex-col gap-0.5 text-left">
+                      <h5 className="text-xs font-bold text-on-surface line-clamp-1">{linkPreview.title || materialLinkUrl}</h5>
+                      {linkPreview.description && (
+                        <p className="text-[10px] text-outline font-medium line-clamp-2">{linkPreview.description}</p>
+                      )}
+                      <span className="text-[9px] text-outline font-bold uppercase mt-1">{getDomainFromUrl(materialLinkUrl)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-1">
                   <button
                     type="submit"
                     disabled={uploadingMaterial}
@@ -1360,57 +1452,124 @@ export default function AcademicsHub() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {materials.map(mat => (
-                    <div key={mat.id} className="p-4 rounded-2xl border border-outline-variant/30 bg-surface-container-low/20 flex flex-col justify-between text-left group">
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          {getSubjectBadge(mat.subject)}
-                          <span className="text-[9px] text-outline font-bold">Class {mat.grade}</span>
-                        </div>
-                        <h4 className="text-xs font-bold text-on-surface mt-2 group-hover:text-primary transition-colors truncate">
-                          {mat.title}
-                        </h4>
-                        <p className="text-[9px] text-outline font-semibold mt-0.5 truncate">File: {mat.filename}</p>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 mt-4">
-                        <div className="text-[8px] text-outline font-medium">
-                          Uploaded: {formatDate(mat.created_at)}
-                        </div>
-                        <div className="flex gap-2">
-                          {role === 'student' ? (
-                            <button 
-                              type="button"
-                              onClick={() => setViewingMaterial(mat)}
-                              className="px-3.5 py-2 rounded-2xl bg-primary-fixed hover:bg-primary hover:text-on-primary text-primary font-bold text-[10px] shadow-xs active:scale-95 duration-100 flex items-center gap-1 border-none cursor-pointer animate-fadeIn"
-                              title="View Resource"
+                    <div key={mat.id} className="rounded-2xl border border-outline-variant/30 bg-surface-container-low/20 flex flex-col justify-between text-left group overflow-hidden">
+                      {mat.link_url ? (
+                        <>
+                          {/* WhatsApp-style link preview card */}
+                          <a
+                            href={mat.link_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col no-underline text-inherit"
+                            title={mat.link_url}
+                          >
+                            {mat.link_image ? (
+                              <img
+                                src={mat.link_image}
+                                alt=""
+                                className="w-full h-32 object-cover bg-surface-container-high"
+                                onError={e => {
+                                  e.target.onerror = null
+                                  e.target.style.display = 'none'
+                                  e.target.nextSibling.style.display = 'flex'
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className="w-full h-20 items-center justify-center bg-surface-container-high text-outline"
+                              style={{ display: mat.link_image ? 'none' : 'flex' }}
                             >
-                              <Icon name="visibility" className="text-xs" />
-                              <span>View Resource</span>
-                            </button>
-                          ) : (
-                            <>
-                              <a 
-                                href={getAttachmentUrl(mat.file_url)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center hover:bg-primary-fixed hover:text-primary transition-colors text-on-surface"
-                                title="Download Material"
-                              >
-                                <Icon name="download" className="text-sm" />
-                              </a>
-                              {(role === 'teacher' || role === 'admin') && (
-                                <button
-                                  onClick={() => handleDeleteMaterial(mat.id)}
-                                  className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
-                                  title="Delete Material"
-                                >
-                                  <Icon name="delete" className="text-sm" />
-                                </button>
+                              <Icon name="link" className="text-2xl" />
+                            </div>
+                            <div className="p-4">
+                              <div className="flex items-center justify-between gap-2">
+                                {getSubjectBadge(mat.subject)}
+                                <span className="text-[9px] text-outline font-bold">Class {mat.grade}</span>
+                              </div>
+                              <h4 className="text-xs font-bold text-on-surface mt-2 group-hover:text-primary transition-colors truncate">
+                                {mat.title}
+                              </h4>
+                              {mat.link_title && (
+                                <p className="text-[10px] text-on-surface font-semibold mt-1 truncate">{mat.link_title}</p>
                               )}
-                            </>
-                          )}
+                              {mat.link_description && (
+                                <p className="text-[9px] text-outline font-medium mt-0.5 line-clamp-2">{mat.link_description}</p>
+                              )}
+                              <span className="text-[8px] text-outline font-bold uppercase mt-1.5 flex items-center gap-1">
+                                <Icon name="link" className="text-[10px]" />
+                                {getDomainFromUrl(mat.link_url)}
+                              </span>
+                            </div>
+                          </a>
+                          <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 pb-4 px-4">
+                            <div className="text-[8px] text-outline font-medium">
+                              Uploaded: {formatDate(mat.created_at)}
+                            </div>
+                            {(role === 'teacher' || role === 'admin') && (
+                              <button
+                                onClick={() => handleDeleteMaterial(mat.id)}
+                                className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
+                                title="Delete Material"
+                              >
+                                <Icon name="delete" className="text-sm" />
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="p-4 flex flex-col justify-between h-full">
+                          <div>
+                            <div className="flex items-center justify-between gap-2">
+                              {getSubjectBadge(mat.subject)}
+                              <span className="text-[9px] text-outline font-bold">Class {mat.grade}</span>
+                            </div>
+                            <h4 className="text-xs font-bold text-on-surface mt-2 group-hover:text-primary transition-colors truncate">
+                              {mat.title}
+                            </h4>
+                            <p className="text-[9px] text-outline font-semibold mt-0.5 truncate">File: {mat.filename}</p>
+                          </div>
+
+                          <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 mt-4">
+                            <div className="text-[8px] text-outline font-medium">
+                              Uploaded: {formatDate(mat.created_at)}
+                            </div>
+                            <div className="flex gap-2">
+                              {role === 'student' ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingMaterial(mat)}
+                                  className="px-3.5 py-2 rounded-2xl bg-primary-fixed hover:bg-primary hover:text-on-primary text-primary font-bold text-[10px] shadow-xs active:scale-95 duration-100 flex items-center gap-1 border-none cursor-pointer animate-fadeIn"
+                                  title="View Resource"
+                                >
+                                  <Icon name="visibility" className="text-xs" />
+                                  <span>View Resource</span>
+                                </button>
+                              ) : (
+                                <>
+                                  <a
+                                    href={getAttachmentUrl(mat.file_url)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center hover:bg-primary-fixed hover:text-primary transition-colors text-on-surface"
+                                    title="Download Material"
+                                  >
+                                    <Icon name="download" className="text-sm" />
+                                  </a>
+                                  {(role === 'teacher' || role === 'admin') && (
+                                    <button
+                                      onClick={() => handleDeleteMaterial(mat.id)}
+                                      className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
+                                      title="Delete Material"
+                                    >
+                                      <Icon name="delete" className="text-sm" />
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1432,8 +1591,8 @@ export default function AcademicsHub() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Test Title</label>
-                    <input 
+                    <label className="font-bold text-[10px] uppercase text-outline">Test Title <span className="text-error">*</span></label>
+                    <input
                       type="text"
                       placeholder="e.g. Physics Midterm Examination"
                       value={testTitle}
@@ -1643,8 +1802,7 @@ export default function AcademicsHub() {
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-outline-variant/10 animate-fadeIn">
                   <div className="flex flex-col gap-1">
                     <label className="font-bold text-[10px] uppercase text-outline">Start Date</label>
-                    <input 
-                      type="date"
+                    <DateInput
                       value={customStartDate}
                       onChange={e => setCustomStartDate(e.target.value)}
                       className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none"
@@ -1652,8 +1810,7 @@ export default function AcademicsHub() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="font-bold text-[10px] uppercase text-outline">End Date</label>
-                    <input 
-                      type="date"
+                    <DateInput
                       value={customEndDate}
                       onChange={e => setCustomEndDate(e.target.value)}
                       className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none"
@@ -1770,8 +1927,8 @@ export default function AcademicsHub() {
                   <form onSubmit={handleRecordScoresSubmit} className="p-5 border-t border-outline-variant/20 space-y-4 text-left animate-fadeIn">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="flex flex-col gap-1">
-                        <label className="font-bold text-[10px] uppercase text-outline">Test Title</label>
-                        <input 
+                        <label className="font-bold text-[10px] uppercase text-outline">Test Title <span className="text-error">*</span></label>
+                        <input
                           type="text"
                           placeholder="e.g. Chapter 3 Calculus Quiz"
                           value={recordTestTitle}
@@ -1793,8 +1950,8 @@ export default function AcademicsHub() {
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="font-bold text-[10px] uppercase text-outline">Total Marks</label>
-                        <input 
+                        <label className="font-bold text-[10px] uppercase text-outline">Total Marks <span className="text-error">*</span></label>
+                        <input
                           type="number"
                           value={recordTotalMarks}
                           onChange={e => setRecordTotalMarks(e.target.value)}
@@ -1803,9 +1960,8 @@ export default function AcademicsHub() {
                         />
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="font-bold text-[10px] uppercase text-outline">Test Date</label>
-                        <input 
-                          type="date"
+                        <label className="font-bold text-[10px] uppercase text-outline">Test Date <span className="text-error">*</span></label>
+                        <DateInput
                           value={recordDate}
                           onChange={e => setRecordDate(e.target.value)}
                           className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -2079,8 +2235,7 @@ export default function AcademicsHub() {
                       <>
                         <div className="flex flex-col gap-1">
                           <label className="text-[9px] font-bold text-outline uppercase tracking-wider">From</label>
-                          <input
-                            type="date"
+                          <DateInput
                             value={reportsModalStartDate}
                             min={myJoinDate || undefined}
                             onChange={e => setReportsModalStartDate(e.target.value)}
@@ -2089,8 +2244,7 @@ export default function AcademicsHub() {
                         </div>
                         <div className="flex flex-col gap-1">
                           <label className="text-[9px] font-bold text-outline uppercase tracking-wider">To</label>
-                          <input
-                            type="date"
+                          <DateInput
                             value={reportsModalEndDate}
                             onChange={e => setReportsModalEndDate(e.target.value)}
                             className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary"
@@ -2317,8 +2471,7 @@ export default function AcademicsHub() {
                           <>
                             <div className="sm:col-span-3 flex flex-col gap-1">
                               <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Start Date</label>
-                              <input
-                                type="date"
+                              <DateInput
                                 value={reportsStartDate}
                                 onChange={e => setReportsStartDate(e.target.value)}
                                 className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2 px-3 focus:outline-none focus:border-primary text-xs font-semibold"
@@ -2327,8 +2480,7 @@ export default function AcademicsHub() {
 
                             <div className="sm:col-span-3 flex flex-col gap-1">
                               <label className="text-[10px] font-bold text-outline uppercase tracking-wider">End Date</label>
-                              <input
-                                type="date"
+                              <DateInput
                                 value={reportsEndDate}
                                 onChange={e => setReportsEndDate(e.target.value)}
                                 className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2 px-3 focus:outline-none focus:border-primary text-xs font-semibold"
@@ -2807,8 +2959,7 @@ export default function AcademicsHub() {
                   <>
                     <div className="flex flex-col gap-1">
                       <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Start Date</label>
-                      <input
-                        type="date"
+                      <DateInput
                         value={reportsModalStartDate}
                         onChange={e => setReportsModalStartDate(e.target.value)}
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2 focus:outline-none focus:border-primary text-xs font-semibold"
@@ -2817,8 +2968,7 @@ export default function AcademicsHub() {
 
                     <div className="flex flex-col gap-1">
                       <label className="text-[9px] font-bold text-outline uppercase tracking-wider">End Date</label>
-                      <input
-                        type="date"
+                      <DateInput
                         value={reportsModalEndDate}
                         onChange={e => setReportsModalEndDate(e.target.value)}
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2 focus:outline-none focus:border-primary text-xs font-semibold"

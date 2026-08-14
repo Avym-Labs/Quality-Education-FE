@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import api from '../../api/axios'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 
 export default function AdminManagement() {
   const [admins, setAdmins] = useState([])
@@ -296,7 +297,7 @@ export default function AdminManagement() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">First Name</label>
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">First Name <span className="text-error">*</span></label>
                     <input 
                       type="text" 
                       value={firstName}
@@ -306,7 +307,7 @@ export default function AdminManagement() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">Last Name</label>
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">Last Name <span className="text-error">*</span></label>
                     <input 
                       type="text" 
                       value={lastName}
@@ -319,7 +320,7 @@ export default function AdminManagement() {
 
                 {!editingAdmin && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">School Name</label>
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">School Name <span className="text-error">*</span></label>
                     <input
                       type="text"
                       value={schoolName}
@@ -331,7 +332,7 @@ export default function AdminManagement() {
                 )}
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase">Email Address</label>
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase">Email Address <span className="text-error">*</span></label>
                   <input 
                     type="email" 
                     value={email}
@@ -342,7 +343,7 @@ export default function AdminManagement() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase">Phone Number</label>
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase">Phone Number <span className="text-error">*</span></label>
                   <input 
                     type="tel" 
                     value={phone}
@@ -354,7 +355,7 @@ export default function AdminManagement() {
 
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">Password</label>
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase">Password {!editingAdmin && <span className="text-error">*</span>}</label>
                     {editingAdmin && (
                       <span className="text-[9px] text-outline font-semibold uppercase italic">(leave blank to keep current)</span>
                     )}
@@ -436,8 +437,7 @@ export default function AdminManagement() {
                     <p className="text-[10px] text-on-surface-variant font-medium mt-0.5 mb-2">Set a specific date when the account will automatically reactivate.</p>
                     
                     {pauseOption === 'custom' && (
-                      <input 
-                        type="date"
+                      <DateInput
                         value={pauseUntilDate}
                         min={new Date().toISOString().split('T')[0]}
                         onChange={(e) => setPauseUntilDate(e.target.value)}

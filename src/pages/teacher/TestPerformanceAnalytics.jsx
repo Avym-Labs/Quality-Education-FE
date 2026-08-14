@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 
 export default function TestPerformanceAnalytics() {
   const { user } = useAuth()
@@ -276,8 +277,7 @@ export default function TestPerformanceAnalytics() {
           </div>
           <div>
             <label className="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">Test Date</label>
-            <input 
-              type="date"
+            <DateInput
               value={testDate}
               onChange={(e) => setTestDate(e.target.value)}
               className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"

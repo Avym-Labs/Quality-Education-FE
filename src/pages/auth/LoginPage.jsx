@@ -84,7 +84,7 @@ export default function LoginPage() {
             {/* Email / Mobile */}
             <div className="space-y-base">
               <label className="text-label-md text-on-surface-variant ml-1" htmlFor="identifier">
-                Email or Mobile
+                Email or Mobile <span className="text-error">*</span>
               </label>
               <div className="relative group">
                 <Icon name="person" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
@@ -103,7 +103,7 @@ export default function LoginPage() {
             {/* Password */}
             <div className="space-y-base">
               <label className="text-label-md text-on-surface-variant ml-1" htmlFor="password">
-                Password
+                Password <span className="text-error">*</span>
               </label>
               <div className="relative group">
                 <Icon name="lock" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />

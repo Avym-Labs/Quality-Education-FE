@@ -352,23 +352,37 @@ export default function UserManagement() {
     setFormError(null)
     setIsSubmitting(true)
 
-    // Form Validation
-    if (modalMode === 'create') {
-      if (!formData.first_name || !formData.email || !formData.password) {
-        setFormError('First Name, Email, and Password are required fields.')
+    // Form Validation — same base fields required for both roles; a few
+    // extras differ by role (password only matters for teacher login,
+    // students fall back to their phone number; roll number/class only
+    // make sense for students; lecturing classes only for teachers).
+    if (!formData.first_name || !formData.last_name || (modalMode === 'create' && !formData.phone)) {
+      setFormError('First Name, Last Name, and Phone Number are required fields.')
+      setIsSubmitting(false)
+      return
+    }
+
+    if (modalMode === 'create' && activeRole === 'teacher' && !formData.password) {
+      setFormError('Password is required when adding a teacher.')
+      setIsSubmitting(false)
+      return
+    }
+
+    if (activeRole === 'student') {
+      if (!formData.roll_number) {
+        setFormError('Roll Number is required.')
         setIsSubmitting(false)
         return
       }
-    } else {
-      if (!formData.first_name) {
-        setFormError('First Name is required.')
+      if (!formData.grade || !formData.section) {
+        setFormError('Create a class in the Classes tab first, then assign the student to it.')
         setIsSubmitting(false)
         return
       }
     }
 
-    if (activeRole === 'student' && (!formData.grade || !formData.section)) {
-      setFormError('Create a class in the Classes tab first, then assign the student to it.')
+    if (activeRole === 'teacher' && formData.assigned_classes.length === 0) {
+      setFormError('Assign at least one lecturing class to this teacher.')
       setIsSubmitting(false)
       return
     }
@@ -803,7 +817,7 @@ export default function UserManagement() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Select Spreadsheet File (.csv, .xlsx)</label>
+                  <label className="text-[10px] text-outline font-bold uppercase">Select Spreadsheet File (.csv, .xlsx) <span className="text-error">*</span></label>
                   <input
                     type="file"
                     accept=".csv, .xlsx"
@@ -878,7 +892,7 @@ export default function UserManagement() {
 
               <form onSubmit={handleCreateClass} className="space-y-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Grade</label>
+                  <label className="text-[10px] text-outline font-bold uppercase">Grade <span className="text-error">*</span></label>
                   <input
                     type="text"
                     placeholder="e.g. 10"
@@ -889,7 +903,7 @@ export default function UserManagement() {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Section</label>
+                  <label className="text-[10px] text-outline font-bold uppercase">Section <span className="text-error">*</span></label>
                   <input
                     type="text"
                     placeholder="e.g. C"
@@ -951,7 +965,7 @@ export default function UserManagement() {
 
               <form onSubmit={handleCredsSubmit} className="space-y-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">System Login Email</label>
+                  <label className="text-[10px] text-outline font-bold uppercase">System Login Email <span className="text-error">*</span></label>
                   <input
                     type="email"
                     value={credsFormData.email}
@@ -1038,7 +1052,7 @@ export default function UserManagement() {
                 {/* 1. General Profile attributes */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-outline font-bold uppercase">First Name</label>
+                    <label className="text-[10px] text-outline font-bold uppercase">First Name <span className="text-error">*</span></label>
                     <input
                       type="text"
                       disabled={modalMode === 'view'}
@@ -1049,7 +1063,7 @@ export default function UserManagement() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-outline font-bold uppercase">Last Name</label>
+                    <label className="text-[10px] text-outline font-bold uppercase">Last Name <span className="text-error">*</span></label>
                     <input
                       type="text"
                       disabled={modalMode === 'view'}
@@ -1063,32 +1077,35 @@ export default function UserManagement() {
                 {modalMode === 'create' && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-outline font-bold uppercase">Email Identifier</label>
+                      <label className="text-[10px] text-outline font-bold uppercase">Email</label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                         className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
-                        required
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-outline font-bold uppercase">Phone Number</label>
+                      <label className="text-[10px] text-outline font-bold uppercase">Phone Number <span className="text-error">*</span></label>
                       <input
                         type="text"
                         value={formData.phone}
                         onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                         className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
+                        required
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-outline font-bold uppercase">Secure Password</label>
+                      <label className="text-[10px] text-outline font-bold uppercase">
+                        Secure Password {activeRole === 'teacher' && <span className="text-error">*</span>}
+                        {activeRole === 'student' && <span className="text-outline normal-case font-medium"> (optional — defaults to phone number)</span>}
+                      </label>
                       <input
                         type="password"
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                         className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
-                        required
+                        required={activeRole === 'teacher'}
                       />
                     </div>
                   </div>
@@ -1099,7 +1116,7 @@ export default function UserManagement() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Grade</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">Grade <span className="text-error">*</span></label>
                         <select
                           disabled={modalMode === 'view' || gradeOptions.length === 0}
                           value={formData.grade}
@@ -1112,7 +1129,7 @@ export default function UserManagement() {
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Section</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">Section <span className="text-error">*</span></label>
                         <select
                           disabled={modalMode === 'view' || sectionOptions.length === 0}
                           value={formData.section}
@@ -1125,13 +1142,14 @@ export default function UserManagement() {
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Roll Number</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">Roll Number <span className="text-error">*</span></label>
                         <input
                           type="text"
                           disabled={modalMode === 'view'}
                           value={formData.roll_number}
                           onChange={(e) => setFormData(prev => ({ ...prev, roll_number: e.target.value }))}
                           className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
+                          required
                         />
                       </div>
                     </div>
@@ -1243,7 +1261,7 @@ export default function UserManagement() {
                       </div>
 
                       <div className="flex flex-col gap-1.5 text-left relative self-start" ref={classDropdownRef}>
-                        <label className="text-[10px] text-outline font-bold uppercase">Lecturing Classes</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">Lecturing Classes <span className="text-error">*</span></label>
 
                         <button
                           type="button"

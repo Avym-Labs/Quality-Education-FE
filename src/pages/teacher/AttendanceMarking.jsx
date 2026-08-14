@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import DateInput from '../../components/common/DateInput'
 
 export default function AttendanceMarking() {
   const { user } = useAuth()
@@ -202,8 +203,7 @@ export default function AttendanceMarking() {
           
           {/* Top Selection Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <input 
-              type="date"
+            <DateInput
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"

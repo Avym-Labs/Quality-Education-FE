@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
             {/* Email Address */}
             <div className="space-y-base">
               <label className="text-label-md text-on-surface-variant ml-1" htmlFor="email">
-                Registered Email Address
+                Registered Email Address <span className="text-error">*</span>
               </label>
               <div className="relative group">
                 <Icon name="mail" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />

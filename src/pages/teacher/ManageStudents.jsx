@@ -392,17 +392,32 @@ export default function ManageStudents() {
               </div>
 
               <form onSubmit={handleSingleAddSubmit} className="grid grid-cols-2 gap-3">
-                <input placeholder="First name" value={singleForm.first_name} onChange={e => updateSingleForm('first_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
-                <input placeholder="Last name" value={singleForm.last_name} onChange={e => updateSingleForm('last_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                <input placeholder="Email (optional)" value={singleForm.email} onChange={e => updateSingleForm('email', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                <input placeholder="Phone (optional)" value={singleForm.phone} onChange={e => updateSingleForm('phone', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                <input placeholder="Password (defaults to roll no.)" value={singleForm.password} onChange={e => updateSingleForm('password', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                <select value={`${singleForm.grade}-${singleForm.section}`} onChange={e => { const [g, s] = e.target.value.split('-'); updateSingleForm('grade', g); updateSingleForm('section', s) }} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:outline-none">
-                  {assignedClasses.length === 0 && <option value="-">No assigned classes</option>}
-                  {assignedClasses.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <input placeholder="Roll number" value={singleForm.roll_number} onChange={e => updateSingleForm('roll_number', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
-                <input placeholder="Father's name (optional)" value={singleForm.father_name} onChange={e => updateSingleForm('father_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">First name <span className="text-error">*</span></label>
+                  <input placeholder="First name" value={singleForm.first_name} onChange={e => updateSingleForm('first_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">Last name <span className="text-error">*</span></label>
+                  <input placeholder="Last name" value={singleForm.last_name} onChange={e => updateSingleForm('last_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                </div>
+                <input placeholder="Email (optional)" value={singleForm.email} onChange={e => updateSingleForm('email', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">Phone <span className="text-error">*</span></label>
+                  <input placeholder="Phone" value={singleForm.phone} onChange={e => updateSingleForm('phone', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                </div>
+                <input placeholder="Password (defaults to phone/roll no.)" value={singleForm.password} onChange={e => updateSingleForm('password', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">Class <span className="text-error">*</span></label>
+                  <select value={`${singleForm.grade}-${singleForm.section}`} onChange={e => { const [g, s] = e.target.value.split('-'); updateSingleForm('grade', g); updateSingleForm('section', s) }} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:outline-none" required>
+                    {assignedClasses.length === 0 && <option value="-">No assigned classes</option>}
+                    {assignedClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">Roll number <span className="text-error">*</span></label>
+                  <input placeholder="Roll number" value={singleForm.roll_number} onChange={e => updateSingleForm('roll_number', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                </div>
+                <input placeholder="Father's name (optional)" value={singleForm.father_name} onChange={e => updateSingleForm('father_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
                 <input placeholder="Mother's name (optional)" value={singleForm.mother_name} onChange={e => updateSingleForm('mother_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
 
                 <div className="col-span-2 flex justify-end">
