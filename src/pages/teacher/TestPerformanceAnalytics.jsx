@@ -11,15 +11,15 @@ export default function TestPerformanceAnalytics() {
   const navigate = useNavigate()
 
   // Class & section
-  const assignedClasses = user?.assigned_classes || ['10-A', '11-B']
-  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '10-A')
+  const assignedClasses = user?.assigned_classes || []
+  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '')
 
   // Subject
-  const subjects = user?.subjects || ['Mathematics', 'Science']
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || 'Mathematics')
+  const subjects = user?.subjects || []
+  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '')
 
   // Test information
-  const [testTitle, setTestTitle] = useState('Chapter 4 Integration Test')
+  const [testTitle, setTestTitle] = useState('')
   const [testType, setTestType] = useState('Unit') // MCQ, Unit, Chapter, Exam
   const [totalMarks, setTotalMarks] = useState(100)
   const [testDate, setTestDate] = useState(() => {
@@ -164,6 +164,14 @@ export default function TestPerformanceAnalytics() {
   // Submit/Publish results in bulk
   const handlePublish = async () => {
     setMessage('')
+    if (!testTitle.trim()) {
+      setMessage('Please enter a test title before publishing.')
+      return
+    }
+    if (!selectedClass || !selectedSubject) {
+      setMessage('Please select a class and subject before publishing.')
+      return
+    }
     try {
       const [grade, section] = selectedClass.split('-')
       const payload = Object.keys(marksData)
@@ -239,6 +247,7 @@ export default function TestPerformanceAnalytics() {
               onChange={(e) => setSelectedClass(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             >
+              {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
               {assignedClasses.map(cls => (
                 <option key={cls} value={cls}>Class {cls}</option>
               ))}
@@ -248,6 +257,7 @@ export default function TestPerformanceAnalytics() {
               onChange={(e) => setSelectedSubject(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             >
+              {subjects.length === 0 && <option value="">No subjects assigned</option>}
               {subjects.map(subj => (
                 <option key={subj} value={subj}>{subj}</option>
               ))}
@@ -263,6 +273,7 @@ export default function TestPerformanceAnalytics() {
               type="text"
               value={testTitle}
               onChange={(e) => setTestTitle(e.target.value)}
+              placeholder="e.g. Chapter 4 Integration Test"
               className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             />
           </div>

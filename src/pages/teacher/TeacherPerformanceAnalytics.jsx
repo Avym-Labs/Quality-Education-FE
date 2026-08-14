@@ -9,11 +9,11 @@ export default function TeacherPerformanceAnalytics() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const assignedClasses = user?.assigned_classes || ['10-A', '11-B']
-  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '10-A')
-  
-  const subjects = user?.subjects || ['Mathematics', 'Science']
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || 'Mathematics')
+  const assignedClasses = user?.assigned_classes || []
+  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '')
+
+  const subjects = user?.subjects || []
+  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -157,6 +157,7 @@ export default function TeacherPerformanceAnalytics() {
               onChange={(e) => setSelectedClass(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
             >
+              {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
               {assignedClasses.map(cls => (
                 <option key={cls} value={cls}>Class {cls}</option>
               ))}
@@ -166,6 +167,7 @@ export default function TeacherPerformanceAnalytics() {
               onChange={(e) => setSelectedSubject(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
             >
+              {subjects.length === 0 && <option value="">No subjects assigned</option>}
               {subjects.map(subj => (
                 <option key={subj} value={subj}>{subj}</option>
               ))}

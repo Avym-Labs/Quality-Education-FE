@@ -20,11 +20,11 @@ export default function TeacherResults() {
   const [historySearch, setHistorySearch] = useState('')
 
   // Upload Form State
-  const assignedClasses = user?.assigned_classes || ['10-A', '11-B']
-  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '10-A')
-  
-  const subjects = user?.subjects || ['Mathematics', 'Science']
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || 'Mathematics')
+  const assignedClasses = user?.assigned_classes || []
+  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '')
+
+  const subjects = user?.subjects || []
+  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '')
 
   const [testTitle, setTestTitle] = useState('')
   const [testType, setTestType] = useState('Unit') // MCQ | Unit | Chapter | Exam
@@ -252,17 +252,19 @@ export default function TeacherResults() {
                       onChange={e => setSelectedClass(e.target.value)}
                       className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary cursor-pointer font-semibold"
                     >
+                      {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
                       {assignedClasses.map(cls => <option key={cls} value={cls}>Class {cls}</option>)}
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <label className="font-bold text-[10px] text-on-surface-variant uppercase">Subject</label>
-                    <select 
-                      value={selectedSubject} 
+                    <select
+                      value={selectedSubject}
                       onChange={e => setSelectedSubject(e.target.value)}
                       className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary cursor-pointer font-semibold"
                     >
+                      {subjects.length === 0 && <option value="">No subjects assigned</option>}
                       {subjects.map(subj => <option key={subj} value={subj}>{subj}</option>)}
                     </select>
                   </div>

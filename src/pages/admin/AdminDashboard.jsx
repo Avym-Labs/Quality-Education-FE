@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   
   // Analytics Filter States
   const [analyticsType, setAnalyticsType] = useState('overall')
-  const [classId, setClassId] = useState('10-A')
+  const [classId, setClassId] = useState('')
   const [teacherId, setTeacherId] = useState('')
   const [teacherOptions, setTeacherOptions] = useState([])
   const [classOptions, setClassOptions] = useState([])
@@ -71,49 +71,24 @@ export default function AdminDashboard() {
     fetchAnalytics()
   }, [analyticsType, classId, teacherId])
 
-  // Map analytics values from backend response (with design mockups as defaults)
-  const totalStudents = analyticsData?.total_students ?? 1240
-  const totalTeachers = analyticsData?.total_teachers ?? 86
+  // Map analytics values from backend response — every fallback here is a
+  // genuine "no data yet" zero/empty state, not a fabricated mockup number.
+  const totalStudents = analyticsData?.total_students ?? 0
+  const totalTeachers = analyticsData?.total_teachers ?? 0
   const totalClasses = analyticsData?.total_classes ?? classOptions.length
-  const attendanceRate = analyticsData?.attendance_rate ?? '94.2'
-  const avgResults = analyticsData?.avg_results ?? '78.4'
-  const subjectPerformance = analyticsData?.subject_performance ?? [
-    { name: 'Mathematics', score: 82 },
-    { name: 'Science', score: 76 },
-    { name: 'History', score: 68 },
-    { name: 'Literature', score: 89 }
-  ]
-  const attendanceTrend = analyticsData?.attendance_trend ?? [
-    { month: 'Jan', rate: 85.0 },
-    { month: 'Feb', rate: 92.0 },
-    { month: 'Mar', rate: 78.0 },
-    { month: 'Apr', rate: 94.0 },
-    { month: 'May', rate: 88.0 },
-    { month: 'Jun', rate: 94.2 }
-  ]
-  const gradeTrend = analyticsData?.grade_trend ?? [
-    { label: 'Midterm 1', score: 74 },
-    { label: 'Semester 1', score: 77 },
-    { label: 'Midterm 2', score: 78.4 }
-  ]
-  const sectionComparison = analyticsData?.section_comparison ?? [
-    { section: 'Sec A', attendance: 92, avg_result: 80 },
-    { section: 'Sec B', attendance: 88, avg_result: 70 },
-    { section: 'Sec C', attendance: 95, avg_result: 85 }
-  ]
+  const attendanceRate = analyticsData?.attendance_rate ?? '0.0'
+  const avgResults = analyticsData?.avg_results ?? '0.0'
+  const subjectPerformance = analyticsData?.subject_performance ?? []
+  const attendanceTrend = analyticsData?.attendance_trend ?? []
+  const gradeTrend = analyticsData?.grade_trend ?? []
+  const sectionComparison = analyticsData?.section_comparison ?? []
   const facultySpotlight = analyticsData?.faculty_spotlight ?? []
-  const highPerformers = analyticsData?.high_performers ?? [
-    { name: 'Liam Wilson', grade: '12th Grade', section: 'Sec A', gpa: '3.98 GPA', initials: 'LW', bg: 'bg-green-100 text-green-700' },
-    { name: 'Emma Smith', grade: '11th Grade', section: 'Sec B', gpa: '3.95 GPA', initials: 'ES', bg: 'bg-blue-100 text-blue-700' }
-  ]
-  const attendanceWarnings = analyticsData?.attendance_warnings ?? [
-    { name: 'Ryan Baker', grade: '10th Grade', section: 'Sec C', rate: '62%', initials: 'RB' },
-    { name: 'Mia Park', grade: '12th Grade', section: 'Sec A', rate: '71%', initials: 'MP' }
-  ]
+  const highPerformers = analyticsData?.high_performers ?? []
+  const attendanceWarnings = analyticsData?.attendance_warnings ?? []
 
   return (
     <DashboardLayout hideTopBar={false}>
-      <div className="flex flex-col gap-4 mt-stack-md lg:h-[calc(100vh-100px)] lg:overflow-hidden pb-4">
+      <div className="flex flex-col gap-4 mt-stack-md pb-4">
         
         {/* Dashboard Welcome Header */}
         <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
@@ -251,12 +226,8 @@ export default function AdminDashboard() {
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Attendance Rate</span>
                 </div>
-                <div className="flex items-baseline justify-between mt-auto z-10 w-full">
+                <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{attendanceRate}%</h3>
-                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[9px] font-bold gap-0.5 print:hidden shrink-0">
-                    <Icon name="trending_up" className="text-[12px]" />
-                    2.1%
-                  </div>
                 </div>
               </div>
 
@@ -271,12 +242,8 @@ export default function AdminDashboard() {
                   </div>
                   <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Avg. Results</span>
                 </div>
-                <div className="flex items-baseline justify-between mt-auto z-10 w-full">
+                <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{avgResults}%</h3>
-                  <div className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[9px] font-bold gap-0.5 print:hidden shrink-0">
-                    <Icon name="trending_up" className="text-[12px]" />
-                    1.5%
-                  </div>
                 </div>
               </div>
             </section>
@@ -332,26 +299,34 @@ export default function AdminDashboard() {
                       <Icon name="calendar_month" className="text-primary" />
                       Attendance Trend
                     </h3>
-                    <div className="flex items-end gap-1.5 px-2 h-32">
-                      {(() => {
-                        const maxRate = Math.max(...attendanceTrend.map(i => i.rate))
-                        return attendanceTrend.map((item, idx) => (
-                          <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full">
-                            <div 
-                              className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${
-                                idx === attendanceTrend.length - 1 ? 'bg-primary' : 'bg-primary-fixed-dim'
-                              }`}
-                              style={{ height: `${(item.rate / maxRate) * 100}%` }}
-                            ></div>
-                          </div>
-                        ))
-                      })()}
-                    </div>
-                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
-                      {attendanceTrend.map((item, idx) => (
-                        <span key={idx} className="flex-1 text-center">{item.month}</span>
-                      ))}
-                    </div>
+                    {attendanceTrend.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-32">
+                        No attendance trend data yet.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-end gap-1.5 px-2 h-32">
+                          {(() => {
+                            const maxRate = Math.max(...attendanceTrend.map(i => i.rate), 1)
+                            return attendanceTrend.map((item, idx) => (
+                              <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full">
+                                <div
+                                  className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${
+                                    idx === attendanceTrend.length - 1 ? 'bg-primary' : 'bg-primary-fixed-dim'
+                                  }`}
+                                  style={{ height: `${(item.rate / maxRate) * 100}%` }}
+                                ></div>
+                              </div>
+                            ))
+                          })()}
+                        </div>
+                        <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
+                          {attendanceTrend.map((item, idx) => (
+                            <span key={idx} className="flex-1 text-center">{item.month}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Academic Grade Trend */}
@@ -360,24 +335,47 @@ export default function AdminDashboard() {
                       <Icon name="show_chart" className="text-secondary" />
                       Academic Grade Trend
                     </h3>
-                    <div className="relative h-32 w-full">
-                      <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 200">
-                        <path d="M0,160 Q100,135 200,110 T400,75" fill="none" stroke="#4648d4" strokeWidth="4" strokeLinecap="round"></path>
-                        <circle cx="0" cy="160" fill="#4648d4" r="5"></circle>
-                        <circle cx="200" cy="110" fill="#4648d4" r="5"></circle>
-                        <circle className="animate-pulse" cx="400" cy="75" fill="#4648d4" r="7"></circle>
-                      </svg>
-                      <div className="absolute inset-0 flex justify-between items-end opacity-5 pointer-events-none">
-                        <div className="w-px h-full bg-outline"></div>
-                        <div className="w-px h-full bg-outline"></div>
-                        <div className="w-px h-full bg-outline"></div>
+                    {gradeTrend.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-32">
+                        No grade trend data yet.
                       </div>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
-                      {gradeTrend.map((item, idx) => (
-                        <span key={idx}>{item.label}</span>
-                      ))}
-                    </div>
+                    ) : (
+                      <>
+                        <div className="relative h-32 w-full">
+                          {(() => {
+                            const scores = gradeTrend.map(i => i.score)
+                            const minScore = Math.min(...scores)
+                            const maxScore = Math.max(...scores, minScore + 1)
+                            const points = gradeTrend.map((item, idx) => {
+                              const x = gradeTrend.length === 1 ? 200 : (idx / (gradeTrend.length - 1)) * 400
+                              const y = 180 - ((item.score - minScore) / (maxScore - minScore)) * 160
+                              return { x, y }
+                            })
+                            const pathD = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+                            return (
+                              <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 200">
+                                <path d={pathD} fill="none" stroke="#4648d4" strokeWidth="4" strokeLinecap="round"></path>
+                                {points.map((p, idx) => (
+                                  <circle
+                                    key={idx}
+                                    className={idx === points.length - 1 ? 'animate-pulse' : ''}
+                                    cx={p.x}
+                                    cy={p.y}
+                                    fill="#4648d4"
+                                    r={idx === points.length - 1 ? 7 : 5}
+                                  ></circle>
+                                ))}
+                              </svg>
+                            )
+                          })()}
+                        </div>
+                        <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
+                          {gradeTrend.map((item, idx) => (
+                            <span key={idx}>{item.label}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                 </div>
@@ -391,22 +389,28 @@ export default function AdminDashboard() {
                       <Icon name="bar_chart" className="text-tertiary" />
                       Subject Performance
                     </h3>
-                    <div className="flex flex-col gap-3">
-                      {subjectPerformance.map((subj, idx) => (
-                        <div key={idx} className="space-y-1">
-                          <div className="flex justify-between text-xs font-bold">
-                            <span className="text-on-surface">{subj.name}</span>
-                            <span className="text-primary">{subj.score}%</span>
+                    {subjectPerformance.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-8">
+                        No subject performance data yet.
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {subjectPerformance.map((subj, idx) => (
+                          <div key={idx} className="space-y-1">
+                            <div className="flex justify-between text-xs font-bold">
+                              <span className="text-on-surface">{subj.name}</span>
+                              <span className="text-primary">{subj.score}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                                style={{ width: `${subj.score}%` }}
+                              ></div>
+                            </div>
                           </div>
-                          <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-primary rounded-full transition-all duration-700 ease-out" 
-                              style={{ width: `${subj.score}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Section-wise */}
@@ -508,49 +512,61 @@ export default function AdminDashboard() {
                     
                     {/* High Performers */}
                     <p className="text-[10px] font-bold text-on-surface-variant mb-3 uppercase tracking-wider">High Performers</p>
-                    <div className="flex flex-col gap-3">
-                      {highPerformers.map((perf, idx) => (
-                        <div key={idx} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${perf.bg}`}>
-                              {perf.initials}
+                    {highPerformers.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-4">
+                        No high performer data yet.
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {highPerformers.map((perf, idx) => (
+                          <div key={idx} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${perf.bg}`}>
+                                {perf.initials}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-on-surface">{perf.name}</p>
+                                <p className="text-[10px] text-on-surface-variant">{perf.grade} • {perf.section}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-xs font-bold text-on-surface">{perf.name}</p>
-                              <p className="text-[10px] text-on-surface-variant">{perf.grade} • {perf.section}</p>
-                            </div>
+                            <span className="bg-primary-container text-on-primary-container px-2 py-0.5 rounded text-[10px] font-bold">
+                              {perf.gpa}
+                            </span>
                           </div>
-                          <span className="bg-primary-container text-on-primary-container px-2 py-0.5 rounded text-[10px] font-bold">
-                            {perf.gpa}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Attendance Warnings */}
                     <p className="text-[10px] font-bold text-on-surface-variant mt-6 mb-3 uppercase tracking-wider">Attendance Alerts</p>
-                    <div className="flex flex-col gap-3">
-                      {attendanceWarnings.map((warn, idx) => (
-                        <div 
-                          key={idx} 
-                          onClick={() => navigate('/admin/students')}
-                          className="flex items-center justify-between group cursor-pointer"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center text-xs font-bold">
-                              {warn.initials}
+                    {attendanceWarnings.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-4">
+                        No attendance alerts.
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {attendanceWarnings.map((warn, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => navigate('/admin/students')}
+                            className="flex items-center justify-between group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center text-xs font-bold">
+                                {warn.initials}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{warn.name}</p>
+                                <p className="text-[10px] text-on-surface-variant">{warn.grade} • {warn.section}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{warn.name}</p>
-                              <p className="text-[10px] text-on-surface-variant">{warn.grade} • {warn.section}</p>
-                            </div>
+                            <span className="text-error font-bold text-xs group-hover:scale-105 transition-transform">
+                              {warn.rate}
+                            </span>
                           </div>
-                          <span className="text-error font-bold text-xs group-hover:scale-105 transition-transform">
-                            {warn.rate}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
 
                   </div>
                 </div>

@@ -91,8 +91,8 @@ export default function TopBar({ onNotificationClick }) {
             )}
           </div>
           <p className="text-xs text-outline font-semibold tracking-wide leading-tight mt-0.5">
-            {role === 'student' && `Grade ${user?.grade || '10'}-${user?.section || 'A'} • Academic Precision School`}
-            {role === 'teacher' && `${user?.department || 'Mathematics Department'} Faculty`}
+            {role === 'student' && (user?.grade ? `Grade ${user.grade}-${user?.section || ''} • Academic Precision School` : 'Academic Precision School')}
+            {role === 'teacher' && `${user?.department ? `${user.department} ` : ''}Faculty`}
             {role === 'admin' && 'System Administrator'}
             {role === 'superadmin' && 'Platform Suite Manager'}
           </p>

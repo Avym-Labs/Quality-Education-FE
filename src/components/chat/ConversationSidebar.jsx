@@ -26,9 +26,20 @@ export default function ConversationSidebar({ activeConversationId }) {
   const [broadcastContent, setBroadcastContent] = useState('')
   const [broadcasting, setBroadcasting] = useState(false)
 
-  // Standard drop-down options for broadcast
-  const classOptions = ['10-A', '10-B', '11-A', '11-B', '12-A', '12-B']
-  const subjectOptions = ['Mathematics', 'Physics', 'Chemistry', 'Science', 'English Literature']
+  // Drop-down options for broadcast, derived from the logged-in teacher's own
+  // assignments (not a guessed list) so teachers only ever target their own classes/subjects
+  const classOptions = user?.assigned_classes || []
+  const subjectOptions = user?.subjects || []
+
+  // Real departments in this school, derived from all teachers (admin-only fetch)
+  const [allTeachers, setAllTeachers] = useState([])
+  useEffect(() => {
+    if (user?.role !== 'admin') return
+    api.get('/teachers')
+      .then(res => setAllTeachers(res.data || []))
+      .catch(() => setAllTeachers([]))
+  }, [user?.role])
+  const departmentOptions = [...new Set(allTeachers.map(t => t.department).filter(Boolean))].sort()
 
   // Broadcast Templates
   const adminTemplates = [
@@ -436,6 +447,9 @@ export default function ConversationSidebar({ activeConversationId }) {
                         required
                       >
                         <option value="">-- Choose Class --</option>
+                        {classOptions.length === 0 && (
+                          <option value="" disabled>No classes assigned to you yet</option>
+                        )}
                         {classOptions.map((cls) => (
                           <option key={cls} value={cls}>Class {cls}</option>
                         ))}
@@ -453,6 +467,9 @@ export default function ConversationSidebar({ activeConversationId }) {
                         required
                       >
                         <option value="">-- Choose Subject --</option>
+                        {subjectOptions.length === 0 && (
+                          <option value="" disabled>No subjects assigned to you yet</option>
+                        )}
                         {subjectOptions.map((sub) => (
                           <option key={sub} value={sub}>{sub}</option>
                         ))}
@@ -470,7 +487,10 @@ export default function ConversationSidebar({ activeConversationId }) {
                         required
                       >
                         <option value="">-- Choose Department --</option>
-                        {['Mathematics', 'Science', 'English', 'Languages', 'Humanities', 'Administration'].map((dept) => (
+                        {departmentOptions.length === 0 && (
+                          <option value="" disabled>No departments found yet</option>
+                        )}
+                        {departmentOptions.map((dept) => (
                           <option key={dept} value={dept}>{dept} Department</option>
                         ))}
                       </select>

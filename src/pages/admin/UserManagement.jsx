@@ -3,8 +3,6 @@ import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
-const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English Literature', 'Biology', 'History']
-
 export default function UserManagement() {
   const [activeRole, setActiveRole] = useState('student') // 'student' | 'teacher' | 'classes'
   const [usersList, setUsersList] = useState([])
@@ -28,6 +26,10 @@ export default function UserManagement() {
   const classKeys = classesList.map(c => `${c.grade}-${c.section}`)
   const gradeOptions = [...new Set(classesList.map(c => c.grade))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0))
   const sectionOptions = [...new Set(classesList.map(c => c.section))].sort()
+
+  // Real subjects actually being taught in this school, derived from
+  // teachersList (already fetched below) instead of a hardcoded guess list.
+  const AVAILABLE_SUBJECTS = [...new Set(teachersList.flatMap(t => t.subjects || []))].sort()
   
   // Student Filters
   const [gradeFilter, setGradeFilter] = useState('')

@@ -11,11 +11,11 @@ export default function HomeworkAssignment({ embed = false }) {
   const navigate = useNavigate()
 
   // Form states
-  const subjects = user?.subjects || ['Mathematics', 'Science']
-  const assignedClasses = user?.assigned_classes || ['10-A', '11-B']
+  const subjects = user?.subjects || []
+  const assignedClasses = user?.assigned_classes || []
 
-  const [subject, setSubject] = useState(subjects[0] || 'Mathematics')
-  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '10-A')
+  const [subject, setSubject] = useState(subjects[0] || '')
+  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
@@ -226,6 +226,7 @@ export default function HomeworkAssignment({ embed = false }) {
                     onChange={(e) => setSubject(e.target.value)}
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   >
+                    {subjects.length === 0 && <option value="">No subjects assigned</option>}
                     {subjects.map(subj => (
                       <option key={subj} value={subj}>{subj}</option>
                     ))}
@@ -235,11 +236,12 @@ export default function HomeworkAssignment({ embed = false }) {
                 {/* Class Selection */}
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-on-surface-variant">Assigned Class</label>
-                  <select 
+                  <select
                     value={selectedClass}
                     onChange={(e) => setSelectedClass(e.target.value)}
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   >
+                    {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
                     {assignedClasses.map(cls => (
                       <option key={cls} value={cls}>Class {cls}</option>
                     ))}

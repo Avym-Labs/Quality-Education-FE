@@ -24,11 +24,11 @@ export default function TeacherAttendance() {
     return `${yyyy}-${mm}-${dd}`
   })
 
-  const assignedClasses = user?.assigned_classes || ['10-A', '11-B']
-  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '10-A')
-  
-  const subjects = user?.subjects || ['Mathematics', 'Science']
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || 'Mathematics')
+  const assignedClasses = user?.assigned_classes || []
+  const [selectedClass, setSelectedClass] = useState(assignedClasses[0] || '')
+
+  const subjects = user?.subjects || []
+  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '')
 
   const [students, setStudents] = useState([])
   const [attendanceStates, setAttendanceStates] = useState({}) // user_id -> 'present' | 'absent' | 'late'
@@ -40,6 +40,8 @@ export default function TeacherAttendance() {
   const [classHistory, setClassHistory] = useState([])
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [activeFilterTab, setActiveFilterTab] = useState('class')
+  // Whether attendance has already been recorded for the selected date/class/subject
+  const [attendanceTaken, setAttendanceTaken] = useState(false)
 
   const getAvatarColors = (index) => {
     const mod = index % 3
@@ -105,7 +107,7 @@ export default function TeacherAttendance() {
   // Load students and existing attendance when filters change
   useEffect(() => {
     async function loadStudentsAndAttendance() {
-      if (viewMode !== 'students' || !selectedClass) return
+      if (viewMode !== 'students' || !selectedClass || !selectedSubject) return
       setMarkingLoading(true)
       setMarkingMessage('')
       try {
@@ -142,6 +144,9 @@ export default function TeacherAttendance() {
           }
         })
         const attRecords = attRes.data || []
+        // A submitted lecture always writes one record per roster student, so
+        // any existing record for this date/class/subject means it's locked.
+        setAttendanceTaken(attRecords.length > 0)
 
         const initialStates = {}
         const computedRates = {}
@@ -240,6 +245,7 @@ export default function TeacherAttendance() {
   const lateCount = Object.values(attendanceStates).filter(s => s === 'late').length
 
   const handleSubmitAttendance = async () => {
+    if (attendanceTaken) return
     setMarkingMessage('')
     try {
       const [grade, section] = selectedClass.split('-')
@@ -261,6 +267,7 @@ export default function TeacherAttendance() {
         entries
       })
 
+      setAttendanceTaken(true)
       setMarkingMessage('Attendance submitted successfully!')
       setTimeout(() => setMarkingMessage(''), 4000)
     } catch (err) {
@@ -439,7 +446,14 @@ export default function TeacherAttendance() {
         {/* =========================================================================
             RENDER VIEW 1: STUDENT ATTENDANCE
             ========================================================================= */}
-        {viewMode === 'students' && (
+        {viewMode === 'students' && (assignedClasses.length === 0 || subjects.length === 0) && (
+          <div className="bg-surface-container-lowest p-8 text-center rounded-2xl border border-outline-variant/30 animate-fadeIn">
+            <Icon name="school" className="text-4xl text-on-surface-variant" />
+            <p className="text-xs text-on-surface-variant font-bold mt-2">No classes or subjects are assigned to your profile yet. Contact your admin to get assigned before marking attendance.</p>
+          </div>
+        )}
+
+        {viewMode === 'students' && assignedClasses.length > 0 && subjects.length > 0 && (
           <div className="flex flex-col lg:flex-row gap-6 items-start animate-fadeIn">
             {/* Left Control Panel Column (Calendar & Info) */}
             <div className="w-full lg:w-80 space-y-4 shrink-0 lg:sticky lg:top-20">
@@ -599,11 +613,18 @@ export default function TeacherAttendance() {
               {/* Status Messages */}
               {markingMessage && (
                 <div className={`p-3 rounded-xl text-center text-xs font-bold ${
-                  markingMessage.includes('successfully') 
-                    ? 'bg-green-50 text-green-800 border border-green-200' 
+                  markingMessage.includes('successfully')
+                    ? 'bg-green-50 text-green-800 border border-green-200'
                     : 'bg-primary-container/20 text-primary border border-primary/20'
                 }`}>
                   {markingMessage}
+                </div>
+              )}
+
+              {!markingLoading && !markingMessage && attendanceTaken && (
+                <div className="p-3 rounded-xl text-center text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center gap-1.5">
+                  <Icon name="check_circle" className="text-[16px]" />
+                  Attendance already taken for Class {selectedClass} — {selectedSubject} on {formattedMarkingDate}.
                 </div>
               )}
 
@@ -727,10 +748,10 @@ export default function TeacherAttendance() {
                                     <div className="flex items-center gap-1.5 shrink-0">
                                       <button
                                         type="button"
-                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
-                                        disabled={isOnLeave}
+                                        onClick={() => !isOnLeave && !attendanceTaken && toggleStatus(student.user_id, 'present')}
+                                        disabled={isOnLeave || attendanceTaken}
                                         title="Mark Present"
-                                        className={`w-9 h-9 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                        className={`w-9 h-9 rounded-lg font-bold text-xs transition-all active:scale-95 ${attendanceTaken ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${
                                           status === 'present'
                                             ? 'bg-[#00D284] text-white border-none shadow-sm font-black'
                                             : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
@@ -740,10 +761,10 @@ export default function TeacherAttendance() {
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
-                                        disabled={isOnLeave}
+                                        onClick={() => !isOnLeave && !attendanceTaken && toggleStatus(student.user_id, 'absent')}
+                                        disabled={isOnLeave || attendanceTaken}
                                         title="Mark Absent"
-                                        className={`w-9 h-9 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                        className={`w-9 h-9 rounded-lg font-bold text-xs transition-all active:scale-95 ${attendanceTaken ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${
                                           status === 'absent'
                                             ? 'bg-[#FF3B6B] text-white border-none shadow-sm font-black'
                                             : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
@@ -838,10 +859,10 @@ export default function TeacherAttendance() {
                                     <div className="flex items-center justify-center gap-2 mt-4 pt-1 w-full">
                                       <button
                                         type="button"
-                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'present')}
-                                        disabled={isOnLeave}
+                                        onClick={() => !isOnLeave && !attendanceTaken && toggleStatus(student.user_id, 'present')}
+                                        disabled={isOnLeave || attendanceTaken}
                                         title="Mark Present"
-                                        className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                        className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 ${attendanceTaken ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${
                                           status === 'present'
                                             ? 'bg-[#00D284] text-white border-none shadow-sm font-black'
                                             : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
@@ -851,10 +872,10 @@ export default function TeacherAttendance() {
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => !isOnLeave && toggleStatus(student.user_id, 'absent')}
-                                        disabled={isOnLeave}
+                                        onClick={() => !isOnLeave && !attendanceTaken && toggleStatus(student.user_id, 'absent')}
+                                        disabled={isOnLeave || attendanceTaken}
                                         title="Mark Absent"
-                                        className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                                        className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 ${attendanceTaken ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${
                                           status === 'absent'
                                             ? 'bg-[#FF3B6B] text-white border-none shadow-sm font-black'
                                             : 'bg-white border border-[#D9D9D9] text-[#555] hover:bg-slate-50'
@@ -889,11 +910,17 @@ export default function TeacherAttendance() {
                   </div>
 
                 </div>
-                <button 
+                <button
                   onClick={handleSubmitAttendance}
-                  className="flex-1 bg-primary text-on-primary py-2.5 rounded-xl font-bold text-xs shadow-md active:scale-95 transition-transform max-w-[180px] border-none cursor-pointer"
+                  disabled={attendanceTaken}
+                  className={`flex-1 py-2.5 rounded-xl font-bold text-xs shadow-md transition-transform max-w-[180px] border-none flex items-center justify-center gap-1.5 ${
+                    attendanceTaken
+                      ? 'bg-emerald-100 text-emerald-700 cursor-not-allowed shadow-none'
+                      : 'bg-primary text-on-primary active:scale-95 cursor-pointer'
+                  }`}
                 >
-                  Submit Attendance
+                  {attendanceTaken && <Icon name="check_circle" className="text-[14px]" />}
+                  {attendanceTaken ? 'Attendance Taken' : 'Submit Attendance'}
                 </button>
               </div>
             </div>
@@ -1207,12 +1234,21 @@ export default function TeacherAttendance() {
                   </p>
                   
                   <div className="flex gap-2 mt-2.5">
-                    <a 
-                      href={`tel:${selectedStudent.phone || '9999999999'}`}
-                      className="bg-primary-container text-on-primary-container p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
-                    >
-                      <Icon name="call" className="text-[16px]" />
-                    </a>
+                    {selectedStudent.phone ? (
+                      <a
+                        href={`tel:${selectedStudent.phone}`}
+                        className="bg-primary-container text-on-primary-container p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center"
+                      >
+                        <Icon name="call" className="text-[16px]" />
+                      </a>
+                    ) : (
+                      <span
+                        title="No phone number on file"
+                        className="bg-surface-container-high text-on-surface-variant/50 p-2 rounded-xl flex items-center justify-center cursor-not-allowed"
+                      >
+                        <Icon name="call" className="text-[16px]" />
+                      </span>
+                    )}
                     <button 
                       onClick={handleStartChat}
                       className="bg-emerald-100 text-emerald-700 p-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center border-none cursor-pointer"
@@ -1275,11 +1311,11 @@ export default function TeacherAttendance() {
                 <div className="bg-surface-container-low p-3.5 rounded-2xl space-y-2 border border-outline-variant/20">
                   <div className="flex items-center justify-between text-xs pb-1.5 border-b border-surface-container-lowest">
                     <span className="text-on-surface-variant font-medium">Father</span>
-                    <span className="text-on-surface font-bold">{selectedStudent.father_name || 'Mr. Rajesh Patel'}</span>
+                    <span className="text-on-surface font-bold">{selectedStudent.father_name || 'Not provided'}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-on-surface-variant font-medium">Mother</span>
-                    <span className="text-on-surface font-bold">{selectedStudent.mother_name || 'Mrs. Sunita Patel'}</span>
+                    <span className="text-on-surface font-bold">{selectedStudent.mother_name || 'Not provided'}</span>
                   </div>
                 </div>
               </div>
@@ -1406,8 +1442,8 @@ export default function TeacherAttendance() {
               <div className="p-4 border-t border-outline-variant/10 flex gap-3 bg-white">
                 <button 
                   onClick={() => {
-                    setSelectedClass(assignedClasses[0] || '10-A')
-                    setSelectedSubject(subjects[0] || 'Mathematics')
+                    setSelectedClass(assignedClasses[0] || '')
+                    setSelectedSubject(subjects[0] || '')
                     setFilterSheetOpen(false)
                   }}
                   className="flex-1 py-3 rounded-full border border-[#D9D9D9] text-[#1E1E1E] font-bold text-xs hover:bg-slate-50 border-none bg-transparent cursor-pointer"

@@ -30,7 +30,7 @@ export default function LeaveRequest() {
   const [studentLeaves, setStudentLeaves] = useState([])
   const [studentLoading, setStudentLoading] = useState(false)
 
-  const availableSubjects = user?.subjects || ['Mathematics', 'Science', 'English']
+  const availableSubjects = user?.subjects || []
 
   // Load history
   async function loadHistory() {
@@ -363,6 +363,9 @@ export default function LeaveRequest() {
                     <div className="space-y-1">
                       <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Select Subjects Affected</label>
                       <div className="flex flex-wrap gap-2 py-1">
+                        {availableSubjects.length === 0 && (
+                          <p className="text-[10px] text-outline italic">No subjects assigned to your profile yet.</p>
+                        )}
                         {availableSubjects.map(subj => {
                           const isChecked = selectedSubjects.includes(subj)
                           return (

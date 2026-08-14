@@ -29,8 +29,8 @@ export default function AcademicsHub() {
 
   // Upload Form States (Teachers & Admins)
   const [materialTitle, setMaterialTitle] = useState('')
-  const [materialClass, setMaterialClass] = useState(user?.assigned_classes?.[0] || '10-A')
-  const [materialSubject, setMaterialSubject] = useState(user?.subjects?.[0] || 'Mathematics')
+  const [materialClass, setMaterialClass] = useState(user?.assigned_classes?.[0] || '')
+  const [materialSubject, setMaterialSubject] = useState(user?.subjects?.[0] || '')
   const [materialFile, setMaterialFile] = useState(null)
   const [materialLinkUrl, setMaterialLinkUrl] = useState('')
   const [linkPreview, setLinkPreview] = useState(null) // { url, title, description, image }
@@ -38,8 +38,8 @@ export default function AcademicsHub() {
   const [uploadingMaterial, setUploadingMaterial] = useState(false)
 
   const [testTitle, setTestTitle] = useState('')
-  const [testClass, setTestClass] = useState(user?.assigned_classes?.[0] || '10-A')
-  const [testSubject, setTestSubject] = useState(user?.subjects?.[0] || 'Mathematics')
+  const [testClass, setTestClass] = useState(user?.assigned_classes?.[0] || '')
+  const [testSubject, setTestSubject] = useState(user?.subjects?.[0] || '')
   const [qPaperFile, setQPaperFile] = useState(null)
   const [ansKeyFile, setAnsKeyFile] = useState(null)
   const [uploadingTest, setUploadingTest] = useState(false)
@@ -47,7 +47,7 @@ export default function AcademicsHub() {
   // ----------------------------------------------------
   // FILTER STATES (For Results & Reports tabs)
   // ----------------------------------------------------
-  const [filterClass, setFilterClass] = useState(user?.assigned_classes?.[0] || (user?.grade ? `${user.grade}-${user.section}` : '10-A'))
+  const [filterClass, setFilterClass] = useState(user?.assigned_classes?.[0] || (user?.grade ? `${user.grade}-${user.section}` : ''))
   const [filterSubject, setFilterSubject] = useState('All')
   const [filterStudentId, setFilterStudentId] = useState('All')
   const [dateRange, setDateRange] = useState('all') // 'all' | '30days' | 'semester' | 'custom'
@@ -62,7 +62,7 @@ export default function AcademicsHub() {
 
   // Results Marks Recorder Form (Only for Teacher/Admin)
   const [isRecordScoresOpen, setIsRecordScoresOpen] = useState(false)
-  const [recordSubject, setRecordSubject] = useState(user?.subjects?.[0] || 'Mathematics')
+  const [recordSubject, setRecordSubject] = useState(user?.subjects?.[0] || '')
   const [recordTestTitle, setRecordTestTitle] = useState('')
   const [recordTotalMarks, setRecordTotalMarks] = useState(100)
   const [recordDate, setRecordDate] = useState(() => new Date().toISOString().split('T')[0])
@@ -88,6 +88,62 @@ export default function AcademicsHub() {
     loadReportsClasses()
   }, [user, role])
   const availableStandards = reportsClasses.map(c => `Standard ${c.grade}-${c.section}`)
+
+  // Real tenant-wide subject list, derived from what teachers actually
+  // teach (not a guessed/hardcoded list) — used for the admin's Grades &
+  // Results subject picker below. Only admins can call GET /teachers.
+  const [allTeachers, setAllTeachers] = useState([])
+  useEffect(() => {
+    async function loadAllTeachers() {
+      if (!user || role !== 'admin') return
+      try {
+        const { data } = await api.get('/teachers')
+        setAllTeachers(data || [])
+      } catch (err) {
+        console.error('Failed to load teachers for subject list:', err)
+      }
+    }
+    loadAllTeachers()
+  }, [user, role])
+  const tenantSubjects = [...new Set(allTeachers.flatMap(t => t.subjects || []))].sort()
+
+  // Shared by every class/subject picker across this hub (Study Material,
+  // Tests, Grades & Results — the Subject filter is visible to students
+  // too, so this covers all three roles): a teacher or student only sees
+  // classes/subjects that are actually theirs — an admin oversees the whole
+  // school, so they get the real tenant-wide lists (real classes, real
+  // subjects actually being taught) instead of a personal subset or a
+  // guessed/hardcoded default.
+  const relevantClassOptions = role === 'admin'
+    ? reportsClasses.map(c => `${c.grade}-${c.section}`)
+    : (user?.assigned_classes || [])
+  const relevantSubjectOptions = role === 'admin'
+    ? tenantSubjects
+    : (user?.subjects || [])
+
+  // For admin, relevantClassOptions/relevantSubjectOptions arrive
+  // asynchronously after mount — once they do, snap any picker still on an
+  // empty/stale default onto the first real option instead of leaving it
+  // pointed at nothing (or a value that isn't actually a real class/subject).
+  useEffect(() => {
+    if (relevantClassOptions.length === 0) return
+    if (!relevantClassOptions.includes(materialClass)) setMaterialClass(relevantClassOptions[0])
+    if (!relevantClassOptions.includes(testClass)) setTestClass(relevantClassOptions[0])
+    if (!relevantClassOptions.includes(filterClass)) setFilterClass(relevantClassOptions[0])
+  }, [relevantClassOptions.join(',')])
+
+  useEffect(() => {
+    if (relevantSubjectOptions.length === 0) return
+    if (!relevantSubjectOptions.includes(materialSubject)) setMaterialSubject(relevantSubjectOptions[0])
+    if (!relevantSubjectOptions.includes(testSubject)) setTestSubject(relevantSubjectOptions[0])
+    if (!relevantSubjectOptions.includes(recordSubject)) setRecordSubject(relevantSubjectOptions[0])
+  }, [relevantSubjectOptions.join(',')])
+
+  // Marks-entry roster for "Record New Class Test Scores": everyone in the
+  // class, admin included, is further narrowed to students actually
+  // enrolled in the subject being recorded — a class doesn't mean every
+  // student in it takes every elective/subject.
+  const recordEligibleStudents = studentsList.filter(s => (s.subjects || []).includes(recordSubject))
 
   const [reportsSelectedClass, setReportsSelectedClass] = useState('')
   const [reportsStartDate, setReportsStartDate] = useState(() => {
@@ -1187,23 +1243,28 @@ export default function AcademicsHub() {
 
   const formatDate = (dateStr) => formatDateDMY(dateStr)
 
+  // A fixed palette of badge colors, picked deterministically from a hash of
+  // the subject name — this way ANY real subject a school actually offers
+  // (not just a hardcoded handful) gets a consistent, distinct-looking
+  // badge instead of always falling back to the same default tint.
+  const SUBJECT_BADGE_PALETTE = [
+    'bg-indigo-50 text-indigo-700 border-indigo-200',
+    'bg-sky-50 text-sky-700 border-sky-200',
+    'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'bg-green-50 text-green-700 border-green-200',
+    'bg-amber-50 text-amber-700 border-amber-200',
+    'bg-purple-50 text-purple-700 border-purple-200',
+    'bg-rose-50 text-rose-700 border-rose-200',
+    'bg-cyan-50 text-cyan-700 border-cyan-200',
+  ]
+
   const getSubjectBadge = (subject) => {
     const sub = subject || 'General'
-    let bgClass = 'bg-[#6351E0]/10 text-[#6351E0] border-[#6351E0]/20' // Default purple tint
-    
-    if (sub.toLowerCase() === 'mathematics') {
-      bgClass = 'bg-indigo-50 text-indigo-700 border-indigo-200'
-    } else if (sub.toLowerCase() === 'physics') {
-      bgClass = 'bg-sky-50 text-sky-700 border-sky-200'
-    } else if (sub.toLowerCase() === 'chemistry') {
-      bgClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'
-    } else if (sub.toLowerCase() === 'biology') {
-      bgClass = 'bg-green-50 text-green-700 border-green-200'
-    } else if (sub.toLowerCase() === 'english') {
-      bgClass = 'bg-amber-50 text-amber-700 border-amber-200'
-    } else if (sub.toLowerCase() === 'computer science') {
-      bgClass = 'bg-purple-50 text-purple-700 border-purple-200'
+    let hash = 0
+    for (let i = 0; i < sub.length; i++) {
+      hash = (hash * 31 + sub.charCodeAt(i)) >>> 0
     }
+    const bgClass = SUBJECT_BADGE_PALETTE[hash % SUBJECT_BADGE_PALETTE.length]
 
     return (
       <span className={`px-2.5 py-0.5 border rounded-full text-[10px] font-extrabold uppercase tracking-wide shadow-2xs select-none ${bgClass}`}>
@@ -1352,7 +1413,8 @@ export default function AcademicsHub() {
                       onChange={e => setMaterialClass(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {['9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A'].map(c => (
+                      {relevantClassOptions.length === 0 && <option value="">No classes yet</option>}
+                      {relevantClassOptions.map(c => (
                         <option key={c} value={c}>Class {c}</option>
                       ))}
                     </select>
@@ -1364,7 +1426,8 @@ export default function AcademicsHub() {
                       onChange={e => setMaterialSubject(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Computer Science'].map(s => (
+                      {relevantSubjectOptions.length === 0 && <option value="">No subjects yet</option>}
+                      {relevantSubjectOptions.map(s => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
@@ -1608,7 +1671,8 @@ export default function AcademicsHub() {
                       onChange={e => setTestClass(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {['9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A'].map(c => (
+                      {relevantClassOptions.length === 0 && <option value="">No classes yet</option>}
+                      {relevantClassOptions.map(c => (
                         <option key={c} value={c}>Class {c}</option>
                       ))}
                     </select>
@@ -1620,7 +1684,8 @@ export default function AcademicsHub() {
                       onChange={e => setTestSubject(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Computer Science'].map(s => (
+                      {relevantSubjectOptions.length === 0 && <option value="">No subjects yet</option>}
+                      {relevantSubjectOptions.map(s => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
@@ -1746,7 +1811,8 @@ export default function AcademicsHub() {
                         onChange={e => setFilterClass(e.target.value)}
                         className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                       >
-                        {['9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A'].map(c => (
+                        {relevantClassOptions.length === 0 && <option value="">No classes assigned</option>}
+                        {relevantClassOptions.map(c => (
                           <option key={c} value={c}>Class {c}</option>
                         ))}
                       </select>
@@ -1776,7 +1842,7 @@ export default function AcademicsHub() {
                     className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                   >
                     <option value="All">All Subjects</option>
-                    {['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Computer Science'].map(s => (
+                    {relevantSubjectOptions.map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
@@ -1944,7 +2010,8 @@ export default function AcademicsHub() {
                           onChange={e => setRecordSubject(e.target.value)}
                           className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                         >
-                          {['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Computer Science'].map(s => (
+                          {relevantSubjectOptions.length === 0 && <option value="">No subjects assigned</option>}
+                          {relevantSubjectOptions.map(s => (
                             <option key={s} value={s}>{s}</option>
                           ))}
                         </select>
@@ -2005,10 +2072,10 @@ export default function AcademicsHub() {
                       {/* Student scores rows */}
                       <div className="border-t border-outline-variant/10 pt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
                         <label className="font-bold text-[10px] uppercase text-outline mb-1 block">Student Scoreboard Sheet</label>
-                      {studentsList.length === 0 ? (
-                        <p className="text-center py-4 text-outline font-semibold">No students found in Class {filterClass}.</p>
+                      {recordEligibleStudents.length === 0 ? (
+                        <p className="text-center py-4 text-outline font-semibold">No students in Class {filterClass} are enrolled in {recordSubject}.</p>
                       ) : (
-                        studentsList.map(s => (
+                        recordEligibleStudents.map(s => (
                           <div key={s.user_id} className="flex items-center gap-3 p-2 rounded-xl border border-outline-variant/20 bg-surface-container-low/10">
                             <span className="text-[10px] font-bold text-outline w-12 shrink-0">Roll #{s.roll_number}</span>
                             <span className="text-xs font-bold text-on-surface flex-1 truncate">{s.full_name}</span>

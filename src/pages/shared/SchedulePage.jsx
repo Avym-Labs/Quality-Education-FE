@@ -20,7 +20,40 @@ export default function SchedulePage({ embed = false }) {
   const [success, setSuccess] = useState('')
 
   //  filters (only for Teacher/Admin)
-  const [classFilter, setClassFilter] = useState(user?.assigned_classes?.[0] || '10-A')
+  const [classFilter, setClassFilter] = useState(user?.assigned_classes?.[0] || '')
+
+  // Real classes/subjects — a teacher only sees classes they're assigned to
+  // and subjects they teach; an admin oversees the whole school, so they
+  // get the real tenant-wide lists instead of a hardcoded guess.
+  const [tenantClasses, setTenantClasses] = useState([])
+  const [tenantTeachers, setTenantTeachers] = useState([])
+  useEffect(() => {
+    async function loadTenantData() {
+      if (!user || role === 'student') return
+      try {
+        const { data } = await api.get('/classes')
+        setTenantClasses(data || [])
+      } catch (err) {
+        console.error('Failed to load classes for schedule:', err)
+      }
+      if (role === 'admin') {
+        try {
+          const { data } = await api.get('/teachers')
+          setTenantTeachers(data || [])
+        } catch (err) {
+          console.error('Failed to load teachers for schedule subjects:', err)
+        }
+      }
+    }
+    loadTenantData()
+  }, [user, role])
+
+  const classOptions = role === 'admin'
+    ? tenantClasses.map(c => `${c.grade}-${c.section}`)
+    : (user?.assigned_classes || [])
+  const subjectOptions = role === 'admin'
+    ? [...new Set(tenantTeachers.flatMap(t => t.subjects || []))].sort()
+    : (user?.subjects || [])
 
   // Edit / Create Modal state
   const [modalOpen, setModalOpen] = useState(false)
@@ -28,8 +61,8 @@ export default function SchedulePage({ embed = false }) {
   
   // Form fields
   const [formTitle, setFormTitle] = useState('')
-  const [formSubject, setFormSubject] = useState('Mathematics')
-  const [formClass, setFormClass] = useState(user?.assigned_classes?.[0] || '10-A')
+  const [formSubject, setFormSubject] = useState(user?.subjects?.[0] || '')
+  const [formClass, setFormClass] = useState(user?.assigned_classes?.[0] || '')
   const [formDate, setFormDate] = useState(() => new Date().toISOString().split('T')[0])
   const [formStartTime, setFormStartTime] = useState('09:00')
   const [formEndTime, setFormEndTime] = useState('10:00')
@@ -50,16 +83,27 @@ export default function SchedulePage({ embed = false }) {
   const DAY_END_HOUR = 18
   const HOUR_PX = 60
 
-  const SUBJECT_COLORS = {
-    mathematics: { bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-700' },
-    physics: { bg: 'bg-sky-50', border: 'border-sky-300', text: 'text-sky-700' },
-    chemistry: { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700' },
-    biology: { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-700' },
-    english: { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700' },
-    'computer science': { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700' },
+  // Deterministic hash-based palette (not a hardcoded subject-name map) so
+  // any real subject a school offers gets a consistent, distinct color.
+  const SUBJECT_COLOR_PALETTE = [
+    { bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-700' },
+    { bg: 'bg-sky-50', border: 'border-sky-300', text: 'text-sky-700' },
+    { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700' },
+    { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-700' },
+    { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700' },
+    { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700' },
+    { bg: 'bg-rose-50', border: 'border-rose-300', text: 'text-rose-700' },
+    { bg: 'bg-cyan-50', border: 'border-cyan-300', text: 'text-cyan-700' },
+  ]
+  const getSubjectColors = (subject) => {
+    const sub = subject || ''
+    if (!sub) return { bg: 'bg-[#6351E0]/5', border: 'border-[#6351E0]/25', text: 'text-[#6351E0]' }
+    let hash = 0
+    for (let i = 0; i < sub.length; i++) {
+      hash = (hash * 31 + sub.charCodeAt(i)) >>> 0
+    }
+    return SUBJECT_COLOR_PALETTE[hash % SUBJECT_COLOR_PALETTE.length]
   }
-  const getSubjectColors = (subject) =>
-    SUBJECT_COLORS[(subject || '').toLowerCase()] || { bg: 'bg-[#6351E0]/5', border: 'border-[#6351E0]/25', text: 'text-[#6351E0]' }
 
   const addDays = (date, n) => {
     const d = new Date(date)
@@ -152,7 +196,7 @@ export default function SchedulePage({ embed = false }) {
   const handleOpenCreateModal = () => {
     setEditingId(null)
     setFormTitle('')
-    setFormSubject(user?.subjects?.[0] || 'Mathematics')
+    setFormSubject(subjectOptions[0] || '')
     setFormClass(classFilter)
     setFormDate(selectedDate.toISOString().split('T')[0])
     setFormStartTime('09:00')
@@ -318,7 +362,8 @@ export default function SchedulePage({ embed = false }) {
                 onChange={e => setClassFilter(e.target.value)}
                 className="bg-surface-container-low border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none"
               >
-                {['9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A'].map(cls => (
+                {classOptions.length === 0 && <option value="">No classes yet</option>}
+                {classOptions.map(cls => (
                   <option key={cls} value={cls}>Class {cls}</option>
                 ))}
               </select>
@@ -765,7 +810,8 @@ export default function SchedulePage({ embed = false }) {
                         onChange={e => setClassFilter(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary cursor-pointer"
                       >
-                        {['9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A'].map(cls => (
+                        {classOptions.length === 0 && <option value="">No classes yet</option>}
+                        {classOptions.map(cls => (
                           <option key={cls} value={cls}>Class {cls}</option>
                         ))}
                       </select>
@@ -838,7 +884,8 @@ export default function SchedulePage({ embed = false }) {
                     onChange={e => setFormClass(e.target.value)}
                     className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                   >
-                    {['9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A'].map(cls => (
+                    {classOptions.length === 0 && <option value="">No classes yet</option>}
+                    {classOptions.map(cls => (
                       <option key={cls} value={cls}>Class {cls}</option>
                     ))}
                   </select>
@@ -850,7 +897,8 @@ export default function SchedulePage({ embed = false }) {
                     onChange={e => setFormSubject(e.target.value)}
                     className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                   >
-                    {['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Computer Science'].map(s => (
+                    {subjectOptions.length === 0 && <option value="">No subjects yet</option>}
+                    {subjectOptions.map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
