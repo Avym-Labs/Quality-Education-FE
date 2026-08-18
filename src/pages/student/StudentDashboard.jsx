@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
@@ -62,6 +62,51 @@ export default function StudentDashboard() {
     }
     fetchDashboardData()
   }, [user])
+
+  // Attendance pop-up: the web app has no live push channel, so this polls
+  // /notifications while the student is on this page and pops up a 3s toast
+  // the moment a NEW "attendance" notification appears (mirrors the app's
+  // live push popup, which fires instantly there via FCM). The first poll
+  // only establishes a baseline of already-existing notifications — it
+  // never pops up for attendance history that predates this page load.
+  const [attendancePopup, setAttendancePopup] = useState(null)
+  const seenNotifIds = useRef(new Set())
+  const isFirstPoll = useRef(true)
+  useEffect(() => {
+    let cancelled = false
+
+    async function pollNotifications() {
+      try {
+        const res = await api.get('/notifications')
+        const items = res.data || []
+        if (cancelled) return
+        if (isFirstPoll.current) {
+          items.forEach(n => seenNotifIds.current.add(n.id))
+          isFirstPoll.current = false
+          return
+        }
+        const newAttendance = items.find(n => n.type === 'attendance' && !seenNotifIds.current.has(n.id))
+        items.forEach(n => seenNotifIds.current.add(n.id))
+        if (newAttendance) {
+          setAttendancePopup({
+            title: newAttendance.title,
+            message: newAttendance.message,
+            status: newAttendance.data?.status,
+          })
+          setTimeout(() => setAttendancePopup(null), 3000)
+        }
+      } catch (err) {
+        console.error('Failed to poll notifications for attendance popup:', err)
+      }
+    }
+
+    pollNotifications()
+    const intervalId = setInterval(pollNotifications, 15000)
+    return () => {
+      cancelled = true
+      clearInterval(intervalId)
+    }
+  }, [])
 
   // Dynamic values
   const attendance = stats?.attendance_percentage ?? 0
@@ -433,6 +478,28 @@ export default function StudentDashboard() {
         </div>
 
       </div>
+
+      {attendancePopup && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center z-[100] animate-fadeIn duration-200 p-4">
+          <div className="bg-surface w-full max-w-xs rounded-3xl shadow-xl p-6 text-center space-y-3">
+            <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center ${
+              attendancePopup.status === 'present'
+                ? 'bg-emerald-100 text-emerald-600'
+                : attendancePopup.status === 'late'
+                  ? 'bg-amber-100 text-amber-600'
+                  : 'bg-error-container text-error'
+            }`}>
+              <Icon
+                name={attendancePopup.status === 'present' ? 'check_circle' : attendancePopup.status === 'late' ? 'schedule' : 'cancel'}
+                className="text-3xl"
+                filled
+              />
+            </div>
+            <h3 className="text-sm font-black text-on-surface">{attendancePopup.title}</h3>
+            <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">{attendancePopup.message}</p>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 }

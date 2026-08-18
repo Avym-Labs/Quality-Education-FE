@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -9,11 +9,28 @@ export default function NewAnnouncement() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [targetRoles, setTargetRoles] = useState(['student']) // student, teacher
-  const [targetGrades, setTargetGrades] = useState([]) // "9", "10", "11", "12"
+  const [targetGrades, setTargetGrades] = useState([])
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+
+  // Real grades that actually exist as classes in this tenant, instead of a
+  // guessed 9-12 range that may not match this school's actual grade levels.
+  const [tenantClasses, setTenantClasses] = useState([])
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        const { data } = await api.get('/classes')
+        setTenantClasses(data || [])
+      } catch (err) {
+        console.error('Failed to load classes for grade filter:', err)
+      }
+    }
+    loadClasses()
+  }, [])
+  const availableGrades = [...new Set(tenantClasses.map(c => c.grade))]
+    .sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0))
 
   const handleToggleRole = (role) => {
     setTargetRoles(prev => 
@@ -57,9 +74,7 @@ export default function NewAnnouncement() {
       setContent('')
       setTargetRoles(['student'])
       setTargetGrades([])
-      setTimeout(() => {
-        navigate('/admin/dashboard')
-      }, 2000)
+      setTimeout(() => setSuccess(false), 4000)
     } catch (err) {
       console.error('Failed to publish announcement:', err)
       setError(err.response?.data?.detail || 'An error occurred while publishing the announcement.')
@@ -95,7 +110,7 @@ export default function NewAnnouncement() {
 
         {success && (
           <div className="bg-green-100 text-green-800 p-4 rounded-xl text-sm font-semibold animate-fadeIn">
-            Announcement published successfully! Redirecting to dashboard...
+            Announcement published successfully!
           </div>
         )}
 
@@ -201,7 +216,10 @@ export default function NewAnnouncement() {
               <div className="flex flex-col gap-unit mt-4">
                 <label className="font-semibold text-xs text-on-surface-variant">Limit to Specific Grades (Optional)</label>
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {['9', '10', '11', '12'].map((grade) => {
+                  {availableGrades.length === 0 && (
+                    <p className="text-xs text-on-surface-variant italic">No classes created yet.</p>
+                  )}
+                  {availableGrades.map((grade) => {
                     const active = targetGrades.includes(grade)
                     return (
                       <button
@@ -209,8 +227,8 @@ export default function NewAnnouncement() {
                         key={grade}
                         onClick={() => handleToggleGrade(grade)}
                         className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
-                          active 
-                            ? 'bg-secondary text-on-secondary border-secondary shadow-sm' 
+                          active
+                            ? 'bg-secondary text-on-secondary border-secondary shadow-sm'
                             : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
                         }`}
                       >

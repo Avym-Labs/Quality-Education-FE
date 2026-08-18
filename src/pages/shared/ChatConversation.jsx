@@ -115,58 +115,75 @@ export default function ChatConversation() {
     }
   }, [user, conversationId])
 
-  // Establish WebSocket connection
+  // Establish WebSocket connection — auto-reconnects on drop (a Render
+  // free-tier restart, a network blip, etc.) after a short delay, mirroring
+  // the mobile app's 3s retry. Without this, once the socket closed the send
+  // button stayed disabled (isConnected stuck false) until the whole page
+  // was reloaded, which is what made it look "stuck" after typing.
   useEffect(() => {
     if (!user || !conversationId) return
 
-    const token = localStorage.getItem('access_token')
-    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-    const wsBase = apiBase.replace('http://', 'ws://').replace('https://', 'wss://').replace('/api', '')
-    const wsUrl = `${wsBase}/ws/chat/${conversationId}?token=${token}`
+    let cancelled = false
+    let socket = null
+    let reconnectTimer = null
 
-    const socket = new WebSocket(wsUrl)
-    setWs(socket)
+    const connect = () => {
+      const token = localStorage.getItem('access_token')
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+      const wsBase = apiBase.replace('http://', 'ws://').replace('https://', 'wss://').replace('/api', '')
+      const wsUrl = `${wsBase}/ws/chat/${conversationId}?token=${token}`
 
-    socket.onopen = () => {
-      setIsConnected(true)
-    }
+      socket = new WebSocket(wsUrl)
+      setWs(socket)
 
-    socket.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data)
-        if (msg.action === 'edit') {
-          // Update the message in-place
-          setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, content: msg.content, is_edited: true } : m))
-        } else if (msg.action === 'delete') {
-          // Mark the message as deleted in-place
-          setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, content: msg.content, is_deleted: true } : m))
-        } else {
-          // Standard send/receive new message
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === msg.id)) return prev
-            return [...prev, msg]
-          })
-          
-          if (msg.sender_id !== user.id) {
-            api.put(`/chat/conversations/${conversationId}/read`).catch(console.error)
+      socket.onopen = () => {
+        setIsConnected(true)
+      }
+
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data)
+          if (msg.action === 'edit') {
+            // Update the message in-place
+            setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, content: msg.content, is_edited: true } : m))
+          } else if (msg.action === 'delete') {
+            // Mark the message as deleted in-place
+            setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, content: msg.content, is_deleted: true } : m))
+          } else {
+            // Standard send/receive new message
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === msg.id)) return prev
+              return [...prev, msg]
+            })
+
+            if (msg.sender_id !== user.id) {
+              api.put(`/chat/conversations/${conversationId}/read`).catch(console.error)
+            }
           }
+        } catch (err) {
+          console.error('WebSocket parsing error:', err)
         }
-      } catch (err) {
-        console.error('WebSocket parsing error:', err)
+      }
+
+      socket.onclose = () => {
+        setIsConnected(false)
+        if (!cancelled) {
+          reconnectTimer = setTimeout(connect, 3000)
+        }
+      }
+
+      socket.onerror = (err) => {
+        console.error('WebSocket connection error:', err)
+        setIsConnected(false)
       }
     }
 
-    socket.onclose = () => {
-      setIsConnected(false)
-    }
-
-    socket.onerror = (err) => {
-      console.error('WebSocket connection error:', err)
-      setIsConnected(false)
-    }
+    connect()
 
     return () => {
-      socket.close()
+      cancelled = true
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      if (socket) socket.close()
     }
   }, [user, conversationId])
 

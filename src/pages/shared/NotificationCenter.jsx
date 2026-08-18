@@ -9,6 +9,8 @@ export default function NotificationCenter() {
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const [latestAnnouncement, setLatestAnnouncement] = useState(null)
 
@@ -45,6 +47,19 @@ export default function NotificationCenter() {
       fetchNotifications()
     } catch (err) {
       console.error('Failed to mark notification as read:', err)
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    setDeleting(true)
+    try {
+      await api.delete('/notifications')
+      setNotifications([])
+    } catch (err) {
+      console.error('Failed to delete all notifications:', err)
+    } finally {
+      setDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -142,8 +157,42 @@ export default function NotificationCenter() {
             </button>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Notifications</h2>
           </div>
-          <Icon name="notifications" className="text-primary text-2xl" />
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={allNotifs.length === 0}
+            title="Delete all notifications"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container/20 transition-colors active:scale-95 duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <Icon name="delete" className="text-xl" />
+          </button>
         </section>
+
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 animate-fadeIn duration-200 p-4">
+            <div className="bg-surface w-full max-w-sm rounded-3xl shadow-xl p-6 space-y-4">
+              <h3 className="text-base font-black text-on-surface">Delete all notifications?</h3>
+              <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
+                This will permanently delete all of your notifications. This cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="px-5 py-2.5 rounded-full border border-outline text-on-surface-variant font-bold text-xs hover:bg-surface-container transition-colors disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAll}
+                  disabled={deleting}
+                  className="px-5 py-2.5 rounded-full bg-error text-on-error font-bold text-xs hover:opacity-90 transition-opacity disabled:opacity-60"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-error-container text-on-error-container p-4 rounded-xl text-sm mb-4">

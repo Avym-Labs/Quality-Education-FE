@@ -362,10 +362,16 @@ export default function AcademicsHub() {
       const studentPresent = Object.values(statusByDate).filter(st => st === 'present').length
       const studentAbsent = Object.values(statusByDate).filter(st => st === 'absent').length
       const studentNoRecord = schoolDaysCount - (studentPresent + studentAbsent)
-      const overallRate = roundToOneDecimal((studentPresent / schoolDaysCount) * 100)
+      // A day nobody marked attendance for is treated as a holiday, not a
+      // school day the student missed — it's excluded from the rate rather
+      // than counted against them. This also means the rate can never
+      // reflect any day before the student had attendance records at all
+      // (e.g. before they joined), since no record can exist for a date
+      // that predates enrollment.
       const markedRate = (studentPresent + studentAbsent) > 0
         ? roundToOneDecimal((studentPresent / (studentPresent + studentAbsent)) * 100)
         : 0
+      const overallRate = markedRate
 
       const pattern = []
       const cur = new Date(start)
@@ -496,8 +502,12 @@ export default function AcademicsHub() {
     const stud = reportsModalStudents.find(s => s.user_id === reportsModalSelectedStudentId)
     if (!stud) return null
 
-    const start = new Date(reportsModalStartDate)
+    let start = new Date(reportsModalStartDate)
     const end = new Date(reportsModalEndDate)
+    if (stud.member_since) {
+      const joinDate = new Date(stud.member_since)
+      if (start < joinDate) start = joinDate
+    }
     const totalDays = Math.max(1, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1)
 
     const inRange = modalStudentAttendance.filter(r => {
@@ -508,6 +518,10 @@ export default function AcademicsHub() {
     const present = Object.values(dateStatusMap).filter(s => s === 'present').length
     const absent = Object.values(dateStatusMap).filter(s => s === 'absent').length
     const noRecord = totalDays - (present + absent)
+    // A day nobody marked attendance for is a holiday, not a day the
+    // student missed — excluded from the rate rather than counted against
+    // them.
+    const markedDays = present + absent
 
     return {
       name: stud.full_name,
@@ -516,7 +530,7 @@ export default function AcademicsHub() {
       present,
       absent,
       noRecord,
-      rate: totalDays > 0 ? roundToOneDecimal((present / totalDays) * 100) : 0,
+      rate: markedDays > 0 ? roundToOneDecimal((present / markedDays) * 100) : 0,
       dateStatusMap
     }
   }
@@ -544,6 +558,12 @@ export default function AcademicsHub() {
     const present = Object.values(dateStatusMap).filter(s => s === 'present').length
     const absent = Object.values(dateStatusMap).filter(s => s === 'absent').length
     const noRecord = totalDays - (present + absent)
+    // A day nobody marked attendance for is a holiday, not a day the
+    // student missed — excluded from the rate rather than counted against
+    // them. Combined with the join-date clamp above, the rate can never be
+    // dragged down by a day before the student existed or a day no one
+    // took attendance on.
+    const markedDays = present + absent
 
     return {
       name,
@@ -552,7 +572,7 @@ export default function AcademicsHub() {
       present,
       absent,
       noRecord,
-      rate: totalDays > 0 ? roundToOneDecimal((present / totalDays) * 100) : 0,
+      rate: markedDays > 0 ? roundToOneDecimal((present / markedDays) * 100) : 0,
       dateStatusMap
     }
   }
