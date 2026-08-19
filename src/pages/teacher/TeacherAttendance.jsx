@@ -106,17 +106,24 @@ export default function TeacherAttendance() {
 
   // Load students and existing attendance when filters change
   useEffect(() => {
+    // Guards against a slower, older request (e.g. from a date rapidly
+    // tapped through) resolving after a newer one and overwriting state
+    // with stale data.
+    let cancelled = false
     async function loadStudentsAndAttendance() {
       if (viewMode !== 'students' || !selectedClass || !selectedSubject) return
       setMarkingLoading(true)
       setMarkingMessage('')
       try {
         const [grade, section] = selectedClass.split('-')
-        
-        // Fetch students
+
+        // Fetch students — scoped to this exact class+subject; the backend
+        // 403s if this teacher isn't actually assigned to teach this
+        // subject in this class.
         const studRes = await api.get('/students', {
-          params: { grade, section: section || '' }
+          params: { grade, section: section || '', subject: selectedSubject }
         })
+        if (cancelled) return
         const studentList = studRes.data || []
         setStudents(studentList)
 
@@ -124,6 +131,7 @@ export default function TeacherAttendance() {
         const leavesRes = await api.get('/leave', {
           params: { status: 'approved' }
         })
+        if (cancelled) return
         const approvedLeaves = leavesRes.data || []
         setLeavesList(approvedLeaves)
 
@@ -131,6 +139,7 @@ export default function TeacherAttendance() {
         const historyRes = await api.get('/attendance', {
           params: { grade, section: section || '' }
         })
+        if (cancelled) return
         const classHistory = historyRes.data || []
         setClassHistory(classHistory)
 
@@ -143,6 +152,7 @@ export default function TeacherAttendance() {
             date: markingDate
           }
         })
+        if (cancelled) return
         const attRecords = attRes.data || []
         // A submitted lecture always writes one record per roster student, so
         // any existing record for this date/class/subject means it's locked.
@@ -173,16 +183,25 @@ export default function TeacherAttendance() {
           computedRates[s.user_id] = total > 0 ? Math.round((present / total) * 100) : 100
         })
 
+        if (cancelled) return
         setAttendanceStates(initialStates)
         setAttendanceRates(computedRates)
       } catch (err) {
+        if (cancelled) return
         console.error('Failed to load students list:', err)
-        setMarkingMessage('Error loading students list.')
+        if (err.response?.status === 403) {
+          setStudents([])
+          setAttendanceStates({})
+          setMarkingMessage(err.response?.data?.detail || `You are not assigned to teach ${selectedSubject} in ${selectedClass}.`)
+        } else {
+          setMarkingMessage('Error loading students list.')
+        }
       } finally {
-        setMarkingLoading(false)
+        if (!cancelled) setMarkingLoading(false)
       }
     }
     loadStudentsAndAttendance()
+    return () => { cancelled = true }
   }, [selectedClass, selectedSubject, markingDate, viewMode])
 
   const handleOpenProfile = async (student) => {

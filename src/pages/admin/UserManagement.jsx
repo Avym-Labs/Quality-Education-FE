@@ -79,6 +79,16 @@ export default function UserManagement() {
   const [formError, setFormError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Tracks which lecturing classes the teacher had when the edit modal
+  // opened, so we know which ones were removed and need their per-class
+  // subject assignments cleared on save.
+  const [originalAssignedClasses, setOriginalAssignedClasses] = useState([])
+
+  // Real teacher-assignment rows for the student's current class, used to
+  // filter the "Enrolled Subjects & Mentors" picker down to teachers who are
+  // actually assigned to teach that subject in that specific class.
+  const [classAssignments, setClassAssignments] = useState([])
+
   // Load teachers for student-teacher mapping
   useEffect(() => {
     async function loadTeachers() {
@@ -204,14 +214,16 @@ export default function UserManagement() {
       subject_teachers: {},
       department: '',
       assigned_classes: [],
-      qualifications: []
+      qualifications: [],
+      classSubjects: {}
     })
     setQualificationInput('')
     setFormError(null)
+    setOriginalAssignedClasses([])
     setModalOpen(true)
   }
 
-  const handleOpenEditModal = (item) => {
+  const handleOpenEditModal = async (item) => {
     setModalMode('edit')
     setSelectedUser(item)
     
@@ -231,8 +243,10 @@ export default function UserManagement() {
         subject_teachers: item.subject_teachers || {},
         department: '',
         assigned_classes: [],
-        qualifications: []
+        qualifications: [],
+        classSubjects: {}
       })
+      setOriginalAssignedClasses([])
     } else {
       setFormData({
         first_name: item.first_name || '',
@@ -249,8 +263,24 @@ export default function UserManagement() {
         subject_teachers: {},
         department: item.department || '',
         assigned_classes: item.assigned_classes || [],
-        qualifications: item.qualifications || []
+        qualifications: item.qualifications || [],
+        classSubjects: {}
       })
+      setOriginalAssignedClasses(item.assigned_classes || [])
+      // Prefill which subjects are taught in each class from the real
+      // per-class assignment rows, instead of assuming every subject applies
+      // to every lecturing class.
+      try {
+        const res = await api.get('/teacher-assignments', { params: { teacher_id: item.id } })
+        const byClass = {}
+        for (const row of res.data || []) {
+          if (!byClass[row.class_key]) byClass[row.class_key] = []
+          byClass[row.class_key].push(row.subject)
+        }
+        setFormData(prev => ({ ...prev, classSubjects: byClass }))
+      } catch (err) {
+        console.error('Failed to load class-subject assignments:', err)
+      }
     }
     setQualificationInput('')
     setFormError(null)
@@ -335,6 +365,42 @@ export default function UserManagement() {
       ...prev,
       qualifications: prev.qualifications.filter((_, i) => i !== idx)
     }))
+  }
+
+  // Refetch eligible mentors whenever the student form's class changes.
+  useEffect(() => {
+    if (!modalOpen || activeRole !== 'student' || !formData.grade || !formData.section) {
+      setClassAssignments([])
+      return
+    }
+    const classKey = `${formData.grade}-${formData.section}`
+    api.get('/teacher-assignments', { params: { class_key: classKey } })
+      .then(res => setClassAssignments(res.data || []))
+      .catch(err => {
+        console.error('Failed to load eligible mentors for class:', err)
+        setClassAssignments([])
+      })
+  }, [modalOpen, activeRole, formData.grade, formData.section])
+
+  // A teacher is only offered as a subject's mentor if there's a real
+  // TeacherAssignment row pairing them to this exact class + subject.
+  const eligibleMentorsForSubject = (sub) => {
+    const teacherDocIds = classAssignments.filter(a => a.subject === sub).map(a => a.teacher_id)
+    return teachersList.filter(t => teacherDocIds.includes(t.id))
+  }
+
+  const handleToggleClassSubject = (classKey, subject) => {
+    setFormData(prev => {
+      const current = prev.classSubjects[classKey] || []
+      const exists = current.includes(subject)
+      return {
+        ...prev,
+        classSubjects: {
+          ...prev.classSubjects,
+          [classKey]: exists ? current.filter(s => s !== subject) : [...current, subject]
+        }
+      }
+    })
   }
 
   // Subject Teacher mapping mapping
@@ -424,10 +490,26 @@ export default function UserManagement() {
           qualifications: formData.qualifications
         }
 
+        let teacherId
         if (modalMode === 'create') {
-          await api.post('/teachers', payload)
+          const res = await api.post('/teachers', payload)
+          teacherId = res.data?.id
         } else {
-          await api.put(`/teachers/${selectedUser.id || selectedUser._id}`, payload)
+          teacherId = selectedUser.id || selectedUser._id
+          await api.put(`/teachers/${teacherId}`, payload)
+        }
+
+        // Sync per-class subject assignments: clear rows for any class that
+        // was removed, then set the current subject list for each remaining
+        // lecturing class.
+        if (teacherId) {
+          const removedClasses = originalAssignedClasses.filter(c => !formData.assigned_classes.includes(c))
+          for (const cls of removedClasses) {
+            await api.put(`/teacher-assignments/${teacherId}/${cls}`, { subjects: [] })
+          }
+          for (const cls of formData.assigned_classes) {
+            await api.put(`/teacher-assignments/${teacherId}/${cls}`, { subjects: formData.classSubjects[cls] || [] })
+          }
         }
       }
       setModalOpen(false)
@@ -1197,19 +1279,25 @@ export default function UserManagement() {
                                 <span>{sub}</span>
                               </label>
                               {isEnrolled && (
-                                <select
-                                  disabled={modalMode === 'view'}
-                                  value={formData.subject_teachers[sub] || ''}
-                                  onChange={(e) => handleSubjectTeacherChange(sub, e.target.value)}
-                                  className="mt-1 px-2 py-1 rounded bg-surface-container-low text-[10px] font-semibold outline-none border border-outline-variant/40"
-                                >
-                                  <option value="">-- Assign Teacher --</option>
-                                  {teachersList
-                                    .filter(t => t.subjects?.includes(sub))
-                                    .map(t => (
-                                      <option key={t.user_id} value={t.user_id}>{t.full_name}</option>
-                                    ))}
-                                </select>
+                                <>
+                                  <select
+                                    disabled={modalMode === 'view'}
+                                    value={formData.subject_teachers[sub] || ''}
+                                    onChange={(e) => handleSubjectTeacherChange(sub, e.target.value)}
+                                    className="mt-1 px-2 py-1 rounded bg-surface-container-low text-[10px] font-semibold outline-none border border-outline-variant/40"
+                                  >
+                                    <option value="">-- Assign Teacher --</option>
+                                    {eligibleMentorsForSubject(sub)
+                                      .map(t => (
+                                        <option key={t.user_id} value={t.user_id}>{t.full_name}</option>
+                                      ))}
+                                  </select>
+                                  {eligibleMentorsForSubject(sub).length === 0 && (
+                                    <span className="text-[9px] text-outline-variant italic px-0.5">
+                                      No teacher is assigned to {sub} in this class yet.
+                                    </span>
+                                  )}
+                                </>
                               )}
                             </div>
                           )
@@ -1312,6 +1400,47 @@ export default function UserManagement() {
                         )}
                       </div>
                     </div>
+
+                    {/* Subjects taught per class — pins each Department
+                        Subject to specific Lecturing Classes, instead of
+                        assuming a teacher teaches every subject in every
+                        assigned class. */}
+                    {formData.assigned_classes.length > 0 && (
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[10px] text-outline font-bold uppercase">Subjects Taught Per Class</label>
+                        <div className="flex flex-col gap-2 p-3 rounded-2xl bg-surface-container-low/30 border border-outline-variant/20">
+                          {formData.assigned_classes.map((cls) => (
+                            <div key={cls} className="flex flex-col gap-1.5 p-2 bg-surface-container-lowest rounded-xl border border-outline-variant/15">
+                              <span className="text-[10px] font-bold text-on-surface">Class {cls}</span>
+                              {formData.subjects.length === 0 ? (
+                                <span className="text-[9px] text-outline-variant italic">Pick Department Subjects above first.</span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {formData.subjects.map((sub) => {
+                                    const isTaughtHere = (formData.classSubjects[cls] || []).includes(sub)
+                                    return (
+                                      <button
+                                        key={sub}
+                                        type="button"
+                                        disabled={modalMode === 'view'}
+                                        onClick={() => handleToggleClassSubject(cls, sub)}
+                                        className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all border cursor-pointer ${
+                                          isTaughtHere
+                                            ? 'bg-tertiary text-on-tertiary border-tertiary'
+                                            : 'bg-surface-container-low text-on-surface border-outline-variant/30 hover:bg-surface-container'
+                                        }`}
+                                      >
+                                        {sub}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Qualifications section */}
                     <div className="flex flex-col gap-1.5 text-left">

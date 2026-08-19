@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
@@ -12,6 +12,7 @@ export default function TeacherDashboard() {
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
   const [presentCount, setPresentCount] = useState(0)
   const [absentCount, setAbsentCount] = useState(0)
+  const [presentCaption, setPresentCaption] = useState('')
   const [activeChart, setActiveChart] = useState('performance')
 
   const classOptions = user?.assigned_classes || []
@@ -158,13 +159,6 @@ export default function TeacherDashboard() {
           }
         }
 
-        // Fetch today's attendance summary
-        const summaryRes = await api.get('/attendance/today-summary')
-        if (summaryRes.data) {
-          setPresentCount(summaryRes.data.present)
-          setAbsentCount(summaryRes.data.absent)
-        }
-
         // Fetch real teacher stats (total students, attendance rate, today's
         // schedule, weekly attendance, subject performance, attendance warnings)
         const statsRes = await api.get('/teachers/stats')
@@ -177,6 +171,79 @@ export default function TeacherDashboard() {
     }
     fetchDashboardStats()
   }, [user])
+
+  // "Present Today" follows the teacher's live timetable: while a
+  // ScheduleEvent is currently in session, it shows that class+subject's
+  // count; when nothing is scheduled right now, it cycles through the
+  // teacher's known class+subject pairs, swapping which one is displayed
+  // every 5 seconds. Same stat card throughout — only the bound values change.
+  const assignmentPairsRef = useRef([])
+  const rotationIndexRef = useRef(0)
+
+  useEffect(() => {
+    let cancelled = false
+    let intervalId
+
+    async function loadAssignmentPairs() {
+      try {
+        const res = await api.get('/teacher-assignments/mine')
+        if (!cancelled) assignmentPairsRef.current = res.data || []
+      } catch (err) {
+        console.error('Failed to load teacher assignment pairs:', err)
+      }
+    }
+
+    async function tick() {
+      let target = null
+      try {
+        const activeRes = await api.get('/schedules/active-now')
+        if (activeRes.data) {
+          target = { classKey: activeRes.data.grade, subject: activeRes.data.subject }
+        }
+      } catch (err) {
+        // No active period right now — fall through to the rotation below.
+      }
+
+      if (!target && assignmentPairsRef.current.length > 0) {
+        const pairs = assignmentPairsRef.current
+        const idx = rotationIndexRef.current % pairs.length
+        rotationIndexRef.current = idx + 1
+        target = { classKey: pairs[idx].class_key, subject: pairs[idx].subject }
+      }
+
+      if (cancelled) return
+      try {
+        const params = {}
+        if (target) {
+          const [grade, section] = target.classKey.split('-')
+          params.grade = grade
+          params.section = section || ''
+          params.subject = target.subject
+        }
+        const summaryRes = await api.get('/attendance/today-summary', { params })
+        if (cancelled) return
+        setPresentCount(summaryRes.data.present)
+        setAbsentCount(summaryRes.data.absent)
+        setPresentCaption(target ? `Class ${target.classKey} · ${target.subject}` : '')
+      } catch (err) {
+        console.error('Failed to load present-today summary:', err)
+      }
+    }
+
+    async function start() {
+      await loadAssignmentPairs()
+      if (cancelled) return
+      await tick()
+      if (cancelled) return
+      intervalId = setInterval(tick, 5000)
+    }
+    start()
+
+    return () => {
+      cancelled = true
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [])
 
   const formatTime = (isoString) => {
     if (!isoString) return ''
@@ -273,6 +340,9 @@ export default function TeacherDashboard() {
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{presentCount}</h3>
+                  {presentCaption && (
+                    <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase tracking-wide truncate block mt-0.5">{presentCaption}</span>
+                  )}
                 </div>
               </div>
 
