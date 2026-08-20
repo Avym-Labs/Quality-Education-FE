@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useNotifications } from '../../context/NotificationContext'
 import api from '../../api/axios'
 import Icon from '../common/Icon'
 
@@ -8,28 +9,10 @@ export default function TopBar({ onNotificationClick }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const role = user?.role || 'student'
-  
-  // System notifications unread count State
-  const [unreadCount, setUnreadCount] = useState(0)
 
-  const fetchUnreadCount = async () => {
-    if (!user) return
-    try {
-      const { data } = await api.get('/notifications/unread-count')
-      setUnreadCount(data.count || 0)
-    } catch (err) {
-      console.error('Failed to fetch unread notification count in TopBar:', err)
-    }
-  }
-
-  useEffect(() => {
-    if (user) {
-      fetchUnreadCount()
-      // Poll every 15 seconds to sync notification badges in real-time
-      const interval = setInterval(fetchUnreadCount, 15000)
-      return () => clearInterval(interval)
-    }
-  }, [user])
+  // Shared with NotificationCenter so marking something read here reflects
+  // instantly instead of waiting on the poll interval.
+  const { unreadCount } = useNotifications()
 
   const [studentStats, setStudentStats] = useState(null)
   const fetchStudentStats = async () => {

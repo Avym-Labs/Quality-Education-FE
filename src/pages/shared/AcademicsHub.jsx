@@ -242,14 +242,16 @@ export default function AcademicsHub() {
     async function loadMyAttendance() {
       if (!user || role !== 'student') return
       try {
-        const { data } = await api.get('/attendance', { params: { student_id: user.id } })
+        const params = { student_id: user.id }
+        if (filterSubject !== 'All') params.subject = filterSubject
+        const { data } = await api.get('/attendance', { params })
         setMyFullAttendance(data || [])
       } catch (err) {
         console.error('Failed to load my attendance for reports:', err)
       }
     }
     loadMyAttendance()
-  }, [user, role])
+  }, [user, role, filterSubject])
 
   // The student's real account-creation date — the report period can never
   // start earlier than this, and "Since Joining" uses it as the real start.
@@ -266,6 +268,40 @@ export default function AcademicsHub() {
     }
     loadMyJoinDate()
   }, [user, role])
+
+  // The student's own test results, scoped to the reports tab's own period +
+  // subject filter (not the separate Results tab's dateRange, so the two
+  // tabs' period controls don't cross-couple).
+  const [myReportsResults, setMyReportsResults] = useState([])
+  useEffect(() => {
+    async function loadMyReportsResults() {
+      if (!user || role !== 'student') return
+      try {
+        const params = {
+          student_id: user.id,
+          start_date: reportsModalStartDate,
+          end_date: reportsModalEndDate,
+        }
+        if (filterSubject !== 'All') params.subject = filterSubject
+        const { data } = await api.get('/results', { params })
+        setMyReportsResults(data || [])
+      } catch (err) {
+        console.error('Failed to load my results for reports:', err)
+      }
+    }
+    loadMyReportsResults()
+  }, [user, role, filterSubject, reportsModalStartDate, reportsModalEndDate])
+
+  const myReportsTotalTests = myReportsResults.length
+  const myReportsAverageScore = myReportsTotalTests > 0
+    ? Math.round(myReportsResults.reduce((acc, r) => acc + r.percentage, 0) / myReportsTotalTests)
+    : 0
+  const myReportsHighestScore = myReportsTotalTests > 0
+    ? Math.max(...myReportsResults.map(r => r.percentage))
+    : 0
+  const myReportsPassRate = myReportsTotalTests > 0
+    ? Math.round((myReportsResults.filter(r => r.percentage >= 50).length / myReportsTotalTests) * 100)
+    : 0
 
   // Preset date-range picker shared by the student's own report and the
   // teacher/admin individual report modal (both read/write
@@ -622,8 +658,11 @@ export default function AcademicsHub() {
         temp.setDate(temp.getDate() + 1);
       }
       
-      const rate = daysCount > 0 ? roundToOneDecimal((present / daysCount) * 100) : 0.0;
-      
+      // A day nobody marked attendance for is a holiday, not a day the
+      // student missed — excluded from the rate rather than counted against
+      // them, matching every other rate calculation in this file.
+      const rate = (present + absent) > 0 ? roundToOneDecimal((present / (present + absent)) * 100) : 0.0;
+
       return {
         monthName,
         totalDays: daysCount,
@@ -2306,8 +2345,21 @@ export default function AcademicsHub() {
                     </div>
                   </div>
 
-                  {/* Date range filter */}
+                  {/* Subject + date range filters */}
                   <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Subject</label>
+                      <select
+                        value={filterSubject}
+                        onChange={e => setFilterSubject(e.target.value)}
+                        className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary cursor-pointer"
+                      >
+                        <option value="All">All Subjects</option>
+                        {relevantSubjectOptions.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Period</label>
                       <select
@@ -2438,6 +2490,78 @@ export default function AcademicsHub() {
                           </div>
                           {renderReportsCalendarGrid(rData)}
                         </div>
+                      </div>
+
+                      {/* Test Results */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-on-surface">Test Results</h3>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Total Tests</span>
+                            <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsTotalTests}</h4>
+                            <p className="text-[9px] text-primary font-bold mt-1.5 flex items-center gap-1">
+                              <Icon name="quiz" className="text-xs" />
+                              <span>Tests Recorded</span>
+                            </p>
+                          </div>
+                          <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Average Score</span>
+                            <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsAverageScore}%</h4>
+                            <p className="text-[9px] text-primary font-bold mt-1.5 flex items-center gap-1">
+                              <Icon name="analytics" className="text-xs" />
+                              <span>Average</span>
+                            </p>
+                          </div>
+                          <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Highest Score</span>
+                            <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsHighestScore}%</h4>
+                            <p className="text-[9px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
+                              <Icon name="military_tech" className="text-xs" />
+                              <span>Best</span>
+                            </p>
+                          </div>
+                          <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Pass Rate</span>
+                            <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsPassRate}%</h4>
+                            <p className="text-[9px] text-primary font-bold mt-1.5 flex items-center gap-1">
+                              <Icon name="check_circle" className="text-xs" />
+                              <span>&ge; 50%</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {myReportsResults.length === 0 ? (
+                          <div className="border border-outline-variant/35 rounded-2xl p-6 bg-surface-container-lowest text-center text-xs text-on-surface-variant font-semibold">
+                            No test results recorded for this period{filterSubject !== 'All' ? ` in ${filterSubject}` : ''}.
+                          </div>
+                        ) : (
+                          <div className="border border-outline-variant/35 rounded-2xl overflow-hidden bg-surface-container-lowest">
+                            <table className="w-full text-xs text-left">
+                              <thead className="bg-surface-container-low">
+                                <tr>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Test</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Subject</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Date</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Score</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Grade</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {[...myReportsResults]
+                                  .sort((a, b) => new Date(b.test_date || b.created_at) - new Date(a.test_date || a.created_at))
+                                  .map(r => (
+                                    <tr key={r.id} className="border-t border-outline-variant/15">
+                                      <td className="px-3 py-2 font-semibold text-on-surface">{r.test_title}</td>
+                                      <td className="px-3 py-2 text-on-surface-variant">{r.subject}</td>
+                                      <td className="px-3 py-2 text-on-surface-variant">{r.test_date ? formatIsoDateDMY(r.test_date) : '-'}</td>
+                                      <td className="px-3 py-2 font-bold text-on-surface">{r.marks_obtained}/{r.total_marks} ({r.percentage}%)</td>
+                                      <td className="px-3 py-2 font-bold text-primary">{r.grade_letter || '-'}</td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
                       </div>
                     </>
                   )

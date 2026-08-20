@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
 import LoginPage from './pages/auth/LoginPage'
@@ -53,6 +54,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+      <NotificationProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/paused" element={<PausedPage />} />
@@ -135,6 +137,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+      </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   )

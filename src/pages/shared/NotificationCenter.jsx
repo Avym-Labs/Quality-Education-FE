@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import { useNotifications } from '../../context/NotificationContext'
 
 export default function NotificationCenter() {
   const navigate = useNavigate()
+  const { refreshUnreadCount } = useNotifications()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -45,6 +47,7 @@ export default function NotificationCenter() {
     try {
       await api.patch(`/notifications/${id}/read`)
       fetchNotifications()
+      refreshUnreadCount()
     } catch (err) {
       console.error('Failed to mark notification as read:', err)
     }
@@ -70,6 +73,7 @@ export default function NotificationCenter() {
       // Mark database ones read
       await api.post('/notifications/read-all')
       fetchNotifications()
+      refreshUnreadCount()
     } catch (err) {
       console.error('Failed to mark all as read:', err)
     }
@@ -103,23 +107,14 @@ export default function NotificationCenter() {
   const { today, yesterday, earlier } = categorizeNotifs()
   const newUpdatesCount = allNotifs.filter(n => !n.is_read).length
 
-  // Helper to format date display
-  const formatTime = (isoString) => {
-    try {
-      const d = new Date(isoString)
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    } catch {
-      return '10:00 AM'
-    }
-  }
-
-  const formatDateLabel = (isoString) => {
-    try {
-      const d = new Date(isoString)
-      return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
-    } catch {
-      return 'Oct 14'
-    }
+  // Always shows the exact date + time together, regardless of which
+  // Today/Yesterday/Earlier bucket the notification falls into.
+  const formatDateTime = (isoString) => {
+    const d = new Date(isoString)
+    if (isNaN(d.getTime())) return ''
+    const datePart = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return `${datePart}, ${timePart}`
   }
 
   // Get icon and color dynamically for db notification
@@ -246,7 +241,7 @@ export default function NotificationCenter() {
                     <div className="flex-grow min-w-0 pr-4">
                       <div className="flex justify-between items-start mb-0.5">
                         <h4 className="font-bold text-sm text-on-surface truncate">{n.title}</h4>
-                        <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-medium ml-2">{formatTime(n.created_at)}</span>
+                        <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-medium ml-2">{formatDateTime(n.created_at)}</span>
                       </div>
                       <p className="text-xs text-on-surface-variant leading-relaxed font-normal">{n.message}</p>
                     </div>
@@ -281,7 +276,7 @@ export default function NotificationCenter() {
                     <div className="flex-grow min-w-0 pr-2">
                       <div className="flex justify-between items-start mb-0.5">
                         <h4 className="font-bold text-sm text-on-surface truncate">{n.title}</h4>
-                        <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-medium ml-2">Yesterday</span>
+                        <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-medium ml-2">{formatDateTime(n.created_at)}</span>
                       </div>
                       <p className="text-xs text-on-surface-variant/80 leading-relaxed font-normal">{n.message}</p>
                     </div>
@@ -311,7 +306,7 @@ export default function NotificationCenter() {
                     <div className="flex-grow min-w-0">
                       <div className="flex justify-between items-start mb-0.5">
                         <h4 className="font-bold text-sm text-on-surface truncate">{n.title}</h4>
-                        <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-medium ml-2">{formatDateLabel(n.created_at)}</span>
+                        <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-medium ml-2">{formatDateTime(n.created_at)}</span>
                       </div>
                       <p className="text-xs text-on-surface-variant/80 leading-relaxed font-normal">{n.message}</p>
                     </div>

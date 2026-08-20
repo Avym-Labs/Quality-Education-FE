@@ -312,10 +312,25 @@ export default function UserManagement() {
   const handleToggleSubject = (sub) => {
     setFormData(prev => {
       const exists = prev.subjects.includes(sub)
-      return {
-        ...prev,
-        subjects: exists ? prev.subjects.filter(s => s !== sub) : [...prev.subjects, sub]
+      if (exists) {
+        // Unchecking must also drop any stale mentor assignment (student
+        // form) or per-class pairing (teacher form) for this subject —
+        // otherwise a leftover reference to a subject no longer selected
+        // fails backend validation on save.
+        const restMentors = Object.fromEntries(
+          Object.entries(prev.subject_teachers).filter(([key]) => key !== sub)
+        )
+        const restClassSubjects = Object.fromEntries(
+          Object.entries(prev.classSubjects || {}).map(([cls, subs]) => [cls, subs.filter(s => s !== sub)])
+        )
+        return {
+          ...prev,
+          subjects: prev.subjects.filter(s => s !== sub),
+          subject_teachers: restMentors,
+          classSubjects: restClassSubjects
+        }
       }
+      return { ...prev, subjects: [...prev.subjects, sub] }
     })
   }
 
@@ -469,7 +484,13 @@ export default function UserManagement() {
           father_name: formData.father_name,
           mother_name: formData.mother_name,
           subjects: formData.subjects,
-          subject_teachers: formData.subject_teachers
+          // Only enrolled subjects' mentors are sent — a stale entry left
+          // over from an earlier edit (or old data predating per-class
+          // validation) must never block a save for a subject that isn't
+          // even selected anymore.
+          subject_teachers: Object.fromEntries(
+            Object.entries(formData.subject_teachers).filter(([sub]) => formData.subjects.includes(sub))
+          )
         }
 
         if (modalMode === 'create') {
