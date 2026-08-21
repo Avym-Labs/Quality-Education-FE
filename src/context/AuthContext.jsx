@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import api from '../api/axios'
 
 const AuthContext = createContext(null)
@@ -7,14 +7,59 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Refreshes the cached profile from the server — the copy saved at login
+  // never otherwise updates on its own, so a class/subject reassignment made
+  // after the session started (e.g. a teacher assigned a new class later)
+  // would stay invisible until the user logged out and back in. Stable via
+  // useCallback so the poll/focus effect below doesn't need to depend on it.
+  const refreshUser = useCallback(async () => {
+    try {
+      const { data } = await api.get('/auth/me')
+      localStorage.setItem('user', JSON.stringify(data))
+      setUser(data)
+      return data
+    } catch (err) {
+      console.error('Failed to refresh user profile:', err)
+      return null
+    }
+  }, [])
+
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     const storedUser = localStorage.getItem('user')
     if (token && storedUser) {
       setUser(JSON.parse(storedUser))
+      // The cached copy could be arbitrarily stale (e.g. a tab left open for
+      // days) — reconcile it immediately rather than waiting on the poll.
+      refreshUser()
     }
     setLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Keeps every page's view of assigned_classes/subjects/etc. fresh without
+  // each one having to remember to refetch itself — a single shared poll,
+  // plus an immediate refresh whenever the tab/window regains focus so
+  // coming back from being away doesn't wait out the poll interval.
+  useEffect(() => {
+    if (!user) return
+    const interval = setInterval(refreshUser, 60000)
+    const handleFocus = () => {
+      if (document.visibilityState === 'visible') refreshUser()
+    }
+    document.addEventListener('visibilitychange', handleFocus)
+    window.addEventListener('focus', handleFocus)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleFocus)
+      window.removeEventListener('focus', handleFocus)
+    }
+    // Depends on user?.id, not user itself — refreshUser() replaces the
+    // whole user object every time it succeeds, and depending on the object
+    // would tear down and restart this effect (and the interval) on every
+    // single poll tick instead of only when the logged-in identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, refreshUser])
 
   const login = async (credentials, rememberMe = false) => {
     const { data } = await api.post('/auth/login', { ...credentials, remember_me: rememberMe })
@@ -119,7 +164,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, switchAccount, addAccount }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, switchAccount, addAccount, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
