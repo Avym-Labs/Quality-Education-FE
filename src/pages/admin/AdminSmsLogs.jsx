@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function AdminSmsLogs() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,7 +24,7 @@ export default function AdminSmsLogs() {
       setLogs(data || [])
     } catch (err) {
       console.error('Failed to load SMS logs:', err)
-      setError('Failed to fetch SMS logs audit trails from server.')
+      setError(t('adminSmsLogs.failedToFetch'))
     } finally {
       setLoading(false)
     }
@@ -80,21 +82,21 @@ export default function AdminSmsLogs() {
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-                SMS Delivery Logs
+                {t('adminSmsLogs.title')}
               </h2>
               <p className="text-on-surface-variant text-xs font-medium mt-0.5">
-                Audit system alerts, attendance triggers, and notifications sent via SMS.
+                {t('adminSmsLogs.subtitle')}
               </p>
             </div>
           </div>
-          
+
           {/* Refresh Action */}
           <button
             onClick={loadSmsLogs}
             className="flex items-center gap-1.5 px-4 py-2 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-colors shadow-xs active:scale-95 duration-100 cursor-pointer select-none"
           >
             <Icon name="refresh" className="text-sm" />
-            <span>Refresh Logs</span>
+            <span>{t('adminSmsLogs.refreshLogs')}</span>
           </button>
         </section>
 
@@ -102,9 +104,9 @@ export default function AdminSmsLogs() {
         <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" />
-            <input 
+            <input
               type="text"
-              placeholder="Search by phone, recipient, content, or sender..."
+              placeholder={t('adminSmsLogs.searchPlaceholder')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-surface-container-low/30 border border-outline-variant rounded-xl py-2 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none text-xs font-semibold"
@@ -112,15 +114,15 @@ export default function AdminSmsLogs() {
           </div>
           
           <div className="flex items-center gap-2">
-            <label className="text-[10px] uppercase font-bold text-outline shrink-0">Status:</label>
+            <label className="text-[10px] uppercase font-bold text-outline shrink-0">{t('adminSmsLogs.status')}</label>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
               className="bg-surface-container-low/30 border border-outline-variant rounded-xl px-3 py-2 text-xs font-semibold text-on-surface focus:outline-none"
             >
-              <option value="All">All Logs</option>
-              <option value="Sent">Sent Successfully</option>
-              <option value="Failed">Failed Delivery</option>
+              <option value="All">{t('adminSmsLogs.allLogs')}</option>
+              <option value="Sent">{t('adminSmsLogs.sentSuccessfully')}</option>
+              <option value="Failed">{t('adminSmsLogs.failedDelivery')}</option>
             </select>
           </div>
         </div>
@@ -129,7 +131,7 @@ export default function AdminSmsLogs() {
         {loading ? (
           <div className="py-20 text-center text-outline font-semibold flex flex-col items-center justify-center gap-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span>Fetching SMS delivery logs...</span>
+            <span>{t('adminSmsLogs.fetchingLogs')}</span>
           </div>
         ) : error ? (
           <div className="bg-error-container text-on-error-container p-4 rounded-2xl text-xs font-bold text-center">
@@ -138,7 +140,7 @@ export default function AdminSmsLogs() {
         ) : filteredLogs.length === 0 ? (
           <div className="bg-surface-container-lowest p-12 text-center rounded-2xl border border-outline-variant/30 shadow-xs">
             <Icon name="sms_failed" className="text-4xl text-outline" />
-            <p className="text-xs text-outline font-bold mt-2">No SMS logs match active search filters.</p>
+            <p className="text-xs text-outline font-bold mt-2">{t('adminSmsLogs.noLogsMatchFilters')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -148,19 +150,19 @@ export default function AdminSmsLogs() {
                 {/* Meta header: Recipient Phone & status */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant/10 pb-3">
                   <div className="flex items-center gap-2 flex-wrap text-xs">
-                    <span className="font-bold text-on-surface">To: {log.recipient_name}</span>
+                    <span className="font-bold text-on-surface">{t('adminSmsLogs.to', { name: log.recipient_name })}</span>
                     <span className="text-[10px] text-outline font-medium">({log.recipient_phone})</span>
                     <span className="text-[10px] text-outline">•</span>
-                    <span className="text-[10px] text-outline font-semibold">Sender: {log.sender_name}</span>
+                    <span className="text-[10px] text-outline font-semibold">{t('adminSmsLogs.sender', { name: log.sender_name })}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase inline-block border ${
-                      log.status === 'sent' 
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                      log.status === 'sent'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                         : 'bg-red-50 text-error border-red-200'
                     }`}>
-                      {log.status}
+                      {log.status === 'sent' ? t('adminSmsLogs.sentSuccessfully') : t('adminSmsLogs.failedDelivery')}
                     </span>
                     <span className="text-[9px] text-outline font-bold bg-surface-container-low px-2 py-0.5 rounded-md shadow-xs">
                       {formatIST(log.created_at)}

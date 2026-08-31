@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -21,6 +22,7 @@ function pillClass(active) {
 }
 
 export default function ManageStudents() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const assignedClasses = user?.assigned_classes || []
@@ -57,7 +59,7 @@ export default function ManageStudents() {
       setRoster(res.data || [])
     } catch (err) {
       console.error('Failed to load roster:', err)
-      setMessage('Failed to load your students.')
+      setMessage(t('manageStudents.failedToLoadRoster'))
     } finally {
       setLoadingRoster(false)
     }
@@ -80,30 +82,30 @@ export default function ManageStudents() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return
-    if (!window.confirm(`Delete ${selectedIds.length} selected student(s)? This cannot be undone.`)) return
+    if (!window.confirm(t('manageStudents.confirmBulkDelete', { count: selectedIds.length }))) return
     setMessage('')
     try {
       await Promise.all(selectedIds.map(id => api.delete(`/students/${id}`)))
-      setMessage(`Deleted ${selectedIds.length} student(s).`)
+      setMessage(t('manageStudents.deletedNStudents', { count: selectedIds.length }))
       setSelectedIds([])
       loadRoster()
     } catch (err) {
       console.error('Bulk delete failed:', err)
-      setMessage('Some students could not be deleted.')
+      setMessage(t('manageStudents.someCouldNotBeDeleted'))
     }
   }
 
   const handleDeleteOne = async (id) => {
-    if (!window.confirm('Delete this student? This cannot be undone.')) return
+    if (!window.confirm(t('manageStudents.confirmDeleteOne'))) return
     setMessage('')
     try {
       await api.delete(`/students/${id}`)
-      setMessage('Student deleted.')
+      setMessage(t('manageStudents.studentDeleted'))
       setSelectedIds(prev => prev.filter(x => x !== id))
       loadRoster()
     } catch (err) {
       console.error('Delete failed:', err)
-      setMessage('Failed to delete student.')
+      setMessage(t('manageStudents.failedToDelete'))
     }
   }
 
@@ -145,22 +147,22 @@ export default function ManageStudents() {
       if (modalMode === 'edit') {
         const { password, ...rest } = formRows[0]
         await api.put(`/students/${editingId}`, rest)
-        setMessage('Student updated.')
+        setMessage(t('manageStudents.studentUpdated'))
       } else {
         const res = await api.post('/students/bulk', { students: formRows })
         const failed = res.data.results.filter(r => !r.success)
         const okCount = res.data.results.length - failed.length
         setMessage(
           failed.length > 0
-            ? `Added ${okCount} student(s); ${failed.length} failed: ${failed.map(f => f.error).join('; ')}`
-            : `Added ${okCount} student(s).`
+            ? t('manageStudents.addedNStudents', { count: okCount, failedCount: failed.length, errors: failed.map(f => f.error).join('; ') })
+            : t('manageStudents.addedNStudentsOnly', { count: okCount })
         )
       }
       setModalOpen(false)
       loadRoster()
     } catch (err) {
       console.error('Failed to save student(s):', err)
-      setMessage(err.response?.data?.detail || 'Failed to save student(s).')
+      setMessage(err.response?.data?.detail || t('manageStudents.failedToSave'))
     } finally {
       setSubmitting(false)
     }
@@ -179,12 +181,12 @@ export default function ManageStudents() {
     setMessage('')
     try {
       await api.post('/students', singleForm)
-      setMessage(`Added ${singleForm.first_name} ${singleForm.last_name}.`)
+      setMessage(t('manageStudents.addedStudent', { name: `${singleForm.first_name} ${singleForm.last_name}` }))
       setSingleForm(emptyFormRow(assignedClasses[0]?.split('-')[0], assignedClasses[0]?.split('-')[1]))
       loadRoster()
     } catch (err) {
       console.error('Failed to add student:', err)
-      setMessage(err.response?.data?.detail || 'Failed to add student.')
+      setMessage(err.response?.data?.detail || t('manageStudents.failedToAdd'))
     } finally {
       setSingleSubmitting(false)
     }
@@ -227,12 +229,12 @@ export default function ManageStudents() {
       setCsvResults(null)
       setMessage(
         rows.length === 0
-          ? 'No valid student rows found in that file. Make sure it has recognizable headers like "First Name", "Last Name", and "Roll Number" — see the downloadable template.'
+          ? t('manageStudents.noValidRows')
           : ''
       )
     } catch (err) {
       console.error('CSV parse failed:', err)
-      setMessage(err.response?.data?.detail || 'Failed to parse that file. Please check the format and try again.')
+      setMessage(err.response?.data?.detail || t('manageStudents.failedToParse'))
     }
   }
 
@@ -252,11 +254,11 @@ export default function ManageStudents() {
       const res = await api.post('/students/bulk', { students: rows })
       setCsvResults(res.data.results)
       const successCount = res.data.results.filter(r => r.success).length
-      setMessage(`Imported ${successCount} of ${rows.length} student(s).`)
+      setMessage(t('manageStudents.importedNOfM', { success: successCount, total: rows.length }))
       loadRoster()
     } catch (err) {
       console.error('Bulk CSV import failed:', err)
-      setMessage('Bulk import failed.')
+      setMessage(t('manageStudents.bulkImportFailed'))
     } finally {
       setImportingCsv(false)
     }
@@ -275,14 +277,14 @@ export default function ManageStudents() {
             <Icon name="arrow_back" />
           </button>
           <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">
-            Manage Students
+            {t('manageStudents.title')}
           </h2>
         </section>
 
         {/* Desktop Header */}
         <div className="hidden md:block mb-6">
-          <h1 className="text-xl font-bold text-on-surface">Manage Students</h1>
-          <p className="text-on-surface-variant text-[10px] uppercase font-bold mt-1 tracking-wider">Department Faculty Portal</p>
+          <h1 className="text-xl font-bold text-on-surface">{t('manageStudents.title')}</h1>
+          <p className="text-on-surface-variant text-[10px] uppercase font-bold mt-1 tracking-wider">{t('manageStudents.departmentFacultyPortal')}</p>
         </div>
 
         <div className="space-y-stack-lg">
@@ -295,8 +297,8 @@ export default function ManageStudents() {
 
         {/* Tab pill */}
         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-full p-1 flex gap-1 max-w-md shadow-xs">
-          <div onClick={() => setActiveTab('manage')} className={pillClass(activeTab === 'manage')}>Manage</div>
-          <div onClick={() => setActiveTab('import')} className={pillClass(activeTab === 'import')}>Import Students</div>
+          <div onClick={() => setActiveTab('manage')} className={pillClass(activeTab === 'manage')}>{t('manageStudents.manageTab')}</div>
+          <div onClick={() => setActiveTab('import')} className={pillClass(activeTab === 'import')}>{t('manageStudents.importTab')}</div>
         </div>
 
         {/* ============================= MANAGE TAB ============================= */}
@@ -304,7 +306,7 @@ export default function ManageStudents() {
           <section className="space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs font-semibold text-on-surface-variant">
-                Students in your assigned classes: {assignedClasses.join(', ') || 'none assigned'}
+                {t('manageStudents.studentsInClasses', { classes: assignedClasses.join(', ') || t('manageStudents.noneAssigned') })}
               </p>
               <div className="flex items-center gap-2">
                 {selectedIds.length > 0 && (
@@ -313,7 +315,7 @@ export default function ManageStudents() {
                     className="flex items-center gap-1.5 px-3 py-2 bg-error-container/30 text-error rounded-xl font-bold text-xs hover:bg-error-container/50 transition-colors border-none cursor-pointer"
                   >
                     <Icon name="delete" className="text-sm" />
-                    <span>Delete Selected ({selectedIds.length})</span>
+                    <span>{t('manageStudents.deleteSelected', { count: selectedIds.length })}</span>
                   </button>
                 )}
                 <button
@@ -321,7 +323,7 @@ export default function ManageStudents() {
                   className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 transition-colors border-none cursor-pointer"
                 >
                   <Icon name="add" className="text-sm" />
-                  <span>Add Student</span>
+                  <span>{t('manageStudents.addStudent')}</span>
                 </button>
               </div>
             </div>
@@ -332,7 +334,7 @@ export default function ManageStudents() {
               </div>
             ) : roster.length === 0 ? (
               <div className="text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-lowest p-6 rounded-2xl border border-dashed border-outline-variant">
-                No students in your assigned classes yet. Use "Add Student" to create one.
+                {t('manageStudents.noStudentsYet')}
               </div>
             ) : (
               <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[24px] overflow-x-auto">
@@ -342,12 +344,12 @@ export default function ManageStudents() {
                       <th className="p-3 text-left w-8">
                         <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={selectedIds.length === roster.length} onChange={toggleSelectAll} />
                       </th>
-                      <th className="p-3 text-left">Name</th>
-                      <th className="p-3 text-left">Roll No.</th>
-                      <th className="p-3 text-left">Class</th>
-                      <th className="p-3 text-left">Subjects</th>
-                      <th className="p-3 text-left">Contact</th>
-                      <th className="p-3 text-right">Actions</th>
+                      <th className="p-3 text-left">{t('manageStudents.name')}</th>
+                      <th className="p-3 text-left">{t('manageStudents.rollNo')}</th>
+                      <th className="p-3 text-left">{t('manageStudents.class')}</th>
+                      <th className="p-3 text-left">{t('manageStudents.subjects')}</th>
+                      <th className="p-3 text-left">{t('manageStudents.contact')}</th>
+                      <th className="p-3 text-right">{t('manageStudents.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -387,38 +389,38 @@ export default function ManageStudents() {
             {/* Add a single student manually */}
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[24px] p-5 shadow-sm space-y-3">
               <div>
-                <h3 className="font-title-lg text-sm text-on-surface font-bold">Add a Student</h3>
-                <p className="text-[10px] text-on-surface-variant font-semibold">Create a single new student in one of your assigned classes</p>
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('manageStudents.addAStudent')}</h3>
+                <p className="text-[10px] text-on-surface-variant font-semibold">{t('manageStudents.addAStudentDesc')}</p>
               </div>
 
               <form onSubmit={handleSingleAddSubmit} className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase px-1">First name <span className="text-error">*</span></label>
-                  <input placeholder="First name" value={singleForm.first_name} onChange={e => updateSingleForm('first_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">{t('manageStudents.firstName')} <span className="text-error">*</span></label>
+                  <input placeholder={t('manageStudents.firstName')} value={singleForm.first_name} onChange={e => updateSingleForm('first_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase px-1">Last name <span className="text-error">*</span></label>
-                  <input placeholder="Last name" value={singleForm.last_name} onChange={e => updateSingleForm('last_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">{t('manageStudents.lastName')} <span className="text-error">*</span></label>
+                  <input placeholder={t('manageStudents.lastName')} value={singleForm.last_name} onChange={e => updateSingleForm('last_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
                 </div>
-                <input placeholder="Email (optional)" value={singleForm.email} onChange={e => updateSingleForm('email', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
+                <input placeholder={t('manageStudents.emailOptional')} value={singleForm.email} onChange={e => updateSingleForm('email', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase px-1">Phone <span className="text-error">*</span></label>
-                  <input placeholder="Phone" value={singleForm.phone} onChange={e => updateSingleForm('phone', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">{t('manageStudents.phone')} <span className="text-error">*</span></label>
+                  <input placeholder={t('manageStudents.phone')} value={singleForm.phone} onChange={e => updateSingleForm('phone', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
                 </div>
-                <input placeholder="Password (defaults to phone/roll no.)" value={singleForm.password} onChange={e => updateSingleForm('password', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
+                <input placeholder={t('manageStudents.passwordDefaultPhoneRoll')} value={singleForm.password} onChange={e => updateSingleForm('password', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase px-1">Class <span className="text-error">*</span></label>
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">{t('manageStudents.class_')} <span className="text-error">*</span></label>
                   <select value={`${singleForm.grade}-${singleForm.section}`} onChange={e => { const [g, s] = e.target.value.split('-'); updateSingleForm('grade', g); updateSingleForm('section', s) }} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:outline-none" required>
-                    {assignedClasses.length === 0 && <option value="-">No assigned classes</option>}
+                    {assignedClasses.length === 0 && <option value="-">{t('manageStudents.noAssignedClasses')}</option>}
                     {assignedClasses.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase px-1">Roll number <span className="text-error">*</span></label>
-                  <input placeholder="Roll number" value={singleForm.roll_number} onChange={e => updateSingleForm('roll_number', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
+                  <label className="text-[9px] font-bold text-outline uppercase px-1">{t('manageStudents.rollNumber')} <span className="text-error">*</span></label>
+                  <input placeholder={t('manageStudents.rollNumber')} value={singleForm.roll_number} onChange={e => updateSingleForm('roll_number', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" required />
                 </div>
-                <input placeholder="Father's name (optional)" value={singleForm.father_name} onChange={e => updateSingleForm('father_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
-                <input placeholder="Mother's name (optional)" value={singleForm.mother_name} onChange={e => updateSingleForm('mother_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                <input placeholder={t('manageStudents.fathersNameOptional')} value={singleForm.father_name} onChange={e => updateSingleForm('father_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none self-end" />
+                <input placeholder={t('manageStudents.mothersNameOptional')} value={singleForm.mother_name} onChange={e => updateSingleForm('mother_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
 
                 <div className="col-span-2 flex justify-end">
                   <button
@@ -426,7 +428,7 @@ export default function ManageStudents() {
                     disabled={singleSubmitting}
                     className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 disabled:opacity-50 border-none cursor-pointer"
                   >
-                    {singleSubmitting ? 'Adding...' : 'Add Student'}
+                    {singleSubmitting ? t('manageStudents.adding') : t('manageStudents.addStudent')}
                   </button>
                 </div>
               </form>
@@ -436,8 +438,8 @@ export default function ManageStudents() {
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[24px] p-5 shadow-sm space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div>
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold">Bulk Upload via CSV/Excel</h3>
-                  <p className="text-[10px] text-on-surface-variant font-semibold">Create many new students at once</p>
+                  <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('manageStudents.bulkUploadCsv')}</h3>
+                  <p className="text-[10px] text-on-surface-variant font-semibold">{t('manageStudents.bulkUploadDesc')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -445,11 +447,11 @@ export default function ManageStudents() {
                     className="flex items-center gap-1.5 px-3 py-2 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/50 rounded-xl font-bold text-xs cursor-pointer transition-colors"
                   >
                     <Icon name="download" className="text-xs" />
-                    <span>Download Template</span>
+                    <span>{t('manageStudents.downloadTemplate')}</span>
                   </button>
                   <label className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold text-xs cursor-pointer hover:opacity-90 transition-colors">
                     <Icon name="upload_file" className="text-xs" />
-                    <span>Choose CSV/Excel File</span>
+                    <span>{t('manageStudents.chooseCsvFile')}</span>
                     <input type="file" accept=".csv,text/csv,.xlsx" onChange={handleCsvFile} className="hidden" />
                   </label>
                 </div>
@@ -460,14 +462,14 @@ export default function ManageStudents() {
                   <div className="flex items-center justify-between gap-2">
                     <label className="flex items-center gap-2 text-[10px] font-bold text-on-surface-variant uppercase px-1">
                       <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={csvSelectedRows.length === csvRows.length} onChange={toggleCsvSelectAll} />
-                      Select all ({csvRows.length} rows parsed)
+                      {t('manageStudents.selectAllRowsParsed', { count: csvRows.length })}
                     </label>
                     <button
                       onClick={handleImportCsv}
                       disabled={importingCsv || csvSelectedRows.length === 0}
                       className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 disabled:opacity-50 border-none cursor-pointer"
                     >
-                      {importingCsv ? 'Importing...' : `Import Selected (${csvSelectedRows.length})`}
+                      {importingCsv ? t('manageStudents.importing') : t('manageStudents.importSelected', { count: csvSelectedRows.length })}
                     </button>
                   </div>
 
@@ -476,10 +478,10 @@ export default function ManageStudents() {
                       <thead>
                         <tr className="border-b border-outline-variant/20 text-on-surface-variant uppercase text-[9px] font-bold bg-surface-container-low sticky top-0">
                           <th className="p-2 text-left w-6"></th>
-                          <th className="p-2 text-left">Name</th>
-                          <th className="p-2 text-left">Roll No.</th>
-                          <th className="p-2 text-left">Class</th>
-                          <th className="p-2 text-left">Status</th>
+                          <th className="p-2 text-left">{t('manageStudents.name')}</th>
+                          <th className="p-2 text-left">{t('manageStudents.rollNo')}</th>
+                          <th className="p-2 text-left">{t('manageStudents.class')}</th>
+                          <th className="p-2 text-left">{t('manageStudents.status')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -496,10 +498,10 @@ export default function ManageStudents() {
                               <td className="p-2">
                                 {result ? (
                                   <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${result.success ? 'bg-emerald-100 text-emerald-800' : 'bg-error-container text-error'}`}>
-                                    {result.success ? 'Added' : result.error}
+                                    {result.success ? t('manageStudents.added') : result.error}
                                   </span>
                                 ) : (
-                                  <span className="text-on-surface-variant/60">Pending</span>
+                                  <span className="text-on-surface-variant/60">{t('manageStudents.pending')}</span>
                                 )}
                               </td>
                             </tr>
@@ -521,7 +523,7 @@ export default function ManageStudents() {
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setModalOpen(false)}>
             <div className="bg-white w-full max-w-2xl rounded-[28px] shadow-xl max-h-[85vh] overflow-y-auto p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-black text-on-surface">{modalMode === 'edit' ? 'Edit Student' : 'Add Student(s)'}</h3>
+                <h3 className="text-base font-black text-on-surface">{modalMode === 'edit' ? t('manageStudents.editStudent') : t('manageStudents.addStudents')}</h3>
                 <button onClick={() => setModalOpen(false)} className="p-1.5 rounded-full bg-surface-container-low hover:bg-surface-container-high border-none cursor-pointer">
                   <Icon name="close" className="text-sm" />
                 </button>
@@ -539,20 +541,20 @@ export default function ManageStudents() {
                       </button>
                     )}
                     <div className="grid grid-cols-2 gap-3">
-                      <input placeholder="First name" value={row.first_name} onChange={e => updateFormRow(idx, 'first_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                      <input placeholder="Last name" value={row.last_name} onChange={e => updateFormRow(idx, 'last_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                      <input placeholder="Email (optional)" value={row.email} onChange={e => updateFormRow(idx, 'email', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                      <input placeholder="Phone (optional)" value={row.phone} onChange={e => updateFormRow(idx, 'phone', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                      <input placeholder={t('manageStudents.firstName')} value={row.first_name} onChange={e => updateFormRow(idx, 'first_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                      <input placeholder={t('manageStudents.lastName')} value={row.last_name} onChange={e => updateFormRow(idx, 'last_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                      <input placeholder={t('manageStudents.emailOptional')} value={row.email} onChange={e => updateFormRow(idx, 'email', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                      <input placeholder={`${t('manageStudents.phone')} (optional)`} value={row.phone} onChange={e => updateFormRow(idx, 'phone', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
                       {modalMode === 'add' && (
-                        <input placeholder="Password (defaults to roll no.)" value={row.password} onChange={e => updateFormRow(idx, 'password', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                        <input placeholder={t('manageStudents.passwordDefaultPhoneRoll')} value={row.password} onChange={e => updateFormRow(idx, 'password', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
                       )}
                       <select value={`${row.grade}-${row.section}`} onChange={e => { const [g, s] = e.target.value.split('-'); updateFormRow(idx, 'grade', g); updateFormRow(idx, 'section', s) }} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:outline-none">
-                        {assignedClasses.length === 0 && <option value="-">No assigned classes</option>}
+                        {assignedClasses.length === 0 && <option value="-">{t('manageStudents.noAssignedClasses')}</option>}
                         {assignedClasses.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                      <input placeholder="Roll number" value={row.roll_number} onChange={e => updateFormRow(idx, 'roll_number', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                      <input placeholder="Father's name (optional)" value={row.father_name} onChange={e => updateFormRow(idx, 'father_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
-                      <input placeholder="Mother's name (optional)" value={row.mother_name} onChange={e => updateFormRow(idx, 'mother_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                      <input placeholder={t('manageStudents.rollNumber')} value={row.roll_number} onChange={e => updateFormRow(idx, 'roll_number', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                      <input placeholder={t('manageStudents.fathersNameOptional')} value={row.father_name} onChange={e => updateFormRow(idx, 'father_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
+                      <input placeholder={t('manageStudents.mothersNameOptional')} value={row.mother_name} onChange={e => updateFormRow(idx, 'mother_name', e.target.value)} className="bg-white border border-outline-variant rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none" />
                     </div>
                   </div>
                 ))}
@@ -561,20 +563,20 @@ export default function ManageStudents() {
               {modalMode === 'add' && (
                 <button onClick={addFormRow} className="flex items-center gap-1.5 text-primary font-bold text-xs hover:underline border-none bg-transparent cursor-pointer">
                   <Icon name="add" className="text-sm" />
-                  <span>Add another</span>
+                  <span>{t('manageStudents.addAnother')}</span>
                 </button>
               )}
 
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setModalOpen(false)} className="flex-1 py-3 rounded-full border border-outline-variant text-on-surface font-bold text-xs hover:bg-surface-container-low bg-transparent cursor-pointer">
-                  Cancel
+                  {t('manageStudents.cancel')}
                 </button>
                 <button
                   onClick={handleSubmitForm}
                   disabled={submitting}
                   className="flex-1 py-3 rounded-full bg-primary text-on-primary font-bold text-xs hover:opacity-95 shadow-md disabled:opacity-50 border-none cursor-pointer"
                 >
-                  {submitting ? 'Saving...' : modalMode === 'edit' ? 'Save Changes' : `Add ${formRows.length} Student${formRows.length > 1 ? 's' : ''}`}
+                  {submitting ? t('manageStudents.saving') : modalMode === 'edit' ? t('manageStudents.saveChanges') : t('manageStudents.addNStudents', { count: formRows.length })}
                 </button>
               </div>
             </div>

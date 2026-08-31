@@ -73,6 +73,21 @@
     animation: float 4s ease-in-out infinite;
   }
 
+  @keyframes cardSwap {
+    0% {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-card-swap {
+    animation: cardSwap 0.4s ease-out;
+  }
+
   /* Custom Typography Utility Styles */
   .heading-bold {
     font-size: 21px !important;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -7,6 +8,7 @@ import Icon from '../../components/common/Icon'
 import DateInput from '../../components/common/DateInput'
 
 export default function LeaveRequest() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -24,6 +26,7 @@ export default function LeaveRequest() {
   const [filterStatus, setFilterStatus] = useState('all') // all | pending
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageIsSuccess, setMessageIsSuccess] = useState(false)
 
   // Student Leaves Approval states
   const [viewTab, setViewTab] = useState('my-leaves') // my-leaves | student-leaves
@@ -46,7 +49,8 @@ export default function LeaveRequest() {
       }
     } catch (err) {
       console.error('Failed to load leave history:', err)
-      setMessage('Error loading leave history.')
+      setMessage(t('teacherLeaveRequest.errorLoadingHistory'))
+      setMessageIsSuccess(false)
     } finally {
       setLoading(false)
     }
@@ -63,7 +67,8 @@ export default function LeaveRequest() {
       }
     } catch (err) {
       console.error('Failed to load student leaves:', err)
-      setMessage('Error loading student leave requests.')
+      setMessage(t('teacherLeaveRequest.errorLoadingStudentLeaves'))
+      setMessageIsSuccess(false)
     } finally {
       setStudentLoading(false)
     }
@@ -73,12 +78,14 @@ export default function LeaveRequest() {
     setMessage('')
     try {
       await api.patch(`/leave/${leaveId}`, { status: actionStatus })
-      setMessage(`Leave request ${actionStatus} successfully!`)
+      setMessage(t('teacherLeaveRequest.leaveActionSuccess', { status: actionStatus === 'approved' ? t('common.statusApproved') : t('common.statusRejected') }))
+      setMessageIsSuccess(true)
       loadStudentLeaves()
       setTimeout(() => setMessage(''), 4000)
     } catch (err) {
       console.error('Failed to update student leave status:', err)
-      setMessage('Failed to update leave status.')
+      setMessage(t('teacherLeaveRequest.failedToUpdateStatus'))
+      setMessageIsSuccess(false)
     }
   }
 
@@ -93,7 +100,8 @@ export default function LeaveRequest() {
     setMessage('')
 
     if (!reason) {
-      setMessage('Please enter a reason for your leave request.')
+      setMessage(t('teacherLeaveRequest.enterReason'))
+      setMessageIsSuccess(false)
       return
     }
 
@@ -103,7 +111,8 @@ export default function LeaveRequest() {
 
     if (leaveMode === 'full') {
       if (!startDate || !endDate) {
-        setMessage('Please select both start and end dates.')
+        setMessage(t('teacherLeaveRequest.selectBothDates'))
+        setMessageIsSuccess(false)
         return
       }
       start = startDate
@@ -111,7 +120,8 @@ export default function LeaveRequest() {
       type = 'Full Day'
     } else {
       if (!singleDate) {
-        setMessage('Please select a date.')
+        setMessage(t('teacherLeaveRequest.selectDate'))
+        setMessageIsSuccess(false)
         return
       }
       start = singleDate
@@ -128,7 +138,8 @@ export default function LeaveRequest() {
         reason: reason
       })
 
-      setMessage('Leave request submitted successfully!')
+      setMessage(t('teacherLeaveRequest.submittedSuccessfully'))
+      setMessageIsSuccess(true)
       // Clear form
       setStartDate('')
       setEndDate('')
@@ -143,7 +154,8 @@ export default function LeaveRequest() {
       setTimeout(() => setMessage(''), 4000)
     } catch (err) {
       console.error('Failed to request leave:', err)
-      setMessage('Failed to submit leave request.')
+      setMessage(t('teacherLeaveRequest.failedToSubmit'))
+      setMessageIsSuccess(false)
     }
   }
 
@@ -174,7 +186,7 @@ export default function LeaveRequest() {
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              Leave Request
+              {t('teacherLeaveRequest.title')}
             </h2>
           </div>
         </section>
@@ -182,8 +194,8 @@ export default function LeaveRequest() {
         {/* Message Banner */}
         {message && (
           <div className={`p-3 rounded-xl text-center text-xs font-bold ${
-            message.includes('successfully') 
-              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+            messageIsSuccess
+              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
               : 'bg-primary-container/20 text-primary border border-primary/20'
           }`}>
             {message}
@@ -197,15 +209,15 @@ export default function LeaveRequest() {
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-6">
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
                 <div>
-                  <h3 className="font-title-lg text-base text-on-surface font-bold">Student Leave Applications</h3>
-                  <p className="text-xs text-on-surface-variant">Review and approve/reject student leave requests</p>
+                  <h3 className="font-title-lg text-base text-on-surface font-bold">{t('teacherLeaveRequest.studentLeaveApplications')}</h3>
+                  <p className="text-xs text-on-surface-variant">{t('teacherLeaveRequest.reviewApproveReject')}</p>
                 </div>
-                <button 
+                <button
                   onClick={loadStudentLeaves}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-low text-primary rounded-xl font-bold text-xs hover:bg-surface-container-high transition-colors active:scale-95 duration-200"
                 >
                   <Icon name="refresh" className="text-sm" />
-                  <span>Refresh</span>
+                  <span>{t('teacherLeaveRequest.refresh')}</span>
                 </button>
               </div>
 
@@ -215,7 +227,7 @@ export default function LeaveRequest() {
                 </div>
               ) : studentLeaves.length === 0 ? (
                 <div className="text-center py-16 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 rounded-2xl border border-dashed border-outline-variant p-6">
-                  No student leave requests found.
+                  {t('teacherLeaveRequest.noStudentLeaveRequests')}
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[560px] overflow-y-auto pr-1.5 custom-scrollbar">
@@ -240,7 +252,7 @@ export default function LeaveRequest() {
                             )}
                             <div>
                               <h4 className="font-bold text-xs text-on-surface">{item.user?.full_name || `${item.user?.first_name} ${item.user?.last_name}`}</h4>
-                              <p className="text-[9px] text-on-surface-variant font-semibold">Student • {item.leave_type}</p>
+                              <p className="text-[9px] text-on-surface-variant font-semibold">{t('teacherLeaveRequest.student')} • {item.leave_type}</p>
                             </div>
                           </div>
 
@@ -263,7 +275,7 @@ export default function LeaveRequest() {
                               'bg-error-container text-on-error-container'
                             }`}>
                               <Icon name={isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'} className="text-[9px]" />
-                              <span>{item.status}</span>
+                              <span>{isPending ? t('common.statusPending') : isApproved ? t('common.statusApproved') : t('common.statusRejected')}</span>
                             </span>
                           </div>
 
@@ -274,18 +286,18 @@ export default function LeaveRequest() {
                                 className="flex items-center gap-1 px-3.5 py-2 bg-red-50 text-error rounded-xl font-bold text-xs hover:bg-red-100 active:scale-95 transition-all"
                               >
                                 <Icon name="close" className="text-sm" />
-                                <span>Reject</span>
+                                <span>{t('teacherLeaveRequest.reject')}</span>
                               </button>
                               <button
                                 onClick={() => handleLeaveAction(item.id, 'approved')}
                                 className="flex items-center gap-1 px-3.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs hover:bg-emerald-100 active:scale-95 transition-all"
                               >
                                 <Icon name="check" className="text-sm" />
-                                <span>Approve</span>
+                                <span>{t('teacherLeaveRequest.approve')}</span>
                               </button>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-outline font-semibold italic">Processed</span>
+                            <span className="text-[10px] text-outline font-semibold italic">{t('teacherLeaveRequest.processed')}</span>
                           )}
                         </div>
                       </div>
@@ -301,29 +313,29 @@ export default function LeaveRequest() {
             
             {/* Request Leave Form */}
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-4">
-              <h3 className="font-title-lg text-base text-on-surface font-bold">Request Leave</h3>
-              
+              <h3 className="font-title-lg text-base text-on-surface font-bold">{t('teacherLeaveRequest.requestLeave')}</h3>
+
               {/* Mode Toggle */}
               <div className="bg-surface-container-low rounded-2xl p-1 flex gap-1 border border-outline-variant/25">
-                <button 
+                <button
                   onClick={() => setLeaveMode('full')}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                    leaveMode === 'full' 
-                      ? 'bg-primary text-on-primary shadow-sm' 
+                    leaveMode === 'full'
+                      ? 'bg-primary text-on-primary shadow-sm'
                       : 'text-on-surface-variant hover:bg-surface-container-high'
                   }`}
                 >
-                  Full Day
+                  {t('teacherLeaveRequest.fullDay')}
                 </button>
-                <button 
+                <button
                   onClick={() => setLeaveMode('partial')}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
-                    leaveMode === 'partial' 
-                      ? 'bg-primary text-on-primary shadow-sm' 
+                    leaveMode === 'partial'
+                      ? 'bg-primary text-on-primary shadow-sm'
                       : 'text-on-surface-variant hover:bg-surface-container-high'
                   }`}
                 >
-                  Partial Leave
+                  {t('teacherLeaveRequest.partialLeave')}
                 </button>
               </div>
 
@@ -333,7 +345,7 @@ export default function LeaveRequest() {
                 {leaveMode === 'full' ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">From Date <span className="text-error">*</span></label>
+                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">{t('teacherLeaveRequest.fromDate')} <span className="text-error">*</span></label>
                       <DateInput
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
@@ -341,7 +353,7 @@ export default function LeaveRequest() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">To Date <span className="text-error">*</span></label>
+                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">{t('teacherLeaveRequest.toDate')} <span className="text-error">*</span></label>
                       <DateInput
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
@@ -353,7 +365,7 @@ export default function LeaveRequest() {
                   /* Partial Leave fields */
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Date <span className="text-error">*</span></label>
+                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">{t('teacherLeaveRequest.date')} <span className="text-error">*</span></label>
                       <DateInput
                         value={singleDate}
                         onChange={(e) => setSingleDate(e.target.value)}
@@ -361,10 +373,10 @@ export default function LeaveRequest() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Select Subjects Affected</label>
+                      <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">{t('teacherLeaveRequest.selectSubjectsAffected')}</label>
                       <div className="flex flex-wrap gap-2 py-1">
                         {availableSubjects.length === 0 && (
-                          <p className="text-[10px] text-outline italic">No subjects assigned to your profile yet.</p>
+                          <p className="text-[10px] text-outline italic">{t('teacherLeaveRequest.noSubjectsAssignedYet')}</p>
                         )}
                         {availableSubjects.map(subj => {
                           const isChecked = selectedSubjects.includes(subj)
@@ -390,11 +402,11 @@ export default function LeaveRequest() {
 
                 {/* Reason */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Reason for Leave <span className="text-error">*</span></label>
-                  <textarea 
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">{t('teacherLeaveRequest.reasonForLeave')} <span className="text-error">*</span></label>
+                  <textarea
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="Describe the reason for leave (medical, personal emergency, etc.)"
+                    placeholder={t('teacherLeaveRequest.reasonPlaceholder')}
                     rows="3"
                     className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   />
@@ -402,20 +414,20 @@ export default function LeaveRequest() {
 
                 {/* File Attachment Upload */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">Attachment (Optional)</label>
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant px-1">{t('teacherLeaveRequest.attachmentOptional')}</label>
                   <div className="border-2 border-dashed border-outline-variant/60 rounded-xl p-4 flex flex-col items-center justify-center gap-1 bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
                     <Icon name="upload_file" className="text-primary text-2xl group-hover:scale-105 transition-transform" />
-                    <p className="text-[10px] text-on-surface-variant font-bold text-center">Upload medical certificate or proof</p>
-                    <p className="text-[9px] text-outline italic">PDF, PNG, JPG up to 5MB</p>
+                    <p className="text-[10px] text-on-surface-variant font-bold text-center">{t('teacherLeaveRequest.uploadMedicalCertificate')}</p>
+                    <p className="text-[9px] text-outline italic">{t('teacherLeaveRequest.fileSizeLimit')}</p>
                   </div>
                 </div>
 
                 {/* Submit button */}
-                <button 
+                <button
                   type="submit"
                   className="w-full py-3.5 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
-                  <span>Submit Leave Request</span>
+                  <span>{t('teacherLeaveRequest.submitLeaveRequest')}</span>
                   <Icon name="send" className="text-sm" />
                 </button>
               </form>
@@ -424,27 +436,27 @@ export default function LeaveRequest() {
             {/* Leave History */}
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[28px] p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-title-lg text-base text-on-surface font-bold">Leave History</h3>
+                <h3 className="font-title-lg text-base text-on-surface font-bold">{t('teacherLeaveRequest.leaveHistory')}</h3>
                 <div className="flex gap-1.5 bg-surface-container p-1 rounded-xl border border-outline-variant/20">
-                  <button 
+                  <button
                     onClick={() => setFilterStatus('all')}
                     className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                      filterStatus === 'all' 
-                        ? 'bg-white text-primary shadow-sm' 
+                      filterStatus === 'all'
+                        ? 'bg-white text-primary shadow-sm'
                         : 'text-on-surface-variant hover:text-on-surface'
                     }`}
                   >
-                    All
+                    {t('common.all')}
                   </button>
-                  <button 
+                  <button
                     onClick={() => setFilterStatus('pending')}
                     className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                      filterStatus === 'pending' 
-                        ? 'bg-white text-primary shadow-sm' 
+                      filterStatus === 'pending'
+                        ? 'bg-white text-primary shadow-sm'
                         : 'text-on-surface-variant hover:text-on-surface'
                     }`}
                   >
-                    Pending
+                    {t('common.statusPending')}
                   </button>
                 </div>
               </div>
@@ -456,7 +468,7 @@ export default function LeaveRequest() {
                 </div>
               ) : filteredHistory.length === 0 ? (
                 <div className="text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-low/40 p-6 rounded-2xl border border-outline-variant/20">
-                  No leave requests found.
+                  {t('teacherLeaveRequest.noLeaveRequestsFound')}
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1.5 custom-scrollbar">
@@ -480,7 +492,7 @@ export default function LeaveRequest() {
                               'bg-error-container text-on-error-container'
                             }`}>
                               <Icon name={isPending ? 'pending' : isApproved ? 'check_circle' : 'cancel'} className="text-[9px]" />
-                              <span>{item.status}</span>
+                              <span>{isPending ? t('common.statusPending') : isApproved ? t('common.statusApproved') : t('common.statusRejected')}</span>
                             </span>
                           </div>
                           <span className="text-on-surface-variant text-[9px] font-bold uppercase tracking-wider text-right">

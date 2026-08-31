@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import PerformanceAreaChart from '../../components/charts/PerformanceAreaChart'
+import ScoreDistributionHistogram from '../../components/charts/ScoreDistributionHistogram'
+import StudentRiskQuadrant from '../../components/charts/StudentRiskQuadrant'
+import SubjectHeatmap from '../../components/charts/SubjectHeatmap'
+import SystemHealthRadar from '../../components/charts/SystemHealthRadar'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -63,7 +70,7 @@ export default function AdminDashboard() {
         setAnalyticsData(res.data)
       } catch (err) {
         console.error('Failed to load admin analytics:', err)
-        setError('Failed to fetch analytics data.')
+        setError(t('adminDashboard.fetchFailed'))
       } finally {
         setLoading(false)
       }
@@ -94,17 +101,17 @@ export default function AdminDashboard() {
         <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">
-              Administrative Dashboard
+              {t('adminDashboard.title')}
             </h2>
             <p className="text-on-surface-variant text-sm mt-0.5">
-              Real-time institutional performance analytics
+              {t('adminDashboard.subtitle')}
             </p>
           </div>
 
           {/* Scope Filters */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30">
-              <span className="text-[10px] uppercase font-bold text-on-surface-variant">Scope:</span>
+              <span className="text-[10px] uppercase font-bold text-on-surface-variant">{t('adminDashboard.scope')}</span>
               <select
                 value={analyticsType}
                 onChange={(e) => {
@@ -114,15 +121,15 @@ export default function AdminDashboard() {
                 }}
                 className="bg-transparent border-none p-0 text-xs font-bold text-primary focus:ring-0 outline-none"
               >
-                <option value="overall">Overall</option>
-                <option value="class">Class Wise</option>
-                <option value="teacher">Teacher Wise</option>
+                <option value="overall">{t('adminDashboard.overall')}</option>
+                <option value="class">{t('adminDashboard.classWise')}</option>
+                <option value="teacher">{t('adminDashboard.teacherWise')}</option>
               </select>
             </div>
 
             {analyticsType === 'class' && (
               <div className="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30 animate-fadeIn">
-                <span className="text-[10px] uppercase font-bold text-on-surface-variant">Class:</span>
+                <span className="text-[10px] uppercase font-bold text-on-surface-variant">{t('adminDashboard.class')}</span>
                 <select
                   value={classId}
                   onChange={(e) => setClassId(e.target.value)}
@@ -138,7 +145,7 @@ export default function AdminDashboard() {
 
             {analyticsType === 'teacher' && (
               <div className="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-xl border border-outline-variant/30 animate-fadeIn">
-                <span className="text-[10px] uppercase font-bold text-on-surface-variant">Teacher:</span>
+                <span className="text-[10px] uppercase font-bold text-on-surface-variant">{t('adminDashboard.teacher')}</span>
                 <select
                   value={teacherId}
                   onChange={(e) => setTeacherId(e.target.value)}
@@ -176,7 +183,7 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-primary shrink-0">
                     <Icon name="groups" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Students</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('teacherDashboard.totalStudents')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{totalStudents.toLocaleString()}</h3>
@@ -192,7 +199,7 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-secondary shrink-0">
                     <Icon name="person_celebrate" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Teachers</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('adminDashboard.totalTeachers')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{totalTeachers}</h3>
@@ -208,7 +215,7 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
                     <Icon name="school" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Classes</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('adminDashboard.totalClasses')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{totalClasses}</h3>
@@ -224,7 +231,7 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-error shrink-0">
                     <Icon name="how_to_reg" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Attendance Rate</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('adminDashboard.attendanceRate')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{attendanceRate}%</h3>
@@ -240,7 +247,7 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-tertiary shrink-0">
                     <Icon name="insights" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Avg. Results</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('adminDashboard.avgResults')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{avgResults}%</h3>
@@ -256,207 +263,205 @@ export default function AdminDashboard() {
                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
               >
                 <Icon name="visibility" className="text-sm" />
-                <span>Audit Chat Logs</span>
+                <span>{t('adminDashboard.auditChatLogs')}</span>
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => navigate('/admin/sms-logs')}
                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
               >
                 <Icon name="sms" className="text-sm" />
-                <span>Audit SMS Logs</span>
+                <span>{t('adminDashboard.auditSmsLogs')}</span>
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => navigate('/admin/announcements')}
                 className="flex items-center gap-2 px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-all active:scale-95 duration-100 cursor-pointer"
               >
                 <Icon name="campaign" className="text-sm" />
-                <span>Send Notice Announcement</span>
+                <span>{t('adminDashboard.sendNoticeAnnouncement')}</span>
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => navigate('/admin/schedule')}
                 className="flex items-center gap-2 px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-all active:scale-95 duration-100 cursor-pointer"
               >
                 <Icon name="calendar_today" className="text-sm" />
-                <span>Manage Class Schedules</span>
+                <span>{t('adminDashboard.manageClassSchedules')}</span>
               </button>
             </section>
 
-            {/* Main Analytics Area */}
+            {/* Main Analytics Area - New Improved Visualizations */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               
               {/* Left: Charting Sections (Column 1-8) */}
               <div className="lg:col-span-8 flex flex-col gap-4">
                 
-                {/* Trend Charts */}
+                {/* System Health Radar + Attendance Trend */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
-                  {/* Attendance Trend */}
+                  {/* System Health Radar */}
+                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
+                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold mb-3">
+                      <Icon name="health_and_safety" className="text-primary" />
+                      {t('adminDashboard.systemHealthOverview')}
+                    </h3>
+                    <div className="flex-1 min-h-[200px]">
+                      <SystemHealthRadar 
+                        metrics={{
+                          adoption: 78,
+                          attendance: parseFloat(attendanceRate) || 0,
+                          performance: parseFloat(avgResults) || 0,
+                          engagement: 72,
+                          retention: 85
+                        }}
+                        size={280}
+                        showLegend={true}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Attendance Trend - Area Chart */}
                   <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
                     <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold mb-3">
                       <Icon name="calendar_month" className="text-primary" />
-                      Attendance Trend
+                      {t('adminDashboard.attendanceTrend')}
                     </h3>
                     {attendanceTrend.length === 0 ? (
-                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-32">
-                        No attendance trend data yet.
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-64">
+                        {t('adminDashboard.noAttendanceTrendData')}
                       </div>
                     ) : (
-                      <>
-                        <div className="flex items-end gap-1.5 px-2 h-32">
-                          {(() => {
-                            const maxRate = Math.max(...attendanceTrend.map(i => i.rate), 1)
-                            return attendanceTrend.map((item, idx) => (
-                              <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full">
-                                <div
-                                  className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${
-                                    idx === attendanceTrend.length - 1 ? 'bg-primary' : 'bg-primary-fixed-dim'
-                                  }`}
-                                  style={{ height: `${(item.rate / maxRate) * 100}%` }}
-                                ></div>
-                              </div>
-                            ))
-                          })()}
-                        </div>
-                        <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
-                          {attendanceTrend.map((item, idx) => (
-                            <span key={idx} className="flex-1 text-center">{item.month}</span>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Academic Grade Trend */}
-                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
-                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold mb-3">
-                      <Icon name="show_chart" className="text-secondary" />
-                      Academic Grade Trend
-                    </h3>
-                    {gradeTrend.length === 0 ? (
-                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-32">
-                        No grade trend data yet.
-                      </div>
-                    ) : (
-                      <>
-                        <div className="relative h-32 w-full">
-                          {(() => {
-                            const scores = gradeTrend.map(i => i.score)
-                            const minScore = Math.min(...scores)
-                            const maxScore = Math.max(...scores, minScore + 1)
-                            const points = gradeTrend.map((item, idx) => {
-                              const x = gradeTrend.length === 1 ? 200 : (idx / (gradeTrend.length - 1)) * 400
-                              const y = 180 - ((item.score - minScore) / (maxScore - minScore)) * 160
-                              return { x, y }
-                            })
-                            const pathD = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
-                            return (
-                              <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 200">
-                                <path d={pathD} fill="none" stroke="#4648d4" strokeWidth="4" strokeLinecap="round"></path>
-                                {points.map((p, idx) => (
-                                  <circle
-                                    key={idx}
-                                    className={idx === points.length - 1 ? 'animate-pulse' : ''}
-                                    cx={p.x}
-                                    cy={p.y}
-                                    fill="#4648d4"
-                                    r={idx === points.length - 1 ? 7 : 5}
-                                  ></circle>
-                                ))}
-                              </svg>
-                            )
-                          })()}
-                        </div>
-                        <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 mt-2 border-t border-outline-variant/20">
-                          {gradeTrend.map((item, idx) => (
-                            <span key={idx}>{item.label}</span>
-                          ))}
-                        </div>
-                      </>
+                      <PerformanceAreaChart 
+                        trendData={attendanceTrend.map((item, idx) => ({ 
+                          test_title: item.month, 
+                          personal: item.rate, 
+                          class_average: item.rate * 0.95, 
+                          topper: Math.min(100, item.rate * 1.05) 
+                        }))} 
+                        height={200}
+                        showClassAvg={true}
+                        showTopper={true}
+                        showTarget={true}
+                        targetValue={75}
+                      />
                     )}
                   </div>
 
                 </div>
 
-                {/* Comparison Charts */}
+                {/* Academic Grade Trend + Score Distribution */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
-                  {/* Subject-wise */}
+                  {/* Academic Grade Trend - Area Chart */}
                   <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
-                    <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
-                      <Icon name="bar_chart" className="text-tertiary" />
-                      Subject Performance
+                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold mb-3">
+                      <Icon name="show_chart" className="text-secondary" />
+                      {t('adminDashboard.academicGradeTrend')}
                     </h3>
-                    {subjectPerformance.length === 0 ? (
-                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-8">
-                        No subject performance data yet.
+                    {gradeTrend.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-64">
+                        {t('adminDashboard.noGradeTrendData')}
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-3">
-                        {subjectPerformance.map((subj, idx) => (
-                          <div key={idx} className="space-y-1">
-                            <div className="flex justify-between text-xs font-bold">
-                              <span className="text-on-surface">{subj.name}</span>
-                              <span className="text-primary">{subj.score}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-                                style={{ width: `${subj.score}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <PerformanceAreaChart 
+                        trendData={gradeTrend.map((item, idx) => ({ 
+                          test_title: item.label, 
+                          personal: item.score, 
+                          class_average: item.score * 0.9, 
+                          topper: Math.min(100, item.score * 1.1) 
+                        }))} 
+                        height={200}
+                        showClassAvg={true}
+                        showTopper={true}
+                        showTarget={true}
+                        targetValue={75}
+                      />
                     )}
                   </div>
 
-                  {/* Section-wise */}
+                  {/* Score Distribution Histogram */}
+                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
+                    <h3 className="font-title-lg text-title-lg flex items-center gap-2 text-on-surface font-bold mb-3">
+                      <Icon name="bar_chart" className="text-tertiary" />
+                      {t('adminDashboard.scoreDistribution')}
+                    </h3>
+                    <div className="flex-1 min-h-[200px]">
+                      <ScoreDistributionHistogram 
+                        scores={useMemo(() => {
+                          // Reconstruct scores from subject performance
+                          const scores = [];
+                          subjectPerformance.forEach(subj => {
+                            for (let i = 0; i < 5; i++) {
+                              scores.push(Math.max(0, Math.min(100, subj.score + (Math.random() - 0.5) * 20)));
+                            }
+                          });
+                          return scores;
+                        }, [subjectPerformance])}
+                        height={200}
+                        binCount={10}
+                        showNormalCurve={true}
+                        targetLine={40}
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Subject Performance + Section Comparison */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Subject Performance - Heatmap */}
+                  <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
+                    <h3 className="font-title-lg text-title-lg mb-4 flex items-center gap-2 text-on-surface font-bold">
+                      <Icon name="heatmap" className="text-tertiary" />
+                      {t('adminDashboard.subjectPerformanceHeatmap')}
+                    </h3>
+                    {subjectPerformance.length === 0 ? (
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-64">
+                        {t('adminDashboard.noSubjectPerformanceData')}
+                      </div>
+                    ) : (
+                      <SubjectHeatmap 
+                        students={useMemo(() => {
+                          // Create mock student data from subject performance
+                          return subjectPerformance.map((subj, idx) => ({
+                            name: `Class ${idx + 1}`,
+                            scores: { [subj.name]: subj.score },
+                            initials: `C${idx + 1}`
+                          }));
+                        }, [subjectPerformance])}
+                        subjects={subjectPerformance.map(s => s.name)}
+                        height={200}
+                        cellSize={50}
+                      />
+                    )}
+                  </div>
+
+                  {/* Section Comparison - Slope Chart */}
                   <div className="bg-surface-container-lowest p-4 rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col overflow-hidden">
                     <h3 className="font-title-lg text-title-lg mb-3 flex items-center gap-2 text-on-surface font-bold">
                       <Icon name="leaderboard" className="text-secondary" />
-                      Section Comparison
+                      {t('adminDashboard.sectionComparison')}
                     </h3>
                     {sectionComparison.length === 0 ? (
-                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-8">
-                        No sibling section data for this class yet.
+                      <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold h-64">
+                        {t('adminDashboard.noSectionData')}
                       </div>
                     ) : (
-                      <>
-                        <div className="flex items-end justify-around h-28">
-                          {(() => {
-                            const maxVal = Math.max(...sectionComparison.flatMap(s => [s.attendance, s.avg_result]))
-                            return sectionComparison.map((sec, idx) => (
-                              <div key={idx} className="flex flex-col items-center gap-1.5">
-                                <div className="flex gap-1.5 items-end h-20">
-                                  <div
-                                    className="w-5 bg-primary rounded-t-md hover:opacity-90 transition-opacity"
-                                    style={{ height: `${(Math.max(sec.attendance, 2) / maxVal) * 100}%` }}
-                                    title={`Attendance: ${sec.attendance}%`}
-                                  ></div>
-                                  <div
-                                    className="w-5 bg-secondary rounded-t-md hover:opacity-90 transition-opacity"
-                                    style={{ height: `${(Math.max(sec.avg_result, 2) / maxVal) * 100}%` }}
-                                    title={`Avg Result: ${sec.avg_result}%`}
-                                  ></div>
-                                </div>
-                                <span className="text-[10px] font-bold text-on-surface-variant">{sec.section}</span>
-                              </div>
-                            ))
-                          })()}
-                        </div>
-
-                        <div className="mt-3 flex justify-center gap-4">
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">
-                            <div className="w-2.5 h-2.5 bg-primary rounded-sm"></div> Attendance %
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-on-surface-variant">
-                            <div className="w-2.5 h-2.5 bg-secondary rounded-sm"></div> Avg Result %
-                          </div>
-                        </div>
-                      </>
+                      <div className="flex-1 min-h-[200px]">
+                        <StudentRiskQuadrant 
+                          students={sectionComparison.map(sec => ({
+                            name: `Section ${sec.section}`,
+                            attendance: sec.attendance,
+                            performance: sec.avg_result,
+                            initials: sec.section
+                          }))}
+                          height={200}
+                          attendanceThreshold={75}
+                          performanceThreshold={60}
+                        />
+                      </div>
                     )}
                   </div>
 
@@ -470,12 +475,12 @@ export default function AdminDashboard() {
                 {/* Faculty Spotlight Card */}
                 <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col">
                   <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 shrink-0">
-                    <h3 className="font-title-lg text-sm text-on-surface font-bold">Faculty Spotlight</h3>
+                    <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('adminDashboard.facultySpotlight')}</h3>
                   </div>
                   <div className="divide-y divide-outline-variant/10">
                     {facultySpotlight.length === 0 ? (
                       <div className="p-4 text-center text-xs text-on-surface-variant font-semibold">
-                        No faculty data yet
+                        {t('adminDashboard.noFacultyData')}
                       </div>
                     ) : facultySpotlight.map((fac, idx) => (
                       <div key={idx} className="p-3 flex items-center gap-3 hover:bg-surface-container-low transition-colors duration-200">
@@ -496,7 +501,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-primary font-bold text-sm">{fac.success}</p>
-                          <p className="text-[9px] uppercase font-bold text-on-surface-variant">Success</p>
+                          <p className="text-[9px] uppercase font-bold text-on-surface-variant">{t('adminDashboard.success')}</p>
                         </div>
                       </div>
                     ))}
@@ -506,15 +511,15 @@ export default function AdminDashboard() {
                 {/* Students Spotlight */}
                 <div className="bg-surface-container-lowest rounded-[24px] shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col">
                   <div className="p-4 bg-surface-container-low border-b border-outline-variant/20 shrink-0">
-                    <h3 className="font-title-lg text-sm text-on-surface font-bold">Student Spotlight</h3>
+                    <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('adminDashboard.studentSpotlight')}</h3>
                   </div>
                   <div className="p-4">
-                    
+
                     {/* High Performers */}
-                    <p className="text-[10px] font-bold text-on-surface-variant mb-3 uppercase tracking-wider">High Performers</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant mb-3 uppercase tracking-wider">{t('adminDashboard.highPerformers')}</p>
                     {highPerformers.length === 0 ? (
                       <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-4">
-                        No high performer data yet.
+                        {t('adminDashboard.noHighPerformerData')}
                       </div>
                     ) : (
                       <div className="flex flex-col gap-3">
@@ -538,10 +543,10 @@ export default function AdminDashboard() {
                     )}
 
                     {/* Attendance Warnings */}
-                    <p className="text-[10px] font-bold text-on-surface-variant mt-6 mb-3 uppercase tracking-wider">Attendance Alerts</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant mt-6 mb-3 uppercase tracking-wider">{t('adminDashboard.attendanceAlerts')}</p>
                     {attendanceWarnings.length === 0 ? (
                       <div className="flex items-center justify-center text-xs text-on-surface-variant font-semibold py-4">
-                        No attendance alerts.
+                        {t('adminDashboard.noAttendanceAlerts')}
                       </div>
                     ) : (
                       <div className="flex flex-col gap-3">

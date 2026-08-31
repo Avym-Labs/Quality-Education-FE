@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import Icon from '../common/Icon'
 
 export default function ConversationSidebar({ activeConversationId }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const role = user?.role || 'student'
@@ -43,41 +45,17 @@ export default function ConversationSidebar({ activeConversationId }) {
 
   // Broadcast Templates
   const adminTemplates = [
-    {
-      title: '📢 Holiday Announcement',
-      content: 'Dear Teachers/Staff,\n\nPlease note that there will be a holiday on [Date] on account of [Event]. Regular classes and operations will resume on [Date].\n\nRegards,\nAdministration.'
-    },
-    {
-      title: '📊 Results Upload Deadline',
-      content: 'Dear Faculty,\n\nPlease ensure that all student marks and exam results are uploaded in the system by [Date]. Late submissions will not be accepted.\n\nRegards,\nAdministration.'
-    },
-    {
-      title: '📅 Test Timetable Released',
-      content: 'Dear Teachers/Staff,\n\nThe timetable for the upcoming exams/tests has been finalized and uploaded. Please review it in your Academics Hub and coordinate with your students accordingly.\n\nRegards,\nAdministration.'
-    },
-    {
-      title: '🔄 Schedule Modification',
-      content: 'Dear Teachers/Staff,\n\nPlease be informed of a schedule adjustment on [Date]. Classes will follow the [Alternate Schedule/Day] timetable for that day. Details are available on the school calendar.\n\nRegards,\nAdministration.'
-    }
+    { title: t('chatList.templates.admin.holidayTitle'), content: t('chatList.templates.admin.holidayContent') },
+    { title: t('chatList.templates.admin.resultsDeadlineTitle'), content: t('chatList.templates.admin.resultsDeadlineContent') },
+    { title: t('chatList.templates.admin.timetableTitle'), content: t('chatList.templates.admin.timetableContent') },
+    { title: t('chatList.templates.admin.scheduleModTitle'), content: t('chatList.templates.admin.scheduleModContent') }
   ]
 
   const teacherTemplates = [
-    {
-      title: '📚 Exam Results Uploaded',
-      content: 'Hello {name},\n\nYour results for the recent exam have been uploaded. Please log in to your Academics Hub to review your marks.\n\nRegards,\nAdmin.'
-    },
-    {
-      title: '💰 Outstanding Fee Reminder',
-      content: 'Dear {name},\n\nThis is a reminder that your tuition fee installment is currently pending. Please proceed with payment via the payments section.\n\nThank you.'
-    },
-    {
-      title: '📝 Pending Homework Alert',
-      content: 'Hi {name},\n\nPlease check your homework panel. You have outstanding assignments due for submission. Ensure completion by the deadline.\n\nRegards,\n{sender_name}.'
-    },
-    {
-      title: '⚠️ Attendance Shortage Warning',
-      content: 'Hi {name},\n\nYour attendance rate is currently below the 75% minimum requirement. Please meet with your homeroom teacher to address this standing.'
-    }
+    { title: t('chatList.templates.teacher.resultsUploadedTitle'), content: t('chatList.templates.teacher.resultsUploadedContent') },
+    { title: t('chatList.templates.teacher.feeReminderTitle'), content: t('chatList.templates.teacher.feeReminderContent') },
+    { title: t('chatList.templates.teacher.homeworkAlertTitle'), content: t('chatList.templates.teacher.homeworkAlertContent') },
+    { title: t('chatList.templates.teacher.attendanceWarningTitle'), content: t('chatList.templates.teacher.attendanceWarningContent') }
   ]
 
   const activeTemplates = user?.role === 'admin' ? adminTemplates : teacherTemplates
@@ -175,7 +153,7 @@ export default function ConversationSidebar({ activeConversationId }) {
       fetchConversations()
     } catch (err) {
       console.error('Failed to send broadcast:', err)
-      alert('Failed to send broadcast message.')
+      alert(t('chatList.failedToSendBroadcast'))
     } finally {
       setBroadcasting(false)
     }
@@ -216,13 +194,13 @@ export default function ConversationSidebar({ activeConversationId }) {
       {/* Search Header */}
       <div className="p-4 border-b border-outline-variant/20 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black text-primary uppercase tracking-wider">Inbox Messages</h2>
+          <h2 className="text-sm font-black text-primary uppercase tracking-wider">{t('chatList.inboxMessages')}</h2>
           <button
             onClick={openNewChatModal}
             className="flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary rounded-full text-xs font-bold hover:bg-opacity-90 transition-colors active:scale-95 duration-100 shadow-sm cursor-pointer"
           >
             <Icon name="add_comment" className="text-sm" />
-            <span>New Chat</span>
+            <span>{t('chatList.newChat')}</span>
           </button>
         </div>
 
@@ -230,7 +208,7 @@ export default function ConversationSidebar({ activeConversationId }) {
           <Icon name="search" className="absolute left-3 top-2.5 text-outline text-base" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder={t('chatList.searchConversations')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 border border-outline bg-surface-container-low rounded-xl text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -243,13 +221,13 @@ export default function ConversationSidebar({ activeConversationId }) {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 text-outline gap-2">
             <Icon name="sync" className="text-3xl animate-spin" />
-            <p className="text-[10px] font-bold uppercase tracking-wider">Loading inbox...</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider">{t('chatList.loadingInbox')}</p>
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="text-center py-16 px-4 text-outline space-y-2">
             <Icon name="chat_bubble_outline" className="text-4xl" />
-            <p className="text-xs font-semibold">No active conversations found.</p>
-            <p className="text-[10px] leading-relaxed">Click "New Chat" to connect with others.</p>
+            <p className="text-xs font-semibold">{t('chatList.noActiveConversations')}</p>
+            <p className="text-[10px] leading-relaxed">{t('chatList.clickNewChatHint')}</p>
           </div>
         ) : (
           filteredConversations.map((c) => {
@@ -314,7 +292,7 @@ export default function ConversationSidebar({ activeConversationId }) {
             {/* Modal Header */}
             <div className="p-4 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low/40">
               <h3 className="text-sm font-black text-primary uppercase tracking-wider">
-                {modalMode === 'direct' ? 'Start a New Chat' : 'Broadcast Message'}
+                {modalMode === 'direct' ? t('chatList.startNewChat') : t('chatList.broadcastMessage')}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -335,7 +313,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                       : 'border-transparent text-outline hover:text-on-surface'
                   }`}
                 >
-                  Direct Message
+                  {t('chatList.directMessage')}
                 </button>
                 <button
                   onClick={() => setModalMode('broadcast')}
@@ -345,7 +323,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                       : 'border-transparent text-outline hover:text-on-surface'
                   }`}
                 >
-                  Bulk Broadcast
+                  {t('chatList.bulkBroadcast')}
                 </button>
               </div>
             )}
@@ -359,7 +337,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                     <Icon name="search" className="absolute left-3 top-2.5 text-outline text-base" />
                     <input
                       type="text"
-                      placeholder={user?.role === 'student' || user?.role === 'admin' ? 'Search teachers...' : 'Search students...'}
+                      placeholder={user?.role === 'student' || user?.role === 'admin' ? t('chatList.searchTeachers') : t('chatList.searchStudents')}
                       value={contactSearch}
                       onChange={(e) => setContactSearch(e.target.value)}
                       className="w-full pl-9 pr-4 py-2 border border-outline bg-surface-container-low rounded-xl text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -370,12 +348,12 @@ export default function ConversationSidebar({ activeConversationId }) {
                     {contactsLoading ? (
                       <div className="flex flex-col items-center justify-center py-12 text-outline gap-2">
                         <Icon name="sync" className="text-2xl animate-spin" />
-                        <p className="text-[10px] font-bold uppercase tracking-wider">Loading ...</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider">{t('chatList.loadingEllipsis')}</p>
                       </div>
                     ) : filteredContacts.length === 0 ? (
                       <div className="text-center py-12 text-outline">
                         <Icon name="group_off" className="text-3xl" />
-                        <p className="text-xs font-semibold mt-2">No matching contacts found.</p>
+                        <p className="text-xs font-semibold mt-2">{t('chatList.noMatchingContacts')}</p>
                       </div>
                     ) : (
                       filteredContacts.map((contact) => (
@@ -397,7 +375,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                                 {contact.full_name}
                               </h4>
                               <p className="text-[9px] text-outline font-semibold uppercase mt-0.5">
-                                {contact.role === 'teacher' ? (contact.department || 'Faculty') : `Class ${contact.grade}-${contact.section}`}
+                                {contact.role === 'teacher' ? (contact.department || t('chatList.faculty')) : t('chatList.classSection', { grade: contact.grade, section: contact.section })}
                               </p>
                             </div>
                           </div>
@@ -412,7 +390,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                 <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
                   {/* Select Scope */}
                   <div className="flex flex-col gap-1 text-left">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Recipient Scope</label>
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('chatList.recipientScope')}</label>
                     <select
                       value={broadcastScope}
                       onChange={(e) => {
@@ -423,14 +401,14 @@ export default function ConversationSidebar({ activeConversationId }) {
                     >
                       {user?.role === 'admin' ? (
                         <>
-                          <option value="overall">All Registered Teachers</option>
-                          <option value="department">Department Wise</option>
+                          <option value="overall">{t('chatList.allRegisteredTeachers')}</option>
+                          <option value="department">{t('chatList.departmentWise')}</option>
                         </>
                       ) : (
                         <>
-                          <option value="overall">All Registered Students</option>
-                          <option value="class">Class Wise</option>
-                          <option value="subject">Subject Wise</option>
+                          <option value="overall">{t('chatList.allRegisteredStudents')}</option>
+                          <option value="class">{t('chatList.classWise')}</option>
+                          <option value="subject">{t('chatList.subjectWise')}</option>
                         </>
                       )}
                     </select>
@@ -439,19 +417,19 @@ export default function ConversationSidebar({ activeConversationId }) {
                   {/* Target Scope Selection */}
                   {broadcastScope === 'class' && (
                     <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Class <span className="text-error">*</span></label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('chatList.selectClass')} <span className="text-error">*</span></label>
                       <select
                         value={broadcastTarget}
                         onChange={(e) => setBroadcastTarget(e.target.value)}
                         className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
                         required
                       >
-                        <option value="">-- Choose Class --</option>
+                        <option value="">{t('chatList.chooseClass')}</option>
                         {classOptions.length === 0 && (
-                          <option value="" disabled>No classes assigned to you yet</option>
+                          <option value="" disabled>{t('chatList.noClassesAssigned')}</option>
                         )}
                         {classOptions.map((cls) => (
-                          <option key={cls} value={cls}>Class {cls}</option>
+                          <option key={cls} value={cls}>{t('chatList.classN', { cls })}</option>
                         ))}
                       </select>
                     </div>
@@ -459,16 +437,16 @@ export default function ConversationSidebar({ activeConversationId }) {
 
                   {broadcastScope === 'subject' && (
                     <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Subject <span className="text-error">*</span></label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('chatList.selectSubject')} <span className="text-error">*</span></label>
                       <select
                         value={broadcastTarget}
                         onChange={(e) => setBroadcastTarget(e.target.value)}
                         className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
                         required
                       >
-                        <option value="">-- Choose Subject --</option>
+                        <option value="">{t('chatList.chooseSubject')}</option>
                         {subjectOptions.length === 0 && (
-                          <option value="" disabled>No subjects assigned to you yet</option>
+                          <option value="" disabled>{t('chatList.noSubjectsAssigned')}</option>
                         )}
                         {subjectOptions.map((sub) => (
                           <option key={sub} value={sub}>{sub}</option>
@@ -479,19 +457,19 @@ export default function ConversationSidebar({ activeConversationId }) {
 
                   {broadcastScope === 'department' && (
                     <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Select Department <span className="text-error">*</span></label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('chatList.selectDepartment')} <span className="text-error">*</span></label>
                       <select
                         value={broadcastTarget}
                         onChange={(e) => setBroadcastTarget(e.target.value)}
                         className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
                         required
                       >
-                        <option value="">-- Choose Department --</option>
+                        <option value="">{t('chatList.chooseDepartment')}</option>
                         {departmentOptions.length === 0 && (
-                          <option value="" disabled>No departments found yet</option>
+                          <option value="" disabled>{t('chatList.noDepartmentsFound')}</option>
                         )}
                         {departmentOptions.map((dept) => (
-                          <option key={dept} value={dept}>{dept} Department</option>
+                          <option key={dept} value={dept}>{t('chatList.departmentSuffix', { dept })}</option>
                         ))}
                       </select>
                     </div>
@@ -499,7 +477,7 @@ export default function ConversationSidebar({ activeConversationId }) {
 
                   {/* Select Prebuilt/Custom Template */}
                   <div className="flex flex-col gap-1 text-left">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Template</label>
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('chatList.messageTemplate')}</label>
                     <select
                       onChange={(e) => {
                         const val = e.target.value
@@ -509,43 +487,43 @@ export default function ConversationSidebar({ activeConversationId }) {
                       }}
                       className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary text-on-surface"
                     >
-                      <option value="">-- Choose template (Optional) --</option>
-                      {activeTemplates.map((t, idx) => (
-                        <option key={`prebuilt-${idx}`} value={t.content}>
-                          {t.title}
+                      <option value="">{t('chatList.chooseTemplateOptional')}</option>
+                      {activeTemplates.map((tpl, idx) => (
+                        <option key={`prebuilt-${idx}`} value={tpl.content}>
+                          {tpl.title}
                         </option>
                       ))}
                       {customTemplates.length > 0 && (
-                        <optgroup label="Your Templates">
-                          {customTemplates.map((t) => (
-                            <option key={t.id} value={t.content}>
-                              {t.title}
+                        <optgroup label={t('chatList.yourTemplates')}>
+                          {customTemplates.map((tpl) => (
+                            <option key={tpl.id} value={tpl.content}>
+                              {tpl.title}
                             </option>
                           ))}
                         </optgroup>
                       )}
                     </select>
                     <p className="text-[9px] text-outline font-semibold uppercase tracking-wider mt-0.5">
-                      Tip: Select a prebuilt option or create your own custom templates.
+                      {t('chatList.templateTip')}
                     </p>
                   </div>
 
                   {/* Message Content */}
                   <div className="flex flex-col gap-1 text-left">
                     <div className="flex justify-between items-center">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Message Content <span className="text-error">*</span></label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('chatList.messageContent')} <span className="text-error">*</span></label>
                       {broadcastContent.trim() && (
                         <button
                           type="button"
                           onClick={() => setIsSavingTemplate(!isSavingTemplate)}
                           className="text-[10px] text-primary hover:underline font-bold cursor-pointer"
                         >
-                          {isSavingTemplate ? 'Cancel Save' : '+ Save as Template'}
+                          {isSavingTemplate ? t('chatList.cancelSave') : t('chatList.saveAsTemplate')}
                         </button>
                       )}
                     </div>
                     <textarea
-                      placeholder="Type your announcement broadcast..."
+                      placeholder={t('chatList.typeAnnouncementPlaceholder')}
                       value={broadcastContent}
                       onChange={(e) => setBroadcastContent(e.target.value)}
                       rows={4}
@@ -557,11 +535,11 @@ export default function ConversationSidebar({ activeConversationId }) {
                   {/* Inline template saving form */}
                   {isSavingTemplate && (
                     <div className="p-3 bg-surface-container-low rounded-2xl border border-outline-variant/35 flex flex-col gap-2.5 animate-fadeIn">
-                      <span className="font-bold text-[9px] text-primary uppercase">Save Current Message as Custom Template</span>
+                      <span className="font-bold text-[9px] text-primary uppercase">{t('chatList.saveTemplateHeader')}</span>
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          placeholder="Template Title (e.g. Test Timetable)"
+                          placeholder={t('chatList.templateTitlePlaceholder')}
                           value={newTemplateTitle}
                           onChange={(e) => setNewTemplateTitle(e.target.value)}
                           className="flex-1 px-3 py-1.5 border border-outline bg-surface-container-lowest rounded-xl text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -573,7 +551,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                           disabled={!newTemplateTitle.trim()}
                           className="px-3 py-1.5 bg-primary text-on-primary font-bold text-xs rounded-xl hover:bg-opacity-95 disabled:opacity-50 cursor-pointer"
                         >
-                          Save
+                          {t('common.save')}
                         </button>
                       </div>
                     </div>
@@ -585,7 +563,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                     className="w-full mt-2 py-3 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:bg-opacity-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Icon name="campaign" className="text-sm" />
-                    <span>{broadcasting ? 'Sending Broadcast...' : 'Broadcast to Group'}</span>
+                    <span>{broadcasting ? t('chatList.sendingBroadcast') : t('chatList.broadcastToGroup')}</span>
                   </button>
                 </form>
               )}

@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import ConversationSidebar from '../../components/chat/ConversationSidebar'
 import Icon from '../../components/common/Icon'
 
 export default function ChatList() {
+  const { t } = useTranslation()
   useEffect(() => {
     // Lock body scroll to prevent page double scrollbars
     document.body.style.overflow = 'hidden'
@@ -27,9 +29,9 @@ export default function ChatList() {
             <Icon name="forum" className="text-3xl" />
           </div>
           <div className="text-center max-w-sm space-y-1">
-            <h3 className="text-sm font-bold text-on-surface">Your Direct Messages</h3>
+            <h3 className="text-sm font-bold text-on-surface">{t('chatList.yourDirectMessages')}</h3>
             <p className="text-xs text-outline leading-relaxed">
-              Select an active conversation from the sidebar or start a new message chat thread.
+              {t('chatList.selectConversationHint')}
             </p>
           </div>
         </div>

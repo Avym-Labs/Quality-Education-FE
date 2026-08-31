@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Icon from './Icon'
 
 export default function PointsCard({ attendancePoints, testPoints, totalPoints }) {
+  const { t } = useTranslation()
   const [view, setView] = useState('attendance')
   const [showModal, setShowModal] = useState(false)
 
@@ -30,16 +32,16 @@ export default function PointsCard({ attendancePoints, testPoints, totalPoints }
             <Icon name={isAttendance ? 'calendar_today' : 'quiz'} className="text-base" filled />
           </div>
           <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">
-            {isAttendance ? 'Attendance Points' : 'Test Points'}
+            {isAttendance ? t('pointsCard.attendancePoints') : t('pointsCard.testPoints')}
           </span>
         </div>
         <div className="flex items-baseline justify-between mt-auto z-10 w-full">
           <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">
             {isAttendance ? ap.total_attendance_points ?? 0 : tp.total_test_points ?? 0}
-            <span className="text-xs font-bold text-on-surface-variant ml-0.5">pts</span>
+            <span className="text-xs font-bold text-on-surface-variant ml-0.5">{t('common.pts')}</span>
           </h3>
           <span className="text-[9px] font-bold text-tertiary bg-tertiary-fixed-dim px-2 py-0.5 rounded shrink-0">
-            {isAttendance ? `Streak: ${ap.current_streak ?? 0}/15d` : `${tp.test_count ?? 0} tests`}
+            {isAttendance ? t('pointsCard.streakOf15', { count: ap.current_streak ?? 0 }) : t('pointsCard.testsCount', { count: tp.test_count ?? 0 })}
           </span>
         </div>
       </div>
@@ -61,44 +63,44 @@ export default function PointsCard({ attendancePoints, testPoints, totalPoints }
               <Icon name="close" className="text-base text-on-surface-variant" />
             </button>
 
-            <h3 className="text-lg font-black text-on-surface mb-1">Points Breakdown</h3>
+            <h3 className="text-lg font-black text-on-surface mb-1">{t('pointsCard.pointsBreakdown')}</h3>
             <p className="text-3xl font-black text-primary mb-4">
-              {totalPoints ?? 0} <span className="text-sm font-bold text-on-surface-variant">total pts</span>
+              {totalPoints ?? 0} <span className="text-sm font-bold text-on-surface-variant">{t('pointsCard.totalPts')}</span>
             </p>
 
             <div className="space-y-4">
               <div className="bg-slate-50 rounded-2xl p-4 border border-outline-variant/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Icon name="calendar_today" className="text-primary text-base" />
-                  <h4 className="font-bold text-sm text-on-surface">Attendance Points</h4>
-                  <span className="ml-auto font-black text-on-surface">{ap.total_attendance_points ?? 0} pts</span>
+                  <h4 className="font-bold text-sm text-on-surface">{t('pointsCard.attendancePoints')}</h4>
+                  <span className="ml-auto font-black text-on-surface">{ap.total_attendance_points ?? 0} {t('common.pts')}</span>
                 </div>
                 <ul className="text-xs text-on-surface-variant space-y-1">
-                  <li>Days attended: <span className="font-bold text-on-surface">{ap.attended_days ?? 0}</span></li>
-                  <li>Daily points (5/day attended): <span className="font-bold text-on-surface">{ap.daily_points ?? 0} pts</span></li>
-                  <li>15-day streak bonuses earned: <span className="font-bold text-on-surface">{ap.completed_cycles ?? 0}</span></li>
-                  <li>Bonus points (25 per streak): <span className="font-bold text-on-surface">{ap.bonus_points ?? 0} pts</span></li>
-                  <li>Current streak: <span className="font-bold text-on-surface">{ap.current_streak ?? 0} / 15 days</span></li>
+                  <li>{t('pointsCard.daysAttended')} <span className="font-bold text-on-surface">{ap.attended_days ?? 0}</span></li>
+                  <li>{t('pointsCard.dailyPoints')} <span className="font-bold text-on-surface">{ap.daily_points ?? 0} {t('common.pts')}</span></li>
+                  <li>{t('pointsCard.streakBonusesEarned')} <span className="font-bold text-on-surface">{ap.completed_cycles ?? 0}</span></li>
+                  <li>{t('pointsCard.bonusPoints')} <span className="font-bold text-on-surface">{ap.bonus_points ?? 0} {t('common.pts')}</span></li>
+                  <li>{t('pointsCard.currentStreak')} <span className="font-bold text-on-surface">{ap.current_streak ?? 0} {t('pointsCard.of15Days')}</span></li>
                 </ul>
               </div>
 
               <div className="bg-slate-50 rounded-2xl p-4 border border-outline-variant/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Icon name="quiz" className="text-tertiary text-base" />
-                  <h4 className="font-bold text-sm text-on-surface">Test Points</h4>
-                  <span className="ml-auto font-black text-on-surface">{tp.total_test_points ?? 0} pts</span>
+                  <h4 className="font-bold text-sm text-on-surface">{t('pointsCard.testPoints')}</h4>
+                  <span className="ml-auto font-black text-on-surface">{tp.total_test_points ?? 0} {t('common.pts')}</span>
                 </div>
                 {tp.breakdown && tp.breakdown.length > 0 ? (
                   <ul className="text-xs text-on-surface-variant space-y-1.5 max-h-40 overflow-y-auto pr-1">
                     {tp.breakdown.map((b, idx) => (
                       <li key={idx} className="flex justify-between gap-2">
                         <span className="truncate">{b.test_title} ({b.subject})</span>
-                        <span className="font-bold text-on-surface shrink-0">{b.percentage}% → {b.points} pts</span>
+                        <span className="font-bold text-on-surface shrink-0">{b.percentage}% → {b.points} {t('common.pts')}</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-on-surface-variant">No tests recorded yet.</p>
+                  <p className="text-xs text-on-surface-variant">{t('pointsCard.noTestsRecorded')}</p>
                 )}
               </div>
             </div>

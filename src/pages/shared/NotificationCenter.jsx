@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 import { useNotifications } from '../../context/NotificationContext'
 
 export default function NotificationCenter() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { refreshUnreadCount } = useNotifications()
   const [notifications, setNotifications] = useState([])
@@ -23,7 +25,7 @@ export default function NotificationCenter() {
       setNotifications(res.data || [])
     } catch (err) {
       console.error('Failed to load notifications:', err)
-      setError('Could not fetch notifications.')
+      setError(t('notificationCenter.failedToFetch'))
     } finally {
       setLoading(false)
     }
@@ -150,12 +152,12 @@ export default function NotificationCenter() {
             >
               <Icon name="arrow_back" />
             </button>
-            <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Notifications</h2>
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">{t('notificationCenter.title')}</h2>
           </div>
           <button
             onClick={() => setShowDeleteConfirm(true)}
             disabled={allNotifs.length === 0}
-            title="Delete all notifications"
+            title={t('notificationCenter.deleteAllTitle')}
             className="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container/20 transition-colors active:scale-95 duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             <Icon name="delete" className="text-xl" />
@@ -165,9 +167,9 @@ export default function NotificationCenter() {
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 animate-fadeIn duration-200 p-4">
             <div className="bg-surface w-full max-w-sm rounded-3xl shadow-xl p-6 space-y-4">
-              <h3 className="text-base font-black text-on-surface">Delete all notifications?</h3>
+              <h3 className="text-base font-black text-on-surface">{t('notificationCenter.deleteAllConfirmTitle')}</h3>
               <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                This will permanently delete all of your notifications. This cannot be undone.
+                {t('notificationCenter.deleteAllConfirmBody')}
               </p>
               <div className="flex gap-3 justify-end pt-2">
                 <button
@@ -175,14 +177,14 @@ export default function NotificationCenter() {
                   disabled={deleting}
                   className="px-5 py-2.5 rounded-full border border-outline text-on-surface-variant font-bold text-xs hover:bg-surface-container transition-colors disabled:opacity-60"
                 >
-                  Cancel
+                  {t('notificationCenter.cancel')}
                 </button>
                 <button
                   onClick={handleDeleteAll}
                   disabled={deleting}
                   className="px-5 py-2.5 rounded-full bg-error text-on-error font-bold text-xs hover:opacity-90 transition-opacity disabled:opacity-60"
                 >
-                  {deleting ? 'Deleting...' : 'Delete'}
+                  {deleting ? t('notificationCenter.deleting') : t('notificationCenter.delete')}
                 </button>
               </div>
             </div>
@@ -198,14 +200,14 @@ export default function NotificationCenter() {
         {/* Quick Action Header */}
         <div className="flex items-center justify-between mt-4 px-1">
           <p className="font-label-md text-xs text-on-surface-variant">
-            {newUpdatesCount > 0 ? `${newUpdatesCount} new updates since morning` : 'No unread updates'}
+            {newUpdatesCount > 0 ? t('notificationCenter.newUpdatesSinceMorning', { count: newUpdatesCount }) : t('notificationCenter.noUnreadUpdates')}
           </p>
           {newUpdatesCount > 0 && (
-            <button 
+            <button
               onClick={handleMarkAllRead}
               className="text-primary font-bold text-xs hover:underline transition-all"
             >
-              Mark all as read
+              {t('notificationCenter.markAllAsRead')}
             </button>
           )}
         </div>
@@ -213,14 +215,14 @@ export default function NotificationCenter() {
         {!loading && allNotifs.length === 0 && (
           <div className="bg-surface-container-low border border-outline-variant/20 rounded-3xl p-10 text-center text-on-surface-variant text-sm flex flex-col items-center gap-3">
             <Icon name="notifications_off" className="text-4xl text-outline" />
-            <p className="font-semibold">No notifications yet.</p>
+            <p className="font-semibold">{t('notificationCenter.noNotificationsYet')}</p>
           </div>
         )}
 
         {/* Today Notifications */}
         {today.length > 0 && (
           <section className="space-y-stack-md">
-            <h3 className="font-title-lg text-sm text-on-surface border-b border-outline-variant/15 pb-2 font-bold uppercase tracking-wider">Today</h3>
+            <h3 className="font-title-lg text-sm text-on-surface border-b border-outline-variant/15 pb-2 font-bold uppercase tracking-wider">{t('notificationCenter.today')}</h3>
             <div className="grid gap-stack-sm">
               {today.map((n) => {
                 const meta = n.icon ? n : { ...n, ...getNotifMeta(n.type) }
@@ -255,7 +257,7 @@ export default function NotificationCenter() {
         {/* Yesterday Notifications */}
         {yesterday.length > 0 && (
           <section className="space-y-stack-md mt-6">
-            <h3 className="font-title-lg text-sm text-on-surface border-b border-outline-variant/15 pb-2 font-bold uppercase tracking-wider">Yesterday</h3>
+            <h3 className="font-title-lg text-sm text-on-surface border-b border-outline-variant/15 pb-2 font-bold uppercase tracking-wider">{t('notificationCenter.yesterday')}</h3>
             <div className="grid gap-stack-sm">
               {yesterday.map((n) => {
                 const meta = n.icon ? n : { ...n, ...getNotifMeta(n.type) }
@@ -290,7 +292,7 @@ export default function NotificationCenter() {
         {/* Earlier Notifications */}
         {earlier.length > 0 && (
           <section className="space-y-stack-md mt-6">
-            <h3 className="font-title-lg text-sm text-on-surface border-b border-outline-variant/15 pb-2 font-bold uppercase tracking-wider">Earlier</h3>
+            <h3 className="font-title-lg text-sm text-on-surface border-b border-outline-variant/15 pb-2 font-bold uppercase tracking-wider">{t('notificationCenter.earlier')}</h3>
             <div className="grid gap-stack-sm">
               {earlier.map((n) => {
                 const meta = n.icon ? n : { ...n, ...getNotifMeta(n.type) }
@@ -326,7 +328,7 @@ export default function NotificationCenter() {
               </div>
               <div className="relative z-10 space-y-2">
                 <div className="bg-on-primary-container/20 w-fit px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase">
-                  Latest Announcement
+                  {t('notificationCenter.latestAnnouncement')}
                 </div>
                 <h3 className="font-headline-lg-mobile text-lg leading-tight font-bold">
                   {latestAnnouncement.title}

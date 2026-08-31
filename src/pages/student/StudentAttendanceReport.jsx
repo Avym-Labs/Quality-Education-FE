@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function StudentAttendanceReport() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   
@@ -39,7 +41,7 @@ export default function StudentAttendanceReport() {
   }, [user])
 
   const attendancePct = stats?.percentage ?? 94.2
-  const rating = attendancePct >= 90 ? 'Excellent Rating' : attendancePct >= 75 ? 'Satisfactory' : 'Needs Review'
+  const rating = attendancePct >= 90 ? t('studentAttendanceReport.excellentRating') : attendancePct >= 75 ? t('studentAttendanceReport.satisfactory') : t('studentAttendanceReport.needsReview')
 
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
@@ -69,7 +71,7 @@ export default function StudentAttendanceReport() {
               className="text-primary cursor-pointer active:scale-95 transition-transform"
               onClick={() => navigate('/student/attendance')}
             />
-            <h1 className="font-title-lg text-title-lg text-primary font-bold">Reports Center</h1>
+            <h1 className="font-title-lg text-title-lg text-primary font-bold">{t('studentAttendanceReport.reportsCenter')}</h1>
           </div>
           <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden">
             {user?.avatar ? (
@@ -112,16 +114,16 @@ export default function StudentAttendanceReport() {
                 </span>
               </div>
               <p className="text-on-surface-variant font-medium text-sm flex items-center gap-2">
-                <span className="font-bold">Roll No: {user?.roll_number}</span> • Grade {user?.grade}-{user?.section}
+                <span className="font-bold">{t('studentAttendanceReport.rollNo', { roll: user?.roll_number })}</span> • {t('studentAttendanceReport.gradeSection', { grade: user?.grade, section: user?.section })}
               </p>
               <div className="mt-4 flex flex-wrap gap-4">
                 <div className="flex flex-col">
-                  <span className="text-outline text-[10px] uppercase tracking-wider font-bold">Attendance Score</span>
+                  <span className="text-outline text-[10px] uppercase tracking-wider font-bold">{t('studentAttendanceReport.attendanceScore')}</span>
                   <span className="text-primary font-bold text-lg">{attendancePct}%</span>
                 </div>
                 <div className="w-[1px] bg-outline-variant h-8 self-center"></div>
                 <div className="flex flex-col">
-                  <span className="text-outline text-[10px] uppercase tracking-wider font-bold">Academic Year</span>
+                  <span className="text-outline text-[10px] uppercase tracking-wider font-bold">{t('studentAttendanceReport.academicYear')}</span>
                   <span className="text-on-surface-variant font-semibold text-sm">2026-27</span>
                 </div>
               </div>
@@ -131,7 +133,7 @@ export default function StudentAttendanceReport() {
                 onClick={() => window.print()}
                 className="bg-primary text-on-primary px-6 py-3 rounded-full font-semibold text-sm hover:shadow-lg transition-shadow flex items-center gap-2"
               >
-                <Icon name="download" className="text-[20px]" /> Export Report
+                <Icon name="download" className="text-[20px]" /> {t('studentAttendanceReport.exportReport')}
               </button>
             </div>
           </div>
@@ -140,19 +142,19 @@ export default function StudentAttendanceReport() {
         {/* Filter Panel and Grid list */}
         <section className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden p-6 space-y-4">
           <div className="flex flex-col md:flex-row justify-between gap-4">
-            <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Attendance Log</h3>
+            <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentAttendanceReport.attendanceLog')}</h3>
             <div className="flex flex-wrap gap-2">
               {['all', 'present', 'absent', 'late'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all capitalize ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
                     filterStatus === status
                       ? 'bg-primary text-white border-primary'
                       : 'bg-surface-container-low text-on-surface-variant border-outline-variant/30 hover:bg-surface-container-high'
                   }`}
                 >
-                  {status}
+                  {status === 'all' ? t('common.all') : status === 'present' ? t('common.statusPresent') : status === 'late' ? t('common.statusLate') : t('common.statusAbsent')}
                 </button>
               ))}
             </div>
@@ -160,11 +162,11 @@ export default function StudentAttendanceReport() {
 
           <div className="relative w-full">
             <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant" />
-            <input 
+            <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-container-low border-none rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary transition-all" 
-              placeholder="Filter by subject or date (YYYY-MM-DD)..." 
+              className="w-full bg-surface-container-low border-none rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary transition-all"
+              placeholder={t('studentAttendanceReport.searchPlaceholder')}
               type="text"
             />
           </div>
@@ -173,32 +175,32 @@ export default function StudentAttendanceReport() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-low">
-                  <th className="px-6 py-3 font-bold text-xs text-on-surface-variant">Date</th>
-                  <th className="px-6 py-3 font-bold text-xs text-on-surface-variant">Subject</th>
-                  <th className="px-6 py-3 font-bold text-xs text-on-surface-variant">Status</th>
+                  <th className="px-6 py-3 font-bold text-xs text-on-surface-variant">{t('studentAttendanceReport.date')}</th>
+                  <th className="px-6 py-3 font-bold text-xs text-on-surface-variant">{t('studentAttendanceReport.subject')}</th>
+                  <th className="px-6 py-3 font-bold text-xs text-on-surface-variant">{t('studentAttendanceReport.status')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
                 {loading ? (
                   <tr>
-                    <td colSpan="3" className="px-6 py-8 text-center text-on-surface-variant">Loading records...</td>
+                    <td colSpan="3" className="px-6 py-8 text-center text-on-surface-variant">{t('studentAttendanceReport.loadingRecords')}</td>
                   </tr>
                 ) : filteredRecords.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className="px-6 py-8 text-center text-on-surface-variant">No matching records found.</td>
+                    <td colSpan="3" className="px-6 py-8 text-center text-on-surface-variant">{t('studentAttendanceReport.noMatchingRecords')}</td>
                   </tr>
                 ) : (
                   filteredRecords.map((r, index) => (
                     <tr key={r.id || index} className="hover:bg-surface-container-low/40 transition-colors">
                       <td className="px-6 py-4 text-sm font-semibold">{formatDate(r.date)}</td>
-                      <td className="px-6 py-4 text-sm font-semibold">{r.subject || 'Class Session'}</td>
+                      <td className="px-6 py-4 text-sm font-semibold">{r.subject || t('studentAttendanceReport.classSession')}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border ${
                           r.status === 'present' ? 'bg-green-500/10 text-green-700 border-green-200' :
                           r.status === 'late' ? 'bg-yellow-500/10 text-yellow-700 border-yellow-200' :
                           'bg-red-500/10 text-red-700 border-red-200'
                         }`}>
-                          {r.status}
+                          {r.status === 'present' ? t('common.statusPresent') : r.status === 'late' ? t('common.statusLate') : t('common.statusAbsent')}
                         </span>
                       </td>
                     </tr>

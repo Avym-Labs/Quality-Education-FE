@@ -1,15 +1,22 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 import PointsCard from '../../components/common/PointsCard'
+import AttendanceDonut from '../../components/charts/AttendanceDonut'
+import PerformanceAreaChart from '../../components/charts/PerformanceAreaChart'
+import SubjectMasteryRadar from '../../components/charts/SubjectMasteryRadar'
+import TestResultsPieChart from '../../components/charts/TestResultsPieChart'
+import SubjectAttendanceBars from '../../components/charts/SubjectAttendanceBars'
 
 export default function StudentDashboard() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
-  
+
   const [stats, setStats] = useState({
     attendance_percentage: 0,
     average_score: 0,
@@ -118,12 +125,12 @@ export default function StudentDashboard() {
   const totalPoints = stats?.total_points ?? 0
   const rank = stats?.class_rank ? `#${stats.class_rank}` : '—'
   const rankPercentile = stats?.class_rank && stats?.class_size
-    ? `Top ${Math.max(1, Math.round((stats.class_rank / stats.class_size) * 100))}%`
-    : 'Not ranked yet'
-  const tier = score >= 90 ? 'Legend Tier' : score >= 80 ? 'Elite Tier' : 'Aspirant Tier'
+    ? t('studentDashboard.topPercent', { pct: Math.max(1, Math.round((stats.class_rank / stats.class_size) * 100)) })
+    : t('studentDashboard.notRankedYet')
+  const tier = score >= 90 ? t('topbar.legendTier') : score >= 80 ? t('topbar.eliteTier') : t('topbar.aspirantTier')
 
   const trendData = stats?.performance_trend || []
-  const weeklyAttendance = stats?.weekly_attendance || []
+  const subjectAttendance = stats?.subject_attendance || []
 
   const getPoints = (key) => {
     if (!trendData || trendData.length === 0) return ''
@@ -137,14 +144,14 @@ export default function StudentDashboard() {
 
   const getGreeting = () => {
     const hrs = new Date().getHours()
-    if (hrs >= 5 && hrs < 12) return 'Good Morning'
-    if (hrs >= 12 && hrs < 18) return 'Good Afternoon'
-    return 'Good Evening'
+    if (hrs >= 5 && hrs < 12) return t('common.goodMorning')
+    if (hrs >= 12 && hrs < 18) return t('common.goodAfternoon')
+    return t('common.goodEvening')
   }
 
   return (
     <DashboardLayout hideTopBar={false}>
-      <div className="flex flex-col gap-4 mt-stack-md lg:h-[calc(100vh-100px)] lg:overflow-hidden pb-4 text-left">
+      <div className="flex flex-col gap-4 mt-stack-md pb-4 text-left">
         
         {/* Welcome Greeting Banner Widget */}
         <section className="bg-gradient-to-br from-[#6351E0] to-[#8F43F2] p-5 rounded-[24px] text-white shadow-lg relative overflow-hidden flex flex-col justify-between select-none animate-fadeIn flex-shrink-0">
@@ -155,11 +162,11 @@ export default function StudentDashboard() {
           {/* Mobile: greeting leads with the student's total points */}
           <div className="md:hidden z-10 text-left">
             <h2 className="text-xl font-black tracking-tight leading-tight">
-              {getGreeting()}, your total points are:
+              {getGreeting()}, {t('studentDashboard.totalPointsAre')}
             </h2>
             <p className="text-3xl font-black tracking-tight mt-1 flex items-center gap-1.5">
               <Icon name="stars" className="text-2xl text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} filled />
-              {totalPoints} <span className="text-sm font-bold">pts</span>
+              {totalPoints} <span className="text-sm font-bold">{t('common.pts')}</span>
             </p>
           </div>
 
@@ -167,7 +174,7 @@ export default function StudentDashboard() {
           <div className="hidden md:flex justify-between items-center gap-4 z-10 text-left">
             <div>
               <h2 className="text-2xl font-black tracking-tight leading-tight">
-                {getGreeting()}, {user?.full_name?.split(' ')[0] || 'Student'}! 👋
+                {getGreeting()}, {user?.full_name?.split(' ')[0] || t('studentDashboard.greetingName')}! 👋
               </h2>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <span className="bg-white/20 text-white px-2 py-0.5 rounded-full flex items-center gap-1 text-[10px] font-bold shrink-0">
@@ -175,22 +182,22 @@ export default function StudentDashboard() {
                   {tier}
                 </span>
                 <span className="text-xs text-white/80 font-semibold">
-                  Grade {user?.grade || '10'}-{user?.section || 'A'} • Academic Precision School
+                  {t('topbar.grade')} {user?.grade || '10'}-{user?.section || 'A'} • {t('topbar.academicPrecisionSchool')}
                 </span>
               </div>
             </div>
             <div className="px-4 py-2 bg-white/20 text-white font-bold text-xs rounded-xl backdrop-blur-md cursor-default select-none flex items-center gap-1.5 shrink-0">
               <Icon name="stars" className="text-sm text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} filled />
-              <span>{totalPoints} Points</span>
+              <span>{totalPoints} {t('common.points')}</span>
             </div>
           </div>
         </section>
 
         {/* 2-Column Responsive Dashboard Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 lg:min-h-0 lg:items-stretch">
-          
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:items-start">
+
           {/* Left Column - Stats & Charts */}
-          <div className="lg:col-span-8 flex flex-col gap-4 lg:h-full lg:min-h-0">
+          <div className="lg:col-span-8 flex flex-col gap-4">
             
             {/* Stats Section (Gamified) */}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-shrink-0">
@@ -204,7 +211,7 @@ export default function StudentDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-primary shrink-0">
                     <Icon name="calendar_today" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Attendance</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('nav.attendance')}</span>
                 </div>
                 <div className="flex items-baseline justify-between mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{attendance}%</h3>
@@ -227,7 +234,7 @@ export default function StudentDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
                     <Icon name="trophy" className="text-base" filled />
                   </div>
-                  <span className="text-[11px] font-bold text-white/90 uppercase tracking-wider block truncate">Current Rank</span>
+                  <span className="text-[11px] font-bold text-white/90 uppercase tracking-wider block truncate">{t('studentDashboard.currentRank')}</span>
                 </div>
                 <div className="flex items-baseline justify-between mt-auto z-10 w-full text-white">
                   <h3 className="text-3xl font-black tracking-tight leading-none">{rank}</h3>
@@ -236,110 +243,103 @@ export default function StudentDashboard() {
               </div>
             </section>
 
-            {/* Charts & Performance - shown side-by-side at equal size on desktop */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:flex-1 lg:min-h-0">
+            {/* Charts & Performance - New improved visualizations */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
 
-              {/* Weekly Consistency (Attendance) Chart */}
-              <div className={`bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex-col justify-between lg:min-h-0 ${activeChart === 'attendance' ? 'flex' : 'hidden'} lg:flex`}>
-                <div className="flex justify-between items-center gap-2 mb-2 w-full">
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold truncate pr-1">Weekly Consistency</h3>
-                  <div className="flex gap-1.5 items-center shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                    <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider">Present</span>
-                  </div>
+              {/* Attendance Overview - Radial Gauge + Heatmap Calendar */}
+              <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col overflow-hidden">
+                <div className="flex justify-between items-center gap-2 mb-4 w-full">
+                  <h3 className="font-title-lg text-sm text-on-surface font-bold truncate pr-1">{t('studentDashboard.attendanceOverview')}</h3>
                 </div>
 
-                <div className="flex-1 transition-all duration-300 lg:min-h-0">
-                  {weeklyAttendance.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-xs text-on-surface-variant font-semibold">
-                      No attendance recorded yet
-                    </div>
-                  ) : (
-                  <div className="h-full flex flex-col justify-between">
-                    <div className="flex items-end justify-between px-2 gap-3 pt-2 flex-grow min-h-0">
-                      {weeklyAttendance.map((d, idx) => (
-                        <div key={idx} className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
-                          <div
-                            className={`w-full max-w-[32px] rounded-t-md transition-all duration-500 hover:opacity-90 ${d.rate < 50 ? 'bg-[#e2dfff]' : 'bg-primary'}`}
-                            style={{ height: `${d.rate}%` }}
-                          ></div>
-                          <span className="text-[10px] font-bold text-on-surface-variant">{d.day}</span>
-                        </div>
-                      ))}
-                    </div>
+                <div className="flex-1 flex flex-col items-center justify-center gap-10">
+                  {/* Donut showing present vs. absent share */}
+                  <AttendanceDonut
+                    percentage={attendance}
+                    size={190}
+                    showLabel={true}
+                  />
+
+                  {/* Subject-wise attendance breakdown */}
+                  <div className="w-full">
+                    <h4 className="font-title-lg text-xs text-on-surface font-bold text-center mb-3">{t('studentDashboard.attendanceBySubject')}</h4>
+                    <SubjectAttendanceBars data={subjectAttendance} />
                   </div>
-                  )}
                 </div>
               </div>
 
-              {/* Performance Trend Chart */}
-              <div className={`bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex-col justify-between lg:min-h-0 ${activeChart === 'performance' ? 'flex' : 'hidden'} lg:flex`}>
-                <div className="flex justify-between items-center gap-2 mb-2 w-full">
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold truncate pr-1">Performance Trend</h3>
+              {/* Performance Trend - Area Chart + Subject Mastery Radar */}
+              <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col overflow-hidden">
+                <div className="flex justify-between items-center gap-2 mb-4 w-full">
+                  <h3 className="font-title-lg text-sm text-on-surface font-bold truncate pr-1">{t('studentDashboard.performanceAnalytics')}</h3>
                 </div>
 
-                <div className="flex-1 transition-all duration-300 lg:min-h-0">
-                  {trendData.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-xs text-on-surface-variant font-semibold">
-                      No test results recorded yet
-                    </div>
-                  ) : (
-                  <div className="h-full flex flex-col justify-between">
-                    {/* Legend for the 3 lines */}
-                    <div className="flex items-center gap-4 justify-start mb-2 px-1 text-[9px] font-bold uppercase tracking-wider">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-primary inline-block"></span>
-                        <span className="text-on-surface-variant">Personal</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-slate-400 inline-block"></span>
-                        <span className="text-on-surface-variant">Class Avg</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
-                        <span className="text-on-surface-variant">Topper</span>
-                      </div>
-                    </div>
-
-                    <div className="relative flex-grow w-full min-h-0 pt-2 flex flex-col justify-between">
-                      <div className="flex-1 relative min-h-0">
-                        <svg className="w-full h-full overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
-                          {/* Grid lines */}
-                          <line x1="0" y1="10" x2="400" y2="10" stroke="#e2e8f0" strokeDasharray="3,3" />
-                          <line x1="0" y1="50" x2="400" y2="50" stroke="#e2e8f0" strokeDasharray="3,3" />
-                          <line x1="0" y1="90" x2="400" y2="90" stroke="#e2e8f0" strokeDasharray="3,3" />
-
-                          {/* Topper line */}
-                          <polyline points={getPoints('topper')} fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          {/* Class Avg line */}
-                          <polyline points={getPoints('class_average')} fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,4" />
-                          {/* Personal line */}
-                          <polyline points={getPoints('personal')} fill="none" stroke="#3525cd" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-
-                          {/* Data dots */}
-                          {trendData.map((d, idx) => {
-                            const step = 400 / Math.max(1, trendData.length - 1)
-                            const x = idx * step
-                            return (
-                              <g key={idx}>
-                                <circle cx={x} cy={100 - ((d.topper || 0) * 0.8 + 10)} r="3" fill="#f59e0b" />
-                                <circle cx={x} cy={100 - ((d.class_average || 0) * 0.8 + 10)} r="3" fill="#94a3b8" />
-                                <circle cx={x} cy={100 - ((d.personal || 0) * 0.8 + 10)} r="4" fill="#3525cd" className={idx === trendData.length - 1 ? "animate-pulse" : ""} />
-                              </g>
-                            )
-                          })}
-                        </svg>
-                      </div>
-                      <div className="flex justify-between mt-2 font-semibold">
-                        <span className="text-[10px] text-on-surface-variant">{trendData[0]?.test_title}</span>
-                        <span className="text-[10px] text-on-surface-variant">{trendData[trendData.length - 1]?.test_title}</span>
-                      </div>
-                    </div>
+                <div className="flex flex-col gap-6">
+                  {/* Area Chart for trend */}
+                  <div className="h-[210px]">
+                    <PerformanceAreaChart
+                      trendData={trendData}
+                      height={210}
+                      showClassAvg={true}
+                      showTopper={true}
+                      showTarget={true}
+                      targetValue={75}
+                    />
                   </div>
-                  )}
+
+                  {/* Subject Mastery Radar */}
+                  <div>
+                    <SubjectMasteryRadar
+                      subjects={useMemo(() => {
+                        // Extract subject breakdown from test_points breakdown or performance_trend
+                        const subjectMap = {};
+                        trendData.forEach(t => {
+                          if (t.subject && !subjectMap[t.subject]) {
+                            subjectMap[t.subject] = { scores: [], count: 0 };
+                          }
+                          if (t.subject) {
+                            subjectMap[t.subject].scores.push(t.personal || 0);
+                            subjectMap[t.subject].count++;
+                          }
+                        });
+                        return Object.entries(subjectMap).map(([subject, data]) => ({
+                          subject,
+                          score: data.scores.length > 0 ? Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length) : 0
+                        }));
+                      }, [trendData])}
+                      size={220}
+                      showLegend={true}
+                    />
+                  </div>
                 </div>
               </div>
 
+            </section>
+
+            {/* Test Results Distribution - Pie Chart */}
+            <section className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 lg:col-span-2">
+              <TestResultsPieChart
+                results={useMemo(() => {
+                  // test_points.breakdown is one entry per test taken; aggregate by subject
+                  const breakdown = testPoints?.breakdown || [];
+                  const bySubject = {};
+                  breakdown.forEach(b => {
+                    if (!b.subject) return;
+                    bySubject[b.subject] = bySubject[b.subject] || { count: 0, totalPct: 0 };
+                    bySubject[b.subject].count++;
+                    bySubject[b.subject].totalPct += b.percentage || 0;
+                  });
+                  return Object.entries(bySubject).map(([subject, d]) => ({
+                    subject,
+                    count: d.count,
+                    avgScore: Math.round(d.totalPct / d.count)
+                  }));
+                }, [testPoints])}
+                size={280}
+                innerRadius={50}
+                showLegend={true}
+                title={t('studentDashboard.testDistributionBySubject')}
+              />
             </section>
 
           </div>
@@ -349,7 +349,7 @@ export default function StudentDashboard() {
             
             {/* Quick Actions Grid */}
             <section className="bg-white p-4 rounded-[24px] shadow-sm border border-outline-variant/35 space-y-3 flex-shrink-0">
-              <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Action Items</h3>
+              <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">{t('studentDashboard.actionItems')}</h3>
               <div className="grid grid-cols-2 gap-2.5">
                 {/* Test Performance Action */}
                 <div 
@@ -359,7 +359,7 @@ export default function StudentDashboard() {
                   <Icon name="event" className="text-error group-hover:scale-105 transition-transform text-lg" />
                   <div>
                     <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">{testsCount}</p>
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Class Tests</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">{t('studentDashboard.classTests')}</p>
                   </div>
                 </div>
 
@@ -370,8 +370,8 @@ export default function StudentDashboard() {
                 >
                   <Icon name="workspace_premium" className="text-secondary group-hover:scale-105 transition-transform text-lg" />
                   <div>
-                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Cabinet</p>
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Achievements</p>
+                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">{t('studentDashboard.cabinet')}</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">{t('studentDashboard.achievements')}</p>
                   </div>
                 </div>
 
@@ -382,8 +382,8 @@ export default function StudentDashboard() {
                 >
                   <Icon name="analytics" className="text-primary group-hover:scale-105 transition-transform text-lg" />
                   <div>
-                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Report</p>
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Analytics</p>
+                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">{t('studentDashboard.report')}</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">{t('studentDashboard.analytics')}</p>
                   </div>
                 </div>
 
@@ -394,8 +394,8 @@ export default function StudentDashboard() {
                 >
                   <Icon name="calendar_today" className="text-secondary group-hover:scale-105 transition-transform text-lg" />
                   <div>
-                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Schedule</p>
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Lectures</p>
+                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">{t('studentDashboard.schedule')}</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">{t('studentDashboard.lectures')}</p>
                   </div>
                 </div>
 
@@ -406,8 +406,8 @@ export default function StudentDashboard() {
                 >
                   <Icon name="event_busy" className="text-primary group-hover:scale-105 transition-transform text-lg" />
                   <div>
-                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">Apply</p>
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">Leave Request</p>
+                    <p className="font-numeric-bold text-xs text-on-surface font-bold leading-none">{t('studentDashboard.apply')}</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide mt-1">{t('studentDashboard.leaveRequest')}</p>
                   </div>
                 </div>
               </div>
@@ -416,16 +416,16 @@ export default function StudentDashboard() {
             {/* Attendance Rankers (Leaderboard) */}
             <section className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col lg:flex-1 lg:min-h-0 space-y-3">
               <div className="flex justify-between items-center">
-                <h3 className="font-title-lg text-sm text-on-surface font-bold">Attendance Rankers</h3>
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('studentDashboard.attendanceRankers')}</h3>
                 <span onClick={() => navigate('/student/profile/achievements')} className="text-primary font-bold text-xs hover:underline cursor-pointer">
-                  View All
+                  {t('common.viewAll')}
                 </span>
               </div>
-              
+
               <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar space-y-2">
                 {leaderboard.length === 0 ? (
                   <div className="text-center py-4 text-xs text-on-surface-variant font-semibold">
-                    No classmates to rank yet
+                    {t('studentDashboard.noClassmates')}
                   </div>
                 ) : leaderboard.map((entry, idx) => {
                   const rank = idx + 1
@@ -454,18 +454,18 @@ export default function StudentDashboard() {
                         <div className="text-left">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-bold text-on-surface">
-                              {isMe ? `${entry.name?.split(' ')[0] || 'You'} (You)` : entry.name}
+                              {isMe ? `${entry.name?.split(' ')[0] || t('common.you')} (${t('common.you')})` : entry.name}
                             </span>
                           </div>
                           <p className="text-[9px] text-on-surface-variant flex items-center gap-1 font-semibold mt-0.5">
                             <Icon name="local_fire_department" className="text-[10px] text-tertiary" filled />
-                            {entry.streak_days} Day Streak
+                            {t('studentDashboard.dayStreak', { count: entry.streak_days })}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-bold text-on-surface font-numeric-bold">{entry.attendance_pct}%</p>
-                        <p className="text-[8px] uppercase font-bold text-on-surface-variant">{entry.total_points} pts</p>
+                        <p className="text-[8px] uppercase font-bold text-on-surface-variant">{entry.total_points} {t('common.pts')}</p>
                       </div>
                     </div>
                   )

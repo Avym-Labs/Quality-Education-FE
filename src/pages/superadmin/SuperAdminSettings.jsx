@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import api from '../../api/axios'
 import Icon from '../../components/common/Icon'
+import LanguageSelector from '../../components/common/LanguageSelector'
 
 export default function SuperAdminSettings() {
   const navigate = useNavigate()
@@ -261,6 +262,14 @@ export default function SuperAdminSettings() {
               </div>
             </div>
           )}
+        </section>
+
+        {/* Section 1b: Language */}
+        <section className="bg-surface-container-lowest rounded-2xl p-stack-md shadow-sm border border-outline-variant/35">
+          <div className="flex items-center justify-between mb-4 border-b border-outline-variant/15 pb-2">
+            <h3 className="font-title-lg text-sm text-on-surface font-bold">Language</h3>
+          </div>
+          <LanguageSelector />
         </section>
 
         {/* Section 2: Manage Admin Credentials */}

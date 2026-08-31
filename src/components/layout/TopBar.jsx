@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationContext'
 import api from '../../api/axios'
@@ -7,6 +8,7 @@ import Icon from '../common/Icon'
 
 export default function TopBar({ onNotificationClick }) {
   const { user, logout } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const role = user?.role || 'student'
 
@@ -33,7 +35,7 @@ export default function TopBar({ onNotificationClick }) {
   }, [user, role])
 
   const score = studentStats?.average_score ?? 85.0
-  const tier = score >= 90 ? 'Legend Tier' : score >= 80 ? 'Elite Tier' : 'Aspirant Tier'
+  const tier = score >= 90 ? t('topbar.legendTier') : score >= 80 ? t('topbar.eliteTier') : t('topbar.aspirantTier')
 
 
   return (
@@ -74,10 +76,12 @@ export default function TopBar({ onNotificationClick }) {
             )}
           </div>
           <p className="text-xs text-outline font-semibold tracking-wide leading-tight mt-0.5">
-            {role === 'student' && (user?.grade ? `Grade ${user.grade}-${user?.section || ''} • Academic Precision School` : 'Academic Precision School')}
-            {role === 'teacher' && `${user?.department ? `${user.department} ` : ''}Faculty`}
-            {role === 'admin' && 'System Administrator'}
-            {role === 'superadmin' && 'Platform Suite Manager'}
+            {role === 'student' && (user?.grade
+              ? `${t('topbar.grade')} ${user.grade}-${user?.section || ''} • ${t('topbar.academicPrecisionSchool')}`
+              : t('topbar.academicPrecisionSchool'))}
+            {role === 'teacher' && `${user?.department ? `${user.department} ` : ''}${t('topbar.faculty')}`}
+            {role === 'admin' && t('topbar.systemAdministrator')}
+            {role === 'superadmin' && t('topbar.platformSuiteManager')}
           </p>
         </div>
       </div>

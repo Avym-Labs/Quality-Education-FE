@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function LeaveApproval() {
+  const { t } = useTranslation()
   const [leaves, setLeaves] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,7 +24,7 @@ export default function LeaveApproval() {
       setLeaves(res.data || [])
     } catch (err) {
       console.error('Failed to load leaves:', err)
-      setError('Could not fetch leave approval records.')
+      setError(t('leaveApproval.failedToFetch'))
     } finally {
       setLoading(false)
     }
@@ -48,7 +50,7 @@ export default function LeaveApproval() {
       })
     } catch (err) {
       console.error(`Failed to ${status} leave:`, err)
-      alert(`Failed to update leave request status.`)
+      alert(t('leaveApproval.failedToUpdate'))
     } finally {
       setProcessingId(null)
     }
@@ -81,9 +83,9 @@ export default function LeaveApproval() {
       const e = new Date(end)
       const diffTime = Math.abs(e - s)
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-      return diffDays === 1 ? '1 Day' : `${diffDays} Days`
+      return diffDays === 1 ? t('leaveApproval.oneDay') : t('leaveApproval.nDays', { count: diffDays })
     } catch {
-      return '1 Day'
+      return t('leaveApproval.oneDay')
     }
   }
 
@@ -94,7 +96,7 @@ export default function LeaveApproval() {
         {/* Header Title */}
         <section className="flex justify-between items-center pb-2 border-b border-outline-variant/20">
           <div>
-            <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Leave Approvals</h2>
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">{t('leaveApproval.title')}</h2>
           </div>
           <Icon name="pending_actions" className="text-primary text-2xl" />
         </section>
@@ -115,7 +117,7 @@ export default function LeaveApproval() {
                 : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant'
             }`}
           >
-            Pending ({pendingLeaves.length})
+            {t('leaveApproval.pending', { count: pendingLeaves.length })}
           </button>
           <button 
             onClick={() => setActiveTab('approved')}
@@ -125,7 +127,7 @@ export default function LeaveApproval() {
                 : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant'
             }`}
           >
-            Approved ({approvedLeaves.length})
+            {t('leaveApproval.approved', { count: approvedLeaves.length })}
           </button>
           <button 
             onClick={() => setActiveTab('rejected')}
@@ -135,7 +137,7 @@ export default function LeaveApproval() {
                 : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant'
             }`}
           >
-            Rejected ({rejectedLeaves.length})
+            {t('leaveApproval.rejected', { count: rejectedLeaves.length })}
           </button>
         </section>
 
@@ -149,10 +151,10 @@ export default function LeaveApproval() {
             {activeLeaves.length > 0 ? (
               activeLeaves.map((request) => {
                 const requester = request.user || {}
-                const name = requester.full_name || `${requester.first_name || ''} ${requester.last_name || ''}`.trim() || 'Academic Requester'
-                const roleLabel = requester.role === 'teacher' ? 'Faculty Member' : 'Student'
-                
-                const classLabel = request.class_info || (requester.role === 'teacher' ? 'Department not set' : 'Class not set')
+                const name = requester.full_name || `${requester.first_name || ''} ${requester.last_name || ''}`.trim() || t('leaveApproval.academicRequester')
+                const roleLabel = requester.role === 'teacher' ? t('leaveApproval.facultyMember') : t('leaveApproval.student')
+
+                const classLabel = request.class_info || (requester.role === 'teacher' ? t('leaveApproval.departmentNotSet') : t('leaveApproval.classNotSet'))
                 const attendanceRate = request.attendance_rate
                 const daysLabel = calculateDays(request.start_date, request.end_date)
                 
@@ -179,7 +181,7 @@ export default function LeaveApproval() {
                           </p>
                           {requester.role !== 'teacher' && attendanceRate && (
                             <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-[10px] font-bold mt-1">
-                              Attendance: {attendanceRate}
+                              {t('leaveApproval.attendance', { rate: attendanceRate })}
                             </div>
                           )}
                         </div>
@@ -197,7 +199,7 @@ export default function LeaveApproval() {
 
                     {/* Reason block */}
                     <div className="mt-stack-md p-stack-md bg-surface-container rounded-xl border-l-4 border-primary">
-                      <p className="font-label-md text-xs font-bold text-primary mb-1">Reason for Leave:</p>
+                      <p className="font-label-md text-xs font-bold text-primary mb-1">{t('leaveApproval.reasonForLeave')}</p>
                       <p className="font-body-md text-xs text-on-surface leading-relaxed">
                         {request.reason}
                       </p>
@@ -208,30 +210,30 @@ export default function LeaveApproval() {
                       <div className="mt-stack-lg space-y-stack-md">
                         <div>
                           <label className="font-semibold text-xs text-on-surface-variant mb-1 block">
-                            Internal Remark (Optional)
+                            {t('leaveApproval.internalRemark')}
                           </label>
-                          <input 
+                          <input
                             value={remarks[request.id] || ''}
                             onChange={(e) => handleRemarkChange(request.id, e.target.value)}
-                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-stack-md py-2 text-xs focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
-                            placeholder="Add administrative notes or instructions..." 
+                            className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-stack-md py-2 text-xs focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                            placeholder={t('leaveApproval.remarkPlaceholder')}
                             type="text"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-stack-md">
-                          <button 
+                          <button
                             disabled={processingId === request.id}
                             onClick={() => handleAction(request.id, 'rejected')}
                             className="h-11 border border-primary text-primary font-bold text-xs rounded-full hover:bg-primary-fixed transition-all active:scale-95 disabled:opacity-50"
                           >
-                            Reject
+                            {t('leaveApproval.reject')}
                           </button>
-                          <button 
+                          <button
                             disabled={processingId === request.id}
                             onClick={() => handleAction(request.id, 'approved')}
                             className="h-11 bg-primary text-on-primary font-bold text-xs rounded-full shadow-md hover:bg-opacity-95 transition-all active:scale-95 disabled:opacity-50"
                           >
-                            Approve
+                            {t('leaveApproval.approve')}
                           </button>
                         </div>
                       </div>
@@ -243,7 +245,7 @@ export default function LeaveApproval() {
                           className={`text-sm ${request.status === 'approved' ? 'text-green-600' : 'text-error'}`}
                         />
                         <span className={request.status === 'approved' ? 'text-green-700' : 'text-error'}>
-                          {request.status === 'approved' ? 'Approved' : 'Rejected'}
+                          {request.status === 'approved' ? t('common.statusApproved') : t('common.statusRejected')}
                         </span>
                       </div>
                     )}
@@ -254,8 +256,8 @@ export default function LeaveApproval() {
             ) : (
               <div className="bg-surface-container-low border border-outline-variant/20 rounded-3xl p-10 text-center text-on-surface-variant text-sm flex flex-col items-center gap-3">
                 <Icon name="inbox" className="text-4xl text-outline" />
-                <p className="font-semibold">No leave requests in this category.</p>
-                <p className="text-xs">All caught up with institutional leave approvals!</p>
+                <p className="font-semibold">{t('leaveApproval.noLeaveRequestsInCategory')}</p>
+                <p className="text-xs">{t('leaveApproval.allCaughtUp')}</p>
               </div>
             )}
           </div>

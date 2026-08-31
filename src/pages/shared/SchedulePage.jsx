@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -7,6 +8,7 @@ import Icon from '../../components/common/Icon'
 import DateInput from '../../components/common/DateInput'
 
 export default function SchedulePage({ embed = false }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const role = user?.role || 'student'
@@ -74,10 +76,9 @@ export default function SchedulePage({ embed = false }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all') // 'upcoming' | 'past' | 'all'
 
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ]
+  const monthNames = t('calendar.months', { returnObjects: true })
+  const dayNamesMini = t('calendar.daysMini', { returnObjects: true })
+  const dayNamesSingle = t('calendar.daysSingle', { returnObjects: true })
 
   const DAY_START_HOUR = 8
   const DAY_END_HOUR = 18
@@ -127,7 +128,7 @@ export default function SchedulePage({ embed = false }) {
       setSchedules(data || [])
     } catch (err) {
       console.error(err)
-      setError('Failed to fetch scheduled events.')
+      setError(t('schedulePage.failedToFetch'))
     } finally {
       setLoading(false)
     }
@@ -243,10 +244,10 @@ export default function SchedulePage({ embed = false }) {
 
       if (editingId) {
         await api.put(`/schedules/${editingId}`, payload)
-        setSuccess('Schedule updated successfully! Students notified.')
+        setSuccess(t('schedulePage.scheduleUpdatedSuccess'))
       } else {
         await api.post('/schedules', payload)
-        setSuccess('New class lecture scheduled successfully!')
+        setSuccess(t('schedulePage.newLectureScheduledSuccess'))
       }
 
       setModalOpen(false)
@@ -254,24 +255,24 @@ export default function SchedulePage({ embed = false }) {
       setTimeout(() => setSuccess(''), 4000)
     } catch (err) {
       console.error(err)
-      setError('Failed to save schedule record.')
+      setError(t('schedulePage.failedToSaveSchedule'))
     } finally {
       setSubmittingForm(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this lecture schedule?')) return
+    if (!window.confirm(t('schedulePage.confirmCancel'))) return
     setError('')
     setSuccess('')
     try {
       await api.delete(`/schedules/${id}`)
-      setSuccess('Schedule cancelled successfully.')
+      setSuccess(t('schedulePage.scheduleCancelledSuccess'))
       loadSchedules()
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
       console.error(err)
-      setError('Failed to cancel schedule.')
+      setError(t('schedulePage.failedToCancel'))
     }
   }
 
@@ -348,7 +349,7 @@ export default function SchedulePage({ embed = false }) {
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-                Lecture Calendar
+                {t('schedulePage.lectureCalendar')}
               </h2>
             </div>
           </div>
@@ -356,15 +357,15 @@ export default function SchedulePage({ embed = false }) {
           {/* Class filter for Teachers & Admins */}
           {role !== 'student' && (
             <div className="flex items-center gap-2">
-              <label className="text-[10px] uppercase font-bold text-outline">Class:</label>
+              <label className="text-[10px] uppercase font-bold text-outline">{t('schedulePage.class')}</label>
               <select
                 value={classFilter}
                 onChange={e => setClassFilter(e.target.value)}
                 className="bg-surface-container-low border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none"
               >
-                {classOptions.length === 0 && <option value="">No classes yet</option>}
+                {classOptions.length === 0 && <option value="">{t('schedulePage.noClassesYet')}</option>}
                 {classOptions.map(cls => (
-                  <option key={cls} value={cls}>Class {cls}</option>
+                  <option key={cls} value={cls}>{t('schedulePage.classLabel', { cls })}</option>
                 ))}
               </select>
             </div>
@@ -416,8 +417,8 @@ export default function SchedulePage({ embed = false }) {
             <div className="grid grid-cols-7 gap-1 text-center text-xs">
               
               {/* Day Titles headers */}
-              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                <div key={d} className="font-bold text-[10px] text-outline uppercase py-1 border-b border-outline-variant/10">
+              {dayNamesMini.map((d, idx) => (
+                <div key={idx} className="font-bold text-[10px] text-outline uppercase py-1 border-b border-outline-variant/10">
                   {d}
                 </div>
               ))}
@@ -473,7 +474,7 @@ export default function SchedulePage({ embed = false }) {
             <div>
               <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2.5 mb-4">
                 <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
-                  Schedules for {selectedDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                  {t('schedulePage.schedulesFor', { date: selectedDate.toLocaleDateString([], { month: 'short', day: 'numeric' }) })}
                 </h3>
 
                 {/* Add Event trigger for Teachers & Admins */}
@@ -483,15 +484,15 @@ export default function SchedulePage({ embed = false }) {
                     className="flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary rounded-xl text-[10px] font-bold shadow-xs hover:bg-opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
                   >
                     <Icon name="add" className="text-xs" />
-                    <span>Add Event</span>
+                    <span>{t('schedulePage.addEvent')}</span>
                   </button>
                 )}
               </div>
 
               {loading ? (
-                <div className="py-12 text-center text-outline font-semibold">Querying calendar...</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('schedulePage.queryingCalendar')}</div>
               ) : selectedDayEvents.length === 0 ? (
-                <div className="py-12 text-center text-outline font-semibold">No lectures scheduled for this date.</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('schedulePage.noLecturesForDate')}</div>
               ) : (
                 <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
                   {selectedDayEvents.map(ev => (
@@ -502,11 +503,11 @@ export default function SchedulePage({ embed = false }) {
                             {ev.subject}
                           </span>
                           {ev.room && (
-                            <span className="text-[8px] text-outline font-bold uppercase">Room {ev.room}</span>
+                            <span className="text-[8px] text-outline font-bold uppercase">{t('schedulePage.room', { room: ev.room })}</span>
                           )}
                         </div>
                         <h4 className="text-xs font-bold text-on-surface mt-1.5 truncate">{ev.title}</h4>
-                        <p className="text-[9px] text-outline font-medium mt-0.5 truncate">Prof: {ev.teacher_name}</p>
+                        <p className="text-[9px] text-outline font-medium mt-0.5 truncate">{t('schedulePage.prof', { name: ev.teacher_name })}</p>
                       </div>
 
                       <div className="flex flex-col items-end shrink-0 gap-1.5">
@@ -520,14 +521,14 @@ export default function SchedulePage({ embed = false }) {
                             <button
                               onClick={() => handleOpenEditModal(ev)}
                               className="text-xs p-1 rounded-md text-outline hover:bg-surface-container hover:text-on-surface cursor-pointer border-none bg-transparent"
-                              title="Edit Event"
+                              title={t('schedulePage.editEvent')}
                             >
                               <Icon name="edit" />
                             </button>
                             <button
                               onClick={() => handleDelete(ev.id)}
                               className="text-xs p-1 rounded-md text-error hover:bg-red-50 cursor-pointer border-none bg-transparent"
-                              title="Delete Event"
+                              title={t('schedulePage.deleteEvent')}
                             >
                               <Icon name="delete" />
                             </button>
@@ -542,7 +543,7 @@ export default function SchedulePage({ embed = false }) {
             
             <div className="text-[8px] text-outline font-semibold uppercase tracking-wider text-center border-t border-outline-variant/15 pt-3 mt-4 flex items-center justify-center gap-1">
               <Icon name="calendar_today" className="text-xs text-primary" />
-              <span>All schedule edits notify the class student list matches to grade subject.</span>
+              <span>{t('schedulePage.allEditsNotify')}</span>
             </div>
           </div>
         </div>
@@ -560,7 +561,7 @@ export default function SchedulePage({ embed = false }) {
                     onClick={handleToday}
                     className="px-3.5 py-2 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-xs font-bold border-none cursor-pointer"
                   >
-                    Today
+                    {t('schedulePage.today')}
                   </button>
                   <button
                     onClick={handleToolbarPrev}
@@ -583,7 +584,7 @@ export default function SchedulePage({ embed = false }) {
                     <input
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Search lectures..."
+                      placeholder={t('schedulePage.searchLectures')}
                       className="pl-9 pr-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary w-56"
                     />
                   </div>
@@ -593,7 +594,7 @@ export default function SchedulePage({ embed = false }) {
                       className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold shadow-xs hover:opacity-95 transition-all active:scale-95 duration-100 border-none cursor-pointer"
                     >
                       <Icon name="add" className="text-sm" />
-                      <span>Create New Record</span>
+                      <span>{t('schedulePage.createNewRecord')}</span>
                     </button>
                   )}
                 </div>
@@ -609,7 +610,7 @@ export default function SchedulePage({ embed = false }) {
                         viewMode === v ? 'bg-white shadow-xs text-primary' : 'bg-transparent text-on-surface-variant hover:text-on-surface'
                       }`}
                     >
-                      {v}
+                      {t(`schedulePage.${v}`)}
                     </button>
                   ))}
                 </div>
@@ -640,7 +641,7 @@ export default function SchedulePage({ embed = false }) {
                     <div className="absolute top-0 left-14 right-0 bottom-0">
                       {dayViewEvents.length === 0 && (
                         <div className="absolute inset-0 flex items-center justify-center text-outline text-xs font-semibold">
-                          No lectures scheduled for this day.
+                          {t('schedulePage.noLecturesForDay')}
                         </div>
                       )}
                       {dayViewEvents.map(ev => {
@@ -658,7 +659,7 @@ export default function SchedulePage({ embed = false }) {
                               {formatEventTime(ev.start_time)} - {formatEventTime(ev.end_time)}
                             </p>
                             <p className="text-[10px] font-bold text-on-surface truncate">{ev.title}</p>
-                            {ev.room && <p className="text-[8px] text-outline font-semibold truncate">Room {ev.room}</p>}
+                            {ev.room && <p className="text-[8px] text-outline font-semibold truncate">{t('schedulePage.room', { room: ev.room })}</p>}
                           </div>
                         )
                       })}
@@ -704,8 +705,8 @@ export default function SchedulePage({ embed = false }) {
                 {/* MONTH VIEW */}
                 {viewMode === 'month' && (
                   <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
-                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                      <div key={d} className="font-bold text-[10px] text-outline uppercase py-1.5 border-b border-outline-variant/10">{d}</div>
+                    {dayNamesMini.map((d, idx) => (
+                      <div key={idx} className="font-bold text-[10px] text-outline uppercase py-1.5 border-b border-outline-variant/10">{d}</div>
                     ))}
                     {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                       <div key={`pad-${i}`} className="opacity-0" />
@@ -742,7 +743,7 @@ export default function SchedulePage({ embed = false }) {
                               )
                             })}
                             {dayEvents.length > 2 && (
-                              <span className={`text-[7px] font-bold ${isSelected ? 'text-white/80' : 'text-outline'}`}>+{dayEvents.length - 2} more</span>
+                              <span className={`text-[7px] font-bold ${isSelected ? 'text-white/80' : 'text-outline'}`}>{t('schedulePage.plusNMore', { count: dayEvents.length - 2 })}</span>
                             )}
                           </div>
                         </div>
@@ -773,7 +774,7 @@ export default function SchedulePage({ embed = false }) {
                     </button>
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-center">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, idx) => (
+                    {dayNamesSingle.map((d, idx) => (
                       <div key={idx} className="text-[8px] font-bold text-outline">{d}</div>
                     ))}
                     {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`mp-${i}`} />)}
@@ -803,31 +804,31 @@ export default function SchedulePage({ embed = false }) {
                 {/* Filters */}
                 <div className="space-y-4 pt-4 border-t border-outline-variant/15">
                   <div className="space-y-2">
-                    <h4 className="text-[10px] font-black uppercase text-outline tracking-wider">Class</h4>
+                    <h4 className="text-[10px] font-black uppercase text-outline tracking-wider">{t('schedulePage.class')}</h4>
                     {isTeacherOrAdmin ? (
                       <select
                         value={classFilter}
                         onChange={e => setClassFilter(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary cursor-pointer"
                       >
-                        {classOptions.length === 0 && <option value="">No classes yet</option>}
+                        {classOptions.length === 0 && <option value="">{t('schedulePage.noClassesYet')}</option>}
                         {classOptions.map(cls => (
-                          <option key={cls} value={cls}>Class {cls}</option>
+                          <option key={cls} value={cls}>{t('schedulePage.classLabel', { cls })}</option>
                         ))}
                       </select>
                     ) : (
                       <div className="px-3 py-2 rounded-xl border border-outline-variant/40 bg-surface-container-low text-xs font-semibold text-on-surface-variant">
-                        Class {user?.grade}-{user?.section}
+                        {t('schedulePage.classLabel', { cls: `${user?.grade}-${user?.section}` })}
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="text-[10px] font-black uppercase text-outline tracking-wider">Status</h4>
+                    <h4 className="text-[10px] font-black uppercase text-outline tracking-wider">{t('schedulePage.status')}</h4>
                     {[
-                      { v: 'upcoming', l: 'Upcoming Lectures' },
-                      { v: 'past', l: 'Past Lectures' },
-                      { v: 'all', l: 'All Lectures' },
+                      { v: 'upcoming', l: t('schedulePage.upcomingLectures') },
+                      { v: 'past', l: t('schedulePage.pastLectures') },
+                      { v: 'all', l: t('schedulePage.allLectures') },
                     ].map(opt => (
                       <label key={opt.v} className="flex items-center gap-2 text-xs font-semibold text-on-surface cursor-pointer">
                         <input
@@ -853,7 +854,7 @@ export default function SchedulePage({ embed = false }) {
               
               <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2.5">
                 <h3 className="text-xs font-black uppercase text-primary tracking-wider">
-                  {editingId ? 'Modify Lecture Schedule' : 'Schedule New Class Event'}
+                  {editingId ? t('schedulePage.modifyLectureSchedule') : t('schedulePage.scheduleNewClassEvent')}
                 </h3>
                 <button
                   type="button"
@@ -865,10 +866,10 @@ export default function SchedulePage({ embed = false }) {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-bold text-[10px] uppercase text-outline">Event Title <span className="text-error">*</span></label>
+                <label className="font-bold text-[10px] uppercase text-outline">{t('schedulePage.eventTitle')} <span className="text-error">*</span></label>
                 <input
                   type="text"
-                  placeholder="e.g. Calculus Basics Intro"
+                  placeholder={t('schedulePage.titlePlaceholder')}
                   value={formTitle}
                   onChange={e => setFormTitle(e.target.value)}
                   className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -878,26 +879,26 @@ export default function SchedulePage({ embed = false }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">Class Room</label>
+                  <label className="font-bold text-[10px] uppercase text-outline">{t('schedulePage.classRoom')}</label>
                   <select
                     value={formClass}
                     onChange={e => setFormClass(e.target.value)}
                     className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                   >
-                    {classOptions.length === 0 && <option value="">No classes yet</option>}
+                    {classOptions.length === 0 && <option value="">{t('schedulePage.noClassesYet')}</option>}
                     {classOptions.map(cls => (
-                      <option key={cls} value={cls}>Class {cls}</option>
+                      <option key={cls} value={cls}>{t('schedulePage.classLabel', { cls })}</option>
                     ))}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">Subject</label>
+                  <label className="font-bold text-[10px] uppercase text-outline">{t('schedulePage.subject')}</label>
                   <select
                     value={formSubject}
                     onChange={e => setFormSubject(e.target.value)}
                     className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                   >
-                    {subjectOptions.length === 0 && <option value="">No subjects yet</option>}
+                    {subjectOptions.length === 0 && <option value="">{t('schedulePage.noSubjectsYet')}</option>}
                     {subjectOptions.map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
@@ -906,7 +907,7 @@ export default function SchedulePage({ embed = false }) {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-bold text-[10px] uppercase text-outline">Scheduled Date <span className="text-error">*</span></label>
+                <label className="font-bold text-[10px] uppercase text-outline">{t('schedulePage.scheduledDate')} <span className="text-error">*</span></label>
                 <DateInput
                   value={formDate}
                   onChange={e => setFormDate(e.target.value)}
@@ -917,7 +918,7 @@ export default function SchedulePage({ embed = false }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">Start Time <span className="text-error">*</span></label>
+                  <label className="font-bold text-[10px] uppercase text-outline">{t('schedulePage.startTime')} <span className="text-error">*</span></label>
                   <input
                     type="time"
                     value={formStartTime}
@@ -927,7 +928,7 @@ export default function SchedulePage({ embed = false }) {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">End Time <span className="text-error">*</span></label>
+                  <label className="font-bold text-[10px] uppercase text-outline">{t('schedulePage.endTime')} <span className="text-error">*</span></label>
                   <input 
                     type="time"
                     value={formEndTime}
@@ -939,10 +940,10 @@ export default function SchedulePage({ embed = false }) {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-bold text-[10px] uppercase text-outline">Room (Optional)</label>
-                <input 
+                <label className="font-bold text-[10px] uppercase text-outline">{t('schedulePage.roomOptional')}</label>
+                <input
                   type="text"
-                  placeholder="e.g. Lab 4B"
+                  placeholder={t('schedulePage.roomPlaceholder')}
                   value={formRoom}
                   onChange={e => setFormRoom(e.target.value)}
                   className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -955,14 +956,14 @@ export default function SchedulePage({ embed = false }) {
                   onClick={() => setModalOpen(false)}
                   className="py-2.5 px-5 bg-surface-variant hover:bg-surface-container-high font-bold text-xs rounded-xl cursor-pointer border-none"
                 >
-                  Cancel
+                  {t('schedulePage.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={submittingForm}
                   className="py-2.5 px-5 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-md disabled:opacity-50 cursor-pointer border-none"
                 >
-                  {submittingForm ? 'Saving...' : editingId ? 'Update and Notify Class' : 'Schedule Event'}
+                  {submittingForm ? t('schedulePage.saving') : editingId ? t('schedulePage.updateAndNotify') : t('schedulePage.scheduleEvent')}
                 </button>
               </div>
 

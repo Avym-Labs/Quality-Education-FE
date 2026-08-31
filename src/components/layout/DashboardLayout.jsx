@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import { useAuth } from '../../context/AuthContext'
@@ -8,62 +9,64 @@ import logo from '../../assets/logo.png'
 
 // Shared submenu shown under "Academics" for every role, mirrors the tabs inside AcademicsHub
 const ACADEMICS_SUBITEMS = [
-  { icon: 'library_books', label: 'Study Material', tab: 'material' },
-  { icon: 'quiz', label: 'Tests & Answer Keys', tab: 'tests' },
-  { icon: 'grade', label: 'Grades & Results', tab: 'results' },
-  { icon: 'bar_chart', label: 'Performance Reports', tab: 'reports' },
-  { icon: 'calendar_today', label: 'Lecture Calendar', tab: 'schedules' },
+  { icon: 'library_books', labelKey: 'nav.studyMaterial', tab: 'material' },
+  { icon: 'quiz', labelKey: 'nav.testsAnswerKeys', tab: 'tests' },
+  { icon: 'grade', labelKey: 'nav.gradesResults', tab: 'results' },
+  { icon: 'bar_chart', labelKey: 'nav.performanceReports', tab: 'reports' },
+  { icon: 'calendar_today', labelKey: 'nav.lectureCalendar', tab: 'schedules' },
 ]
 
 // Student/teacher also get Homework as an Academics tab; admin never had a
 // standalone Homework nav item so keeps the plain submenu above.
 const ACADEMICS_SUBITEMS_WITH_HOMEWORK = [
   ...ACADEMICS_SUBITEMS,
-  { icon: 'assignment', label: 'Homework', tab: 'homework' },
+  { icon: 'assignment', labelKey: 'nav.homework', tab: 'homework' },
 ]
 
 const SIDEBAR_ITEMS = {
   student: [
-    { icon: 'home', label: 'Home', path: '/student/dashboard' },
-    { icon: 'school', label: 'Academics', path: '/student/academics', children: ACADEMICS_SUBITEMS_WITH_HOMEWORK },
-    { icon: 'event_busy', label: 'Leave', path: '/student/leave' },
-    { icon: 'chat', label: 'Chat', path: '/student/chat' },
-    { icon: 'person', label: 'Account', path: '/student/settings' },
+    { icon: 'home', labelKey: 'nav.home', path: '/student/dashboard' },
+    { icon: 'school', labelKey: 'nav.academics', path: '/student/academics', children: ACADEMICS_SUBITEMS_WITH_HOMEWORK },
+    { icon: 'event_busy', labelKey: 'nav.leave', path: '/student/leave' },
+    { icon: 'chat', labelKey: 'nav.chat', path: '/student/chat' },
+    { icon: 'person', labelKey: 'nav.account', path: '/student/settings' },
   ],
   teacher: [
-    { icon: 'home', label: 'Home', path: '/teacher/dashboard' },
-    { icon: 'calendar_today', label: 'Attendance', path: '/teacher/attendance' },
-    { icon: 'school', label: 'Academics', path: '/teacher/academics', children: ACADEMICS_SUBITEMS_WITH_HOMEWORK },
-    { icon: 'group_add', label: 'Manage Students', path: '/teacher/manage-students' },
-    { icon: 'chat', label: 'Chat', path: '/teacher/chat' },
-    { icon: 'person', label: 'Account', path: '/teacher/settings' },
+    { icon: 'home', labelKey: 'nav.home', path: '/teacher/dashboard' },
+    { icon: 'calendar_today', labelKey: 'nav.attendance', path: '/teacher/attendance' },
+    { icon: 'school', labelKey: 'nav.academics', path: '/teacher/academics', children: ACADEMICS_SUBITEMS_WITH_HOMEWORK },
+    { icon: 'group_add', labelKey: 'nav.manageStudents', path: '/teacher/manage-students' },
+    { icon: 'chat', labelKey: 'nav.chat', path: '/teacher/chat' },
+    { icon: 'person', labelKey: 'nav.account', path: '/teacher/settings' },
   ],
   admin: [
-    { icon: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
-    { icon: 'group', label: 'Users', path: '/admin/users' },
-    { icon: 'school', label: 'Academics', path: '/admin/academics', children: ACADEMICS_SUBITEMS },
-    { icon: 'campaign', label: 'Announce', path: '/admin/announcements' },
-    { icon: 'chat', label: 'Chat', path: '/admin/chat' },
-    { icon: 'person', label: 'Account', path: '/admin/settings' },
+    { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard' },
+    { icon: 'group', labelKey: 'nav.users', path: '/admin/users' },
+    { icon: 'school', labelKey: 'nav.academics', path: '/admin/academics', children: ACADEMICS_SUBITEMS },
+    { icon: 'campaign', labelKey: 'nav.announce', path: '/admin/announcements' },
+    { icon: 'chat', labelKey: 'nav.chat', path: '/admin/chat' },
+    { icon: 'person', labelKey: 'nav.account', path: '/admin/settings' },
   ],
   superadmin: [
-    { icon: 'dashboard', label: 'Dashboard', path: '/superadmin/dashboard' },
-    { icon: 'shield', label: 'Admins', path: '/superadmin/admins' },
-    { icon: 'payments', label: 'Payments', path: '/superadmin/payments' },
-    { icon: 'person', label: 'Account', path: '/superadmin/settings' },
+    { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/superadmin/dashboard' },
+    { icon: 'shield', labelKey: 'nav.admins', path: '/superadmin/admins' },
+    { icon: 'payments', labelKey: 'nav.payments', path: '/superadmin/payments' },
+    { icon: 'person', labelKey: 'nav.account', path: '/superadmin/settings' },
   ],
 }
 
 export default function DashboardLayout({ children, hideTopBar = false, fixedHeight = false, noPadding = false }) {
   const { user, logout } = useAuth()
+  const { t } = useTranslation()
   const role = user?.role || 'student'
   const navigate = useNavigate()
   const location = useLocation()
 
   const items = SIDEBAR_ITEMS[role] || SIDEBAR_ITEMS.student
 
-  // Which parent nav item (if any) has its submenu expanded
-  const [expandedItem, setExpandedItem] = useState(null)
+  // Which parent nav item (if any) has its submenu expanded — tracked by
+  // path rather than label so it doesn't break when the label is translated.
+  const [expandedPath, setExpandedPath] = useState(null)
   const activeTabParam = new URLSearchParams(location.search).get('tab')
 
   const isParentActive = (item) =>
@@ -72,7 +75,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
   // Auto-expand the parent whose section is currently open
   useEffect(() => {
     const active = items.find((item) => item.children && isParentActive(item))
-    setExpandedItem(active ? active.label : null)
+    setExpandedPath(active ? active.path : null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname])
 
@@ -88,14 +91,14 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
             </div>
             <div className="text-left">
               <h2 className="text-base font-black text-on-surface tracking-tight">Educore</h2>
-              <span className="text-[9px] uppercase tracking-widest text-primary font-bold">{role} portal</span>
+              <span className="text-[9px] uppercase tracking-widest text-primary font-bold">{t(`nav.${role}Portal`)}</span>
             </div>
           </div>
 
           {/* Navigation Links */}
           <nav className="space-y-1.5">
             {items.map((item) => {
-              const { icon, label, path, children: subItems } = item
+              const { icon, labelKey, path, children: subItems } = item
               const isActive = isParentActive(item)
 
               if (!subItems) {
@@ -110,17 +113,17 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
                     }`}
                   >
                     <Icon name={icon} className="text-[18px]" />
-                    <span>{label}</span>
+                    <span>{t(labelKey)}</span>
                   </NavLink>
                 )
               }
 
-              const isExpanded = expandedItem === label
+              const isExpanded = expandedPath === path
               return (
                 <div key={path}>
                   <button
                     type="button"
-                    onClick={() => setExpandedItem(isExpanded ? null : label)}
+                    onClick={() => setExpandedPath(isExpanded ? null : path)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all active:scale-98 hover:-translate-x-0.5 duration-200 border-none cursor-pointer ${
                       isActive
                         ? 'bg-gradient-to-r from-[#6351E0] to-[#DD62F2] text-white shadow-sm font-black'
@@ -128,7 +131,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
                     }`}
                   >
                     <Icon name={icon} className="text-[18px]" />
-                    <span className="flex-1 text-left">{label}</span>
+                    <span className="flex-1 text-left">{t(labelKey)}</span>
                     <Icon
                       name="expand_more"
                       className={`text-[16px] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
@@ -150,7 +153,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
                             }`}
                           >
                             <Icon name={child.icon} className="text-[15px]" />
-                            <span>{child.label}</span>
+                            <span>{t(child.labelKey)}</span>
                           </NavLink>
                         )
                       })}
@@ -189,7 +192,7 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-error/10 hover:bg-error/15 text-error font-bold text-xs border-none cursor-pointer active:scale-95 transition-all"
           >
             <Icon name="logout" className="text-[16px]" />
-            <span>Sign Out</span>
+            <span>{t('common.signOut')}</span>
           </button>
         </div>
       </aside>

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function NewAnnouncement() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -51,13 +53,13 @@ export default function NewAnnouncement() {
     setLoading(true)
 
     if (!title.trim() || !content.trim()) {
-      setError('Please fill in both the title and the message content.')
+      setError(t('newAnnouncement.fillTitleAndContent'))
       setLoading(false)
       return
     }
 
     if (targetRoles.length === 0) {
-      setError('Please select at least one target audience (Students or Teachers).')
+      setError(t('newAnnouncement.selectAudience'))
       setLoading(false)
       return
     }
@@ -77,7 +79,7 @@ export default function NewAnnouncement() {
       setTimeout(() => setSuccess(false), 4000)
     } catch (err) {
       console.error('Failed to publish announcement:', err)
-      setError(err.response?.data?.detail || 'An error occurred while publishing the announcement.')
+      setError(err.response?.data?.detail || t('newAnnouncement.publishError'))
     } finally {
       setLoading(false)
     }
@@ -98,7 +100,7 @@ export default function NewAnnouncement() {
             <Icon name="arrow_back" />
           </button>
           <div>
-            <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">New Announcement</h2>
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">{t('newAnnouncement.title')}</h2>
           </div>
         </section>
 
@@ -110,7 +112,7 @@ export default function NewAnnouncement() {
 
         {success && (
           <div className="bg-green-100 text-green-800 p-4 rounded-xl text-sm font-semibold animate-fadeIn">
-            Announcement published successfully!
+            {t('newAnnouncement.publishedSuccess')}
           </div>
         )}
 
@@ -123,25 +125,25 @@ export default function NewAnnouncement() {
             <section className="bg-surface-container-lowest p-stack-lg rounded-[24px] border border-outline-variant/30 flex flex-col gap-stack-md shadow-sm">
               <div className="flex items-center gap-stack-sm border-b border-outline-variant/20 pb-stack-sm mb-stack-sm">
                 <Icon name="edit_note" className="text-primary" />
-                <h3 className="font-title-lg text-sm text-on-surface font-bold">Content Details</h3>
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('newAnnouncement.contentDetails')}</h3>
               </div>
-              
+
               <div className="flex flex-col gap-unit">
-                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="title">Announcement Title <span className="text-error">*</span></label>
-                <input 
+                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="title">{t('newAnnouncement.announcementTitle')} <span className="text-error">*</span></label>
+                <input
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-stack-md py-3 rounded-xl border border-outline-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-sm" 
-                  placeholder="e.g. Annual Sports Meet 2026" 
+                  className="w-full px-stack-md py-3 rounded-xl border border-outline-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-sm"
+                  placeholder={t('newAnnouncement.titlePlaceholder')}
                   type="text"
                   required
                 />
               </div>
-              
+
               {/* Select Prebuilt Notice Template */}
               <div className="flex flex-col gap-unit mt-2">
-                <label className="font-semibold text-xs text-on-surface-variant">Notice Template (Optional)</label>
+                <label className="font-semibold text-xs text-on-surface-variant">{t('newAnnouncement.noticeTemplate')}</label>
                 <select
                   onChange={(e) => {
                     const val = e.target.value
@@ -153,21 +155,21 @@ export default function NewAnnouncement() {
                   }}
                   className="w-full px-stack-md py-2.5 rounded-xl border border-outline-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-xs font-semibold"
                 >
-                  <option value="">-- Select prebuilt designed layout --</option>
-                  <option value="School Holiday Announcement|||Dear Students and Faculty,&#10;&#10;Please note that the school will remain closed on [Date] on account of [Occasion]. Normal classes will resume on [Resume Date].&#10;&#10;Regards,&#10;School Administration">🏫 Holiday Notice Layout</option>
-                  <option value="Upcoming Examination Schedule|||Dear Students,&#10;&#10;The schedule for the upcoming term examinations has been published. Please check the academics portal for timetables, guidelines, and syllabus details. Prep well!&#10;&#10;Best wishes,&#10;Academic Coordinator">📅 Exam Schedule Notice Layout</option>
-                  <option value="Scheduled Campus Maintenance|||Dear Students and Staff,&#10;&#10;Please be informed that campus [facilities/servers] will undergo maintenance on [Date] from [Start Time] to [End Time]. Some services may be temporarily unavailable. We apologize for any inconvenience.&#10;&#10;Sincerely,&#10;IT Support Services">🔧 Maintenance Alert Layout</option>
+                  <option value="">{t('newAnnouncement.chooseTemplate')}</option>
+                  <option value={`${t('newAnnouncement.templates.holidayTitle')}|||${t('newAnnouncement.templates.holidayContent')}`}>{t('newAnnouncement.templates.holidayLabel')}</option>
+                  <option value={`${t('newAnnouncement.templates.examTitle')}|||${t('newAnnouncement.templates.examContent')}`}>{t('newAnnouncement.templates.examLabel')}</option>
+                  <option value={`${t('newAnnouncement.templates.maintenanceTitle')}|||${t('newAnnouncement.templates.maintenanceContent')}`}>{t('newAnnouncement.templates.maintenanceLabel')}</option>
                 </select>
               </div>
 
               <div className="flex flex-col gap-unit mt-2">
-                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="message">Message Body <span className="text-error">*</span></label>
-                <textarea 
+                <label className="font-semibold text-xs text-on-surface-variant" htmlFor="message">{t('newAnnouncement.messageBody')} <span className="text-error">*</span></label>
+                <textarea
                   id="message"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full px-stack-md py-3 rounded-xl border border-outline-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-sm resize-none" 
-                  placeholder="Provide detailed announcement details here..." 
+                  className="w-full px-stack-md py-3 rounded-xl border border-outline-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-sm resize-none"
+                  placeholder={t('newAnnouncement.messagePlaceholder')}
                   rows="5"
                   required
                 ></textarea>
@@ -178,12 +180,12 @@ export default function NewAnnouncement() {
             <section className="bg-surface-container-lowest p-stack-lg rounded-[24px] border border-outline-variant/30 flex flex-col gap-stack-md shadow-sm">
               <div className="flex items-center gap-stack-sm border-b border-outline-variant/20 pb-stack-sm mb-stack-sm">
                 <Icon name="group_add" className="text-primary" />
-                <h3 className="font-title-lg text-sm text-on-surface font-bold">Audience Target</h3>
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('newAnnouncement.audienceTarget')}</h3>
               </div>
-              
+
               {/* Target Roles Checkbox Chips */}
               <div className="flex flex-col gap-unit">
-                <label className="font-semibold text-xs text-on-surface-variant">Recipient Roles <span className="text-error">*</span></label>
+                <label className="font-semibold text-xs text-on-surface-variant">{t('newAnnouncement.recipientRoles')} <span className="text-error">*</span></label>
                 <div className="flex flex-wrap gap-stack-sm mt-1">
                   <button
                     type="button"
@@ -195,7 +197,7 @@ export default function NewAnnouncement() {
                     }`}
                   >
                     <Icon name="groups" className="text-base" />
-                    All Students
+                    {t('newAnnouncement.allStudents')}
                   </button>
                   <button
                     type="button"
@@ -207,17 +209,17 @@ export default function NewAnnouncement() {
                     }`}
                   >
                     <Icon name="supervisor_account" className="text-base" />
-                    Teachers
+                    {t('newAnnouncement.teachers')}
                   </button>
                 </div>
               </div>
 
               {/* Target Grades (For students specifically) */}
               <div className="flex flex-col gap-unit mt-4">
-                <label className="font-semibold text-xs text-on-surface-variant">Limit to Specific Grades (Optional)</label>
+                <label className="font-semibold text-xs text-on-surface-variant">{t('newAnnouncement.limitToGrades')}</label>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {availableGrades.length === 0 && (
-                    <p className="text-xs text-on-surface-variant italic">No classes created yet.</p>
+                    <p className="text-xs text-on-surface-variant italic">{t('newAnnouncement.noClassesCreated')}</p>
                   )}
                   {availableGrades.map((grade) => {
                     const active = targetGrades.includes(grade)
@@ -232,12 +234,12 @@ export default function NewAnnouncement() {
                             : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
                         }`}
                       >
-                        Grade {grade}
+                        {t('newAnnouncement.gradeLabel', { grade })}
                       </button>
                     )
                   })}
                 </div>
-                <p className="text-[10px] text-on-surface-variant italic mt-1">If no grade is selected, the announcement will be visible to all grades.</p>
+                <p className="text-[10px] text-on-surface-variant italic mt-1">{t('newAnnouncement.gradeHint')}</p>
               </div>
             </section>
 
@@ -248,15 +250,15 @@ export default function NewAnnouncement() {
                 onClick={() => navigate('/admin/dashboard')}
                 className="px-6 py-3 border border-outline text-on-surface-variant rounded-2xl font-bold transition-colors hover:bg-surface-container"
               >
-                Cancel
+                {t('newAnnouncement.cancel')}
               </button>
-              <button 
+              <button
                 type="submit"
                 disabled={loading}
                 className="px-8 py-3 bg-primary text-on-primary rounded-2xl font-bold shadow-lg hover:shadow-primary/20 hover:bg-opacity-95 transition-all active:scale-95 disabled:bg-opacity-50 flex items-center gap-2"
               >
                 <Icon name="send" className="text-base" />
-                {loading ? 'Publishing...' : 'Publish Announcement'}
+                {loading ? t('newAnnouncement.publishing') : t('newAnnouncement.publishAnnouncement')}
               </button>
             </div>
           </form>
@@ -265,9 +267,9 @@ export default function NewAnnouncement() {
           <div className="md:col-span-5 flex flex-col gap-stack-lg sticky top-24 h-fit">
             <section className="bg-surface-container-highest/20 p-stack-lg rounded-[24px] border border-outline-variant/30 flex flex-col gap-stack-md">
               <div className="flex items-center justify-between mb-unit border-b border-outline-variant/20 pb-2">
-                <h3 className="font-title-lg text-xs font-bold text-on-surface-variant uppercase tracking-wider">Live Preview</h3>
+                <h3 className="font-title-lg text-xs font-bold text-on-surface-variant uppercase tracking-wider">{t('newAnnouncement.livePreview')}</h3>
                 <span className="bg-secondary/10 text-secondary px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-widest animate-pulse">
-                  LIVE
+                  {t('newAnnouncement.live')}
                 </span>
               </div>
               
@@ -297,14 +299,14 @@ export default function NewAnnouncement() {
                       </div>
                       <div className="flex flex-col gap-0.5 overflow-hidden w-full">
                         <div className="flex justify-between items-center w-full">
-                          <span className="font-semibold text-[10px] text-primary truncate">EduCore Broadcast</span>
-                          <span className="text-[8px] text-on-surface-variant font-medium">Now</span>
+                          <span className="font-semibold text-[10px] text-primary truncate">{t('newAnnouncement.broadcastLabel')}</span>
+                          <span className="text-[8px] text-on-surface-variant font-medium">{t('newAnnouncement.now')}</span>
                         </div>
                         <h4 className="font-bold text-xs text-on-surface line-clamp-1">
-                          {title.trim() || 'Announcement Title'}
+                          {title.trim() || t('newAnnouncement.titlePlaceholderPreview')}
                         </h4>
                         <p className="text-[10px] text-on-surface-variant line-clamp-2 leading-relaxed mt-0.5">
-                          {content.trim() || 'Your message body will render here...'}
+                          {content.trim() || t('newAnnouncement.contentPlaceholderPreview')}
                         </p>
                       </div>
                     </div>
@@ -312,7 +314,7 @@ export default function NewAnnouncement() {
 
                   <div className="mt-auto mb-4 flex flex-col items-center gap-1.5 text-white/50">
                     <Icon name="lock" className="text-2xl" />
-                    <p className="text-[9px] font-medium tracking-wider">Swipe up to unlock</p>
+                    <p className="text-[9px] font-medium tracking-wider">{t('newAnnouncement.swipeToUnlock')}</p>
                   </div>
                 </div>
               </div>
@@ -320,11 +322,11 @@ export default function NewAnnouncement() {
               <div className="mt-unit flex flex-col gap-2 text-xs">
                 <p className="text-on-surface-variant flex items-center gap-1 text-[11px] font-medium">
                   <Icon name="info" className="text-sm" />
-                  Push preview updates in real-time as you write.
+                  {t('newAnnouncement.previewUpdatesHint')}
                 </p>
                 <div className="flex items-center gap-2 p-2 bg-surface-container-low rounded-xl border border-outline-variant/30">
                   <Icon name="smartphone" className="text-primary text-sm" />
-                  <span className="font-semibold text-[10px] text-on-surface-variant">Push Notification Enabled</span>
+                  <span className="font-semibold text-[10px] text-on-surface-variant">{t('newAnnouncement.pushNotificationEnabled')}</span>
                   <div className="ml-auto w-8 h-4 bg-primary rounded-full relative">
                     <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
                   </div>

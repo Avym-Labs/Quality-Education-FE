@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function StudentReports() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -36,7 +38,7 @@ export default function StudentReports() {
         }
       } catch (err) {
         console.error(err)
-        setError('Failed to compile your academic reports.')
+        setError(t('studentReports.failedToCompile'))
       } finally {
         setLoading(false)
       }
@@ -78,7 +80,7 @@ export default function StudentReports() {
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              Report Cards & Analytics
+              {t('studentReports.title')}
             </h2>
           </div>
         </section>
@@ -94,7 +96,7 @@ export default function StudentReports() {
         {!loading && (
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
             <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/35 shadow-sm">
-              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Attendance Rate</p>
+              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{t('studentReports.attendanceRate')}</p>
               <h3 className="text-2xl font-black text-primary mt-1">{attendance}%</h3>
               <div className="w-full bg-surface-container-high h-2 rounded-full mt-2.5 overflow-hidden">
                 <div className="bg-primary h-full rounded-full" style={{ width: `${attendance}%` }}></div>
@@ -102,7 +104,7 @@ export default function StudentReports() {
             </div>
 
             <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/35 shadow-sm">
-              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Cumulative Average</p>
+              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{t('studentReports.cumulativeAverage')}</p>
               <h3 className="text-2xl font-black text-secondary mt-1">{avgMarks}%</h3>
               <div className="w-full bg-surface-container-high h-2 rounded-full mt-2.5 overflow-hidden">
                 <div className="bg-secondary h-full rounded-full" style={{ width: `${avgMarks}%` }}></div>
@@ -110,9 +112,9 @@ export default function StudentReports() {
             </div>
 
             <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/35 shadow-sm">
-              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Letter Grade</p>
+              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{t('studentReports.letterGrade')}</p>
               <h3 className="text-2xl font-black text-tertiary mt-1">{calculateGradeLetter(avgMarks)}</h3>
-              <p className="text-[10px] text-outline font-semibold mt-2.5">Based on {totalTests} logged tests</p>
+              <p className="text-[10px] text-outline font-semibold mt-2.5">{t('studentReports.basedOnNTests', { count: totalTests })}</p>
             </div>
           </section>
         )}
@@ -128,13 +130,13 @@ export default function StudentReports() {
             {/* Report Header */}
             <div className="flex justify-between items-start border-b-2 border-gray-800 pb-4">
               <div>
-                <h1 className="text-xl font-black tracking-tight text-gray-900 uppercase">EduCore Premium School</h1>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Official Student Report Card</p>
-                <p className="text-[10px] font-semibold text-gray-400 mt-1">2025 - 2026 Academic Term</p>
+                <h1 className="text-xl font-black tracking-tight text-gray-900 uppercase">{t('teacherReports.schoolName')}</h1>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">{t('studentReports.officialStudentReportCard')}</p>
+                <p className="text-[10px] font-semibold text-gray-400 mt-1">{t('teacherReports.academicTerm')}</p>
               </div>
               <div className="text-right">
                 <span className="px-3 py-1 bg-gray-100 text-gray-800 border border-gray-200 text-[10px] font-black rounded uppercase">
-                  Class {user?.grade || '10'}-{user?.section || 'A'}
+                  {t('studentReports.classSection', { grade: user?.grade || '10', section: user?.section || 'A' })}
                 </span>
               </div>
             </div>
@@ -142,39 +144,39 @@ export default function StudentReports() {
             {/* Student Info Grid */}
             <div className="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-4 rounded-xl border border-gray-200/60">
               <div>
-                <p className="text-[9px] uppercase font-bold text-gray-400">Student Name</p>
+                <p className="text-[9px] uppercase font-bold text-gray-400">{t('teacherReports.studentName')}</p>
                 <p className="font-extrabold text-gray-850 mt-0.5">{user?.full_name}</p>
               </div>
               <div>
-                <p className="text-[9px] uppercase font-bold text-gray-400">Roll / Student ID</p>
-                <p className="font-extrabold text-gray-850 mt-0.5">{user?.student_id?.slice(-8) || 'N/A'}</p>
+                <p className="text-[9px] uppercase font-bold text-gray-400">{t('teacherReports.rollStudentId')}</p>
+                <p className="font-extrabold text-gray-850 mt-0.5">{user?.student_id?.slice(-8) || t('teacherReports.notAvailable')}</p>
               </div>
               <div>
-                <p className="text-[9px] uppercase font-bold text-gray-400">Attendance</p>
-                <p className="font-extrabold text-gray-850 mt-0.5">{attendance}% Present</p>
+                <p className="text-[9px] uppercase font-bold text-gray-400">{t('teacherReports.attendance')}</p>
+                <p className="font-extrabold text-gray-850 mt-0.5">{t('teacherReports.percentPresent', { pct: attendance })}</p>
               </div>
               <div>
-                <p className="text-[9px] uppercase font-bold text-gray-400">Term Average</p>
+                <p className="text-[9px] uppercase font-bold text-gray-400">{t('teacherReports.termAverage')}</p>
                 <p className="font-extrabold text-gray-850 mt-0.5">{avgMarks}%</p>
               </div>
             </div>
 
             {/* Grades Ledger */}
             <div>
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Academic Subject Breakdown</h3>
-              
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('studentReports.academicSubjectBreakdown')}</h3>
+
               {results.length === 0 ? (
-                <p className="text-xs text-gray-500 italic py-4 text-center bg-gray-50 rounded-xl">No test scores recorded yet.</p>
+                <p className="text-xs text-gray-500 italic py-4 text-center bg-gray-50 rounded-xl">{t('studentReports.noTestScoresYet')}</p>
               ) : (
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-gray-150 border-b border-gray-200">
-                        <th className="p-3 font-bold text-gray-700 uppercase">Subject</th>
-                        <th className="p-3 font-bold text-gray-700 uppercase">Test Title</th>
-                        <th className="p-3 font-bold text-gray-700 uppercase">Score</th>
-                        <th className="p-3 font-bold text-gray-700 uppercase text-center">Grade</th>
-                        <th className="p-3 font-bold text-gray-700 uppercase">Teacher Remarks</th>
+                        <th className="p-3 font-bold text-gray-700 uppercase">{t('teacherReports.subject')}</th>
+                        <th className="p-3 font-bold text-gray-700 uppercase">{t('teacherReports.testTitle')}</th>
+                        <th className="p-3 font-bold text-gray-700 uppercase">{t('teacherReports.score')}</th>
+                        <th className="p-3 font-bold text-gray-700 uppercase text-center">{t('teacherReports.grade')}</th>
+                        <th className="p-3 font-bold text-gray-700 uppercase">{t('studentReports.teacherRemarks')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -184,7 +186,7 @@ export default function StudentReports() {
                           <td className="p-3 text-gray-650">{r.test_title}</td>
                           <td className="p-3 text-gray-650">{r.marks_obtained} / {r.total_marks} ({r.percentage}%)</td>
                           <td className="p-3 text-center font-extrabold text-gray-900">{r.grade_letter}</td>
-                          <td className="p-3 text-gray-500 italic">{r.remarks || '--'}</td>
+                          <td className="p-3 text-gray-500 italic">{r.remarks || t('teacherReports.noRemarks')}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -197,12 +199,12 @@ export default function StudentReports() {
             <div className="flex justify-between items-end pt-10">
               <div className="text-center w-36">
                 <div className="h-0.5 bg-gray-800 w-full mb-1"></div>
-                <p className="text-[9px] uppercase font-bold text-gray-500">Class Teacher</p>
+                <p className="text-[9px] uppercase font-bold text-gray-500">{t('teacherReports.classTeacher')}</p>
               </div>
-              
+
               <div className="text-center w-36">
                 <div className="h-0.5 bg-gray-800 w-full mb-1"></div>
-                <p className="text-[9px] uppercase font-bold text-gray-500">Principal Signature</p>
+                <p className="text-[9px] uppercase font-bold text-gray-500">{t('teacherReports.principalSignature')}</p>
               </div>
             </div>
 
@@ -213,7 +215,7 @@ export default function StudentReports() {
                 className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl text-xs font-bold hover:shadow-md cursor-pointer active:scale-95 transition-all"
               >
                 <Icon name="print" className="text-sm" />
-                <span>Print Report Card</span>
+                <span>{t('teacherReports.printReportCard')}</span>
               </button>
             </div>
 

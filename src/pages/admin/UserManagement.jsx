@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function UserManagement() {
+  const { t } = useTranslation()
   const [activeRole, setActiveRole] = useState('student') // 'student' | 'teacher' | 'classes'
   const [usersList, setUsersList] = useState([])
   const [teachersList, setTeachersList] = useState([]) // Loaded for student mapping
@@ -128,7 +130,7 @@ export default function UserManagement() {
   const handleCreateClass = async (e) => {
     e.preventDefault()
     if (!newClassGrade.trim() || !newClassSection.trim()) {
-      setClassFormError('Grade and section are both required.')
+      setClassFormError(t('userManagement.gradeAndSectionRequired'))
       return
     }
     setClassSubmitting(true)
@@ -138,7 +140,7 @@ export default function UserManagement() {
       setClassModalOpen(false)
       fetchClasses()
     } catch (err) {
-      setClassFormError(err.response?.data?.detail || 'Failed to add class.')
+      setClassFormError(err.response?.data?.detail || t('userManagement.failedToAddClass'))
     } finally {
       setClassSubmitting(false)
     }
@@ -147,17 +149,17 @@ export default function UserManagement() {
   const handleDeleteClass = async (cls) => {
     const classKey = `${cls.grade}-${cls.section}`
     const warnings = []
-    if (cls.student_count > 0) warnings.push(`permanently delete ${cls.student_count} student${cls.student_count === 1 ? '' : 's'} and their login access`)
-    if (cls.teacher_count > 0) warnings.push(`unassign ${cls.teacher_count} teacher${cls.teacher_count === 1 ? '' : 's'} from this class (accounts kept)`)
-    const suffix = warnings.length ? ` This will ${warnings.join(' and ')}.` : ''
-    if (!window.confirm(`Delete Class ${classKey}?${suffix} This cannot be undone.`)) return
+    if (cls.student_count > 0) warnings.push(t('userManagement.confirmDeleteClassWarnStudents', { count: cls.student_count, plural: cls.student_count === 1 ? '' : 's' }))
+    if (cls.teacher_count > 0) warnings.push(t('userManagement.confirmDeleteClassWarnTeachers', { count: cls.teacher_count, plural: cls.teacher_count === 1 ? '' : 's' }))
+    const suffix = warnings.length ? t('userManagement.thisWillSuffix', { warnings: warnings.join(t('userManagement.and')) }) : ''
+    if (!window.confirm(t('userManagement.confirmDeleteClass', { cls: classKey, suffix }))) return
     try {
       await api.delete(`/classes/${cls.id}`)
       fetchClasses()
       fetchUsers()
     } catch (err) {
       console.error(err)
-      alert('Failed to delete class.')
+      alert(t('userManagement.failedToDeleteClass'))
     }
   }
 
@@ -180,7 +182,7 @@ export default function UserManagement() {
       }
     } catch (err) {
       console.error('Failed to load users:', err)
-      setError(`Could not fetch ${activeRole} records.`)
+      setError(t('userManagement.couldNotFetchRecords', { role: activeRole }))
     } finally {
       setLoading(false)
     }
@@ -440,32 +442,32 @@ export default function UserManagement() {
     // students fall back to their phone number; roll number/class only
     // make sense for students; lecturing classes only for teachers).
     if (!formData.first_name || !formData.last_name || (modalMode === 'create' && !formData.phone)) {
-      setFormError('First Name, Last Name, and Phone Number are required fields.')
+      setFormError(t('userManagement.firstLastPhoneRequired'))
       setIsSubmitting(false)
       return
     }
 
     if (modalMode === 'create' && activeRole === 'teacher' && !formData.password) {
-      setFormError('Password is required when adding a teacher.')
+      setFormError(t('userManagement.passwordRequiredForTeacher'))
       setIsSubmitting(false)
       return
     }
 
     if (activeRole === 'student') {
       if (!formData.roll_number) {
-        setFormError('Roll Number is required.')
+        setFormError(t('userManagement.rollNumberRequired'))
         setIsSubmitting(false)
         return
       }
       if (!formData.grade || !formData.section) {
-        setFormError('Create a class in the Classes tab first, then assign the student to it.')
+        setFormError(t('userManagement.createClassFirst'))
         setIsSubmitting(false)
         return
       }
     }
 
     if (activeRole === 'teacher' && formData.assigned_classes.length === 0) {
-      setFormError('Assign at least one lecturing class to this teacher.')
+      setFormError(t('userManagement.assignAtLeastOneClass'))
       setIsSubmitting(false)
       return
     }
@@ -537,7 +539,7 @@ export default function UserManagement() {
       fetchUsers()
     } catch (err) {
       console.error('Failed to save user:', err)
-      setFormError(err.response?.data?.detail || 'Failed to submit records.')
+      setFormError(err.response?.data?.detail || t('userManagement.failedToSubmitRecords'))
     } finally {
       setIsSubmitting(false)
     }
@@ -546,7 +548,7 @@ export default function UserManagement() {
   // Delete User Action
   const handleDeleteUser = async (item) => {
     const name = item.full_name || `${item.first_name} ${item.last_name}`
-    if (!window.confirm(`Are you sure you want to completely delete ${name}'s profile and access?`)) return
+    if (!window.confirm(t('userManagement.confirmDeleteUser', { name }))) return
     try {
       if (activeRole === 'student') {
         await api.delete(`/students/${item.id}`)
@@ -556,7 +558,7 @@ export default function UserManagement() {
       fetchUsers()
     } catch (err) {
       console.error(err)
-      alert('Failed to delete user profile.')
+      alert(t('userManagement.failedToDeleteUser'))
     }
   }
 
@@ -571,13 +573,13 @@ export default function UserManagement() {
         phone: credsFormData.phone || null,
         password: credsFormData.password || null
       })
-      setCredsMessage('Access credentials updated successfully.')
+      setCredsMessage(t('userManagement.credentialsUpdatedSuccess'))
       setTimeout(() => {
         setCredsModalOpen(false)
         fetchUsers()
       }, 1500)
     } catch (err) {
-      setCredsMessage(err.response?.data?.detail || 'Error updating credentials.')
+      setCredsMessage(err.response?.data?.detail || t('userManagement.errorUpdatingCredentials'))
     } finally {
       setCredsSubmitting(false)
     }
@@ -587,7 +589,7 @@ export default function UserManagement() {
   const handleBulkImportSubmit = async (e) => {
     e.preventDefault()
     if (!selectedFile) {
-      setImportError('Please select a file to upload.')
+      setImportError(t('userManagement.selectFileToUpload'))
       return
     }
     setImporting(true)
@@ -606,7 +608,7 @@ export default function UserManagement() {
       setSelectedFile(null)
       fetchUsers()
     } catch (err) {
-      setImportError(err.response?.data?.detail || 'Failed to parse sheet template.')
+      setImportError(err.response?.data?.detail || t('userManagement.failedToParseSheet'))
     } finally {
       setImporting(false)
     }
@@ -620,7 +622,7 @@ export default function UserManagement() {
         <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-outline-variant/30">
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              User Management
+              {t('userManagement.title')}
             </h2>
           </div>
           <div className="flex gap-2.5">
@@ -636,7 +638,7 @@ export default function UserManagement() {
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary-container text-on-secondary-container hover:bg-opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
               >
                 <Icon name="publish" className="text-sm" />
-                <span>Bulk Import</span>
+                <span>{t('userManagement.bulkImport')}</span>
               </button>
             )}
             <button
@@ -644,7 +646,7 @@ export default function UserManagement() {
               className="flex items-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary hover:opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
             >
               <Icon name={activeRole === 'classes' ? 'add_circle' : 'person_add'} className="text-sm" />
-              <span>Add {activeRole === 'student' ? 'Student' : activeRole === 'teacher' ? 'Teacher' : 'Class'}</span>
+              <span>{activeRole === 'student' ? t('userManagement.addStudent') : activeRole === 'teacher' ? t('userManagement.addTeacher') : t('userManagement.addClass')}</span>
             </button>
           </div>
         </section>
@@ -652,7 +654,7 @@ export default function UserManagement() {
         {/* Filters and Search toolbar */}
         <section className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/20 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-outline uppercase font-bold">Manage:</span>
+            <span className="text-[11px] text-outline uppercase font-bold">{t('userManagement.manage')}</span>
             <select
               value={activeRole}
               onChange={(e) => {
@@ -663,9 +665,9 @@ export default function UserManagement() {
               }}
               className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
             >
-              <option value="classes">🏫 Classes</option>
-              <option value="student">🎓 Students List</option>
-              <option value="teacher">👨‍🏫 Teachers List</option>
+              <option value="classes">{t('userManagement.classesOption')}</option>
+              <option value="student">{t('userManagement.studentsListOption')}</option>
+              <option value="teacher">{t('userManagement.teachersListOption')}</option>
             </select>
           </div>
 
@@ -675,7 +677,7 @@ export default function UserManagement() {
               <Icon name="search" className="absolute left-3 top-2.5 text-outline text-base" />
               <input
                 type="text"
-                placeholder={`Search by name...`}
+                placeholder={t('userManagement.searchByName')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyPress={handleSearchKeyPress}
@@ -690,16 +692,16 @@ export default function UserManagement() {
                   onChange={(e) => setGradeFilter(e.target.value)}
                   className="px-3.5 py-2 rounded-xl border border-outline bg-surface-container-low text-xs outline-none focus:border-primary"
                 >
-                  <option value="">All Grades</option>
-                  {gradeOptions.map(g => <option key={g} value={g}>Grade {g}</option>)}
+                  <option value="">{t('userManagement.allGrades')}</option>
+                  {gradeOptions.map(g => <option key={g} value={g}>{t('userManagement.gradeLabel', { grade: g })}</option>)}
                 </select>
                 <select
                   value={sectionFilter}
                   onChange={(e) => setSectionFilter(e.target.value)}
                   className="px-3.5 py-2 rounded-xl border border-outline bg-surface-container-low text-xs outline-none focus:border-primary"
                 >
-                  <option value="">All Sections</option>
-                  {sectionOptions.map(s => <option key={s} value={s}>Section {s}</option>)}
+                  <option value="">{t('userManagement.allSections')}</option>
+                  {sectionOptions.map(s => <option key={s} value={s}>{t('userManagement.sectionLabel', { section: s })}</option>)}
                 </select>
               </>
             )}
@@ -708,7 +710,7 @@ export default function UserManagement() {
               onClick={fetchUsers}
               className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors rounded-xl text-xs font-bold border-none cursor-pointer"
             >
-              Apply Filter
+              {t('userManagement.applyFilter')}
             </button>
           </div>
           )}
@@ -723,7 +725,7 @@ export default function UserManagement() {
           ) : classesList.length === 0 ? (
             <div className="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant/15 text-outline">
               <Icon name="school" className="text-4xl" />
-              <p className="mt-2 font-semibold">No classes yet. Click &ldquo;Add Class&rdquo; to create one.</p>
+              <p className="mt-2 font-semibold">{t('userManagement.noClassesYetClickAdd')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -733,15 +735,15 @@ export default function UserManagement() {
                     {cls.grade}-{cls.section}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-on-surface">Class {cls.grade}-{cls.section}</h4>
+                    <h4 className="font-bold text-on-surface">{t('userManagement.classLabel', { grade: cls.grade, section: cls.section })}</h4>
                     <p className="text-[10px] text-outline font-semibold mt-0.5">
-                      {cls.student_count} Student{cls.student_count === 1 ? '' : 's'} • {cls.teacher_count} Teacher{cls.teacher_count === 1 ? '' : 's'}
+                      {t('userManagement.studentsCount', { count: cls.student_count, plural: cls.student_count === 1 ? '' : 's' })} • {t('userManagement.teachersCount', { count: cls.teacher_count, plural: cls.teacher_count === 1 ? '' : 's' })}
                     </p>
                   </div>
                   <button
                     onClick={() => handleDeleteClass(cls)}
                     className="p-2 hover:bg-error/10 text-error rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center shrink-0"
-                    title="Delete Class"
+                    title={t('userManagement.deleteClass')}
                   >
                     <Icon name="delete" className="text-base" />
                   </button>
@@ -764,7 +766,7 @@ export default function UserManagement() {
         ) : usersList.length === 0 ? (
           <div className="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant/15 text-outline">
             <Icon name="group_off" className="text-4xl" />
-            <p className="mt-2 font-semibold">No {activeRole} records found matching constraints.</p>
+            <p className="mt-2 font-semibold">{t('userManagement.noRecordsFound', { role: activeRole })}</p>
           </div>
         ) : (
           <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/20 shadow-sm overflow-hidden">
@@ -772,23 +774,23 @@ export default function UserManagement() {
               <table className="w-full border-collapse text-left text-xs font-semibold">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant/25 text-outline font-bold uppercase tracking-wider text-[10px]">
-                    <th className="p-4">Name</th>
-                    <th className="p-4">Contact Info</th>
+                    <th className="p-4">{t('userManagement.name')}</th>
+                    <th className="p-4">{t('userManagement.contactInfo')}</th>
                     {activeRole === 'student' ? (
                       <>
-                        <th className="p-4">Class</th>
-                        <th className="p-4">Roll Number</th>
-                        <th className="p-4">Subjects</th>
-                        <th className="p-4">Added By</th>
+                        <th className="p-4">{t('userManagement.class')}</th>
+                        <th className="p-4">{t('userManagement.rollNumber')}</th>
+                        <th className="p-4">{t('userManagement.subjects')}</th>
+                        <th className="p-4">{t('userManagement.addedBy')}</th>
                       </>
                     ) : (
                       <>
-                        <th className="p-4">Department</th>
-                        <th className="p-4">Subjects</th>
-                        <th className="p-4">Assigned Classes</th>
+                        <th className="p-4">{t('userManagement.department')}</th>
+                        <th className="p-4">{t('userManagement.subjects')}</th>
+                        <th className="p-4">{t('userManagement.assignedClasses')}</th>
                       </>
                     )}
-                    <th className="p-4 text-center">Actions</th>
+                    <th className="p-4 text-center">{t('userManagement.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/15 font-semibold text-on-surface">
@@ -805,48 +807,48 @@ export default function UserManagement() {
                           </div>
                           <div>
                             <h4 className="font-bold text-on-surface">{item.full_name || `${item.first_name} ${item.last_name}`}</h4>
-                            <p className="text-[10px] text-outline font-medium mt-0.5">UID: {item.user_id || item.id}</p>
+                            <p className="text-[10px] text-outline font-medium mt-0.5">{t('userManagement.uid', { id: item.user_id || item.id })}</p>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
                         <div>
                           <p>{item.email}</p>
-                          <p className="text-outline text-[10px] mt-0.5">{item.phone || 'No Phone'}</p>
+                          <p className="text-outline text-[10px] mt-0.5">{item.phone || t('userManagement.noPhone')}</p>
                         </div>
                       </td>
                       {activeRole === 'student' ? (
                         <>
                           <td className="p-4">
                             <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">
-                              Grade {item.grade}-{item.section}
+                              {t('userManagement.classLabel', { grade: item.grade, section: item.section })}
                             </span>
                           </td>
-                          <td className="p-4 font-mono font-bold text-outline">{item.roll_number || 'N/A'}</td>
+                          <td className="p-4 font-mono font-bold text-outline">{item.roll_number || t('userManagement.notAvailable')}</td>
                           <td className="p-4">
                             <p className="truncate max-w-[200px] text-outline text-[10px]">
-                              {item.subjects?.join(', ') || 'No subjects enrolled'}
+                              {item.subjects?.join(', ') || t('userManagement.noSubjectsEnrolled')}
                             </p>
                           </td>
-                          <td className="p-4 text-outline text-[10px]">{item.added_by || 'N/A'}</td>
+                          <td className="p-4 text-outline text-[10px]">{item.added_by || t('userManagement.notAvailable')}</td>
                         </>
                       ) : (
                         <>
                           <td className="p-4">
                             <span className="px-2 py-0.5 rounded bg-tertiary/10 text-tertiary text-[10px] font-bold">
-                              {item.department || 'General'}
+                              {item.department || t('userManagement.general')}
                             </span>
                           </td>
                           <td className="p-4">
                             <p className="truncate max-w-[200px] text-outline text-[10px]">
-                              {item.subjects?.join(', ') || 'None'}
+                              {item.subjects?.join(', ') || t('userManagement.none')}
                             </p>
                           </td>
                           <td className="p-4">
                             <div className="flex flex-wrap gap-1">
                               {item.assigned_classes?.map(cls => (
                                 <span key={cls} className="text-[9px] bg-surface-container-high px-1.5 py-0.5 rounded text-outline font-bold">{cls}</span>
-                              )) || 'None'}
+                              )) || t('userManagement.none')}
                             </div>
                           </td>
                         </>
@@ -856,28 +858,28 @@ export default function UserManagement() {
                           <button
                             onClick={() => handleOpenViewModal(item)}
                             className="p-2 hover:bg-surface-container-high text-on-surface rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
-                            title="View Profile"
+                            title={t('userManagement.viewProfile')}
                           >
                             <Icon name="visibility" className="text-base" />
                           </button>
                           <button
                             onClick={() => handleOpenEditModal(item)}
                             className="p-2 hover:bg-primary/10 text-primary rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
-                            title="Edit Details"
+                            title={t('userManagement.editDetails')}
                           >
                             <Icon name="edit" className="text-base" />
                           </button>
                           <button
                             onClick={() => handleOpenCredsModal(item)}
                             className="p-2 hover:bg-tertiary/10 text-tertiary rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
-                            title="Update Password"
+                            title={t('userManagement.updatePassword')}
                           >
                             <Icon name="vpn_key" className="text-base" />
                           </button>
                           <button
                             onClick={() => handleDeleteUser(item)}
                             className="p-2 hover:bg-error/10 text-error rounded-xl border-none bg-transparent cursor-pointer transition-colors flex items-center justify-center"
-                            title="Delete User"
+                            title={t('userManagement.deleteUser')}
                           >
                             <Icon name="delete" className="text-base" />
                           </button>
@@ -898,9 +900,9 @@ export default function UserManagement() {
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
                 <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
                   <Icon name="publish" className="text-primary" />
-                  Bulk Spreadsheet Import
+                  {t('userManagement.bulkSpreadsheetImport')}
                 </h3>
-                <button 
+                <button
                   onClick={() => setBulkImportModalOpen(false)}
                   className="hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
                 >
@@ -910,19 +912,19 @@ export default function UserManagement() {
 
               <form onSubmit={handleBulkImportSubmit} className="space-y-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Import Target Role</label>
+                  <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.importTargetRole')}</label>
                   <select
                     value={importRole}
                     onChange={(e) => setImportRole(e.target.value)}
                     className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                   >
-                    <option value="student">🎓 Students List</option>
-                    <option value="teacher">👨‍🏫 Teachers List</option>
+                    <option value="student">{t('userManagement.studentsListOption')}</option>
+                    <option value="teacher">{t('userManagement.teachersListOption')}</option>
                   </select>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Select Spreadsheet File (.csv, .xlsx) <span className="text-error">*</span></label>
+                  <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.selectSpreadsheetFile')} <span className="text-error">*</span></label>
                   <input
                     type="file"
                     accept=".csv, .xlsx"
@@ -931,13 +933,13 @@ export default function UserManagement() {
                     required
                   />
                   <p className="text-[9px] text-outline mt-1 font-semibold">
-                    Headers are auto-mapped via column regex patterns. Supported formats: .csv, .xlsx
+                    {t('userManagement.headersAutoMapped')}
                   </p>
                 </div>
 
                 {importResult && (
                   <div className="p-3 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-xl text-[10px] font-bold text-center">
-                    {importResult.detail}. Imported count: {importResult.imported_count}
+                    {t('userManagement.importedCount', { detail: importResult.detail, count: importResult.imported_count })}
                   </div>
                 )}
 
@@ -953,7 +955,7 @@ export default function UserManagement() {
                     onClick={() => setBulkImportModalOpen(false)}
                     className="px-4 py-2.5 border border-outline hover:bg-surface-container text-xs font-bold rounded-xl cursor-pointer bg-transparent"
                   >
-                    Close
+                    {t('userManagement.close')}
                   </button>
                   <button
                     type="submit"
@@ -963,12 +965,12 @@ export default function UserManagement() {
                     {importing ? (
                       <>
                         <Icon name="sync" className="animate-spin text-sm" />
-                        <span>Uploading...</span>
+                        <span>{t('userManagement.uploading')}</span>
                       </>
                     ) : (
                       <>
                         <Icon name="upload_file" className="text-sm" />
-                        <span>Import Records</span>
+                        <span>{t('userManagement.importRecords')}</span>
                       </>
                     )}
                   </button>
@@ -985,7 +987,7 @@ export default function UserManagement() {
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
                 <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
                   <Icon name="school" className="text-primary" />
-                  Add New Class
+                  {t('userManagement.addNewClass')}
                 </h3>
                 <button
                   onClick={() => setClassModalOpen(false)}
@@ -997,10 +999,10 @@ export default function UserManagement() {
 
               <form onSubmit={handleCreateClass} className="space-y-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Grade <span className="text-error">*</span></label>
+                  <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.grade')} <span className="text-error">*</span></label>
                   <input
                     type="text"
-                    placeholder="e.g. 10"
+                    placeholder={t('userManagement.gradePlaceholder')}
                     value={newClassGrade}
                     onChange={(e) => setNewClassGrade(e.target.value)}
                     className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -1008,10 +1010,10 @@ export default function UserManagement() {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Section <span className="text-error">*</span></label>
+                  <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.section')} <span className="text-error">*</span></label>
                   <input
                     type="text"
-                    placeholder="e.g. C"
+                    placeholder={t('userManagement.sectionPlaceholder')}
                     value={newClassSection}
                     onChange={(e) => setNewClassSection(e.target.value.toUpperCase())}
                     className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -1031,14 +1033,14 @@ export default function UserManagement() {
                     onClick={() => setClassModalOpen(false)}
                     className="px-4 py-2.5 border border-outline hover:bg-surface-container text-xs font-bold rounded-xl cursor-pointer bg-transparent"
                   >
-                    Cancel
+                    {t('userManagement.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={classSubmitting}
                     className="px-5 py-2.5 bg-primary text-on-primary hover:opacity-95 disabled:opacity-40 rounded-xl text-xs font-bold cursor-pointer border-none shadow-sm"
                   >
-                    {classSubmitting ? 'Adding...' : 'Add Class'}
+                    {classSubmitting ? t('userManagement.adding') : t('userManagement.addClass')}
                   </button>
                 </div>
               </form>
@@ -1053,9 +1055,9 @@ export default function UserManagement() {
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
                 <h3 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
                   <Icon name="vpn_key" className="text-tertiary" />
-                  Edit Access Access
+                  {t('userManagement.editAccessAccess')}
                 </h3>
-                <button 
+                <button
                   onClick={() => setCredsModalOpen(false)}
                   className="hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
                 >
@@ -1064,13 +1066,13 @@ export default function UserManagement() {
               </div>
 
               <div>
-                <p className="text-xs text-on-surface-variant font-bold">Target User: <span className="text-primary font-black">{credsTargetUser?.name}</span></p>
-                <p className="text-[10px] text-outline mt-0.5">Role Type: {credsTargetUser?.role.toUpperCase()}</p>
+                <p className="text-xs text-on-surface-variant font-bold">{t('userManagement.targetUser')} <span className="text-primary font-black">{credsTargetUser?.name}</span></p>
+                <p className="text-[10px] text-outline mt-0.5">{t('userManagement.roleType', { role: credsTargetUser?.role.toUpperCase() })}</p>
               </div>
 
               <form onSubmit={handleCredsSubmit} className="space-y-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">System Login Email <span className="text-error">*</span></label>
+                  <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.systemLoginEmail')} <span className="text-error">*</span></label>
                   <input
                     type="email"
                     value={credsFormData.email}
@@ -1081,7 +1083,7 @@ export default function UserManagement() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">Contact Phone</label>
+                  <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.contactPhone')}</label>
                   <input
                     type="text"
                     value={credsFormData.phone}
@@ -1091,10 +1093,10 @@ export default function UserManagement() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-outline font-bold uppercase">New Secure Password</label>
+                  <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.newSecurePassword')}</label>
                   <input
                     type="password"
-                    placeholder="•••••••• (Leave blank to keep current)"
+                    placeholder={t('userManagement.passwordPlaceholder')}
                     value={credsFormData.password}
                     onChange={(e) => setCredsFormData(prev => ({ ...prev, password: e.target.value }))}
                     className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -1103,7 +1105,7 @@ export default function UserManagement() {
 
                 {credsMessage && (
                   <div className={`p-3 rounded-xl text-center text-[10px] font-bold ${
-                    credsMessage.includes('success') ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-error-container/20 text-error border border-error/25'
+                    credsMessage === t('userManagement.credentialsUpdatedSuccess') ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-error-container/20 text-error border border-error/25'
                   }`}>
                     {credsMessage}
                   </div>
@@ -1115,14 +1117,14 @@ export default function UserManagement() {
                     onClick={() => setCredsModalOpen(false)}
                     className="px-4 py-2.5 border border-outline hover:bg-surface-container text-xs font-bold rounded-xl cursor-pointer bg-transparent"
                   >
-                    Cancel
+                    {t('userManagement.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={credsSubmitting}
                     className="px-5 py-2.5 bg-primary text-on-primary hover:opacity-95 disabled:opacity-40 rounded-xl text-xs font-bold cursor-pointer border-none shadow-sm flex items-center justify-center gap-1"
                   >
-                    {credsSubmitting ? 'Updating...' : 'Save Settings'}
+                    {credsSubmitting ? t('userManagement.updating') : t('userManagement.saveSettings')}
                   </button>
                 </div>
               </form>
@@ -1136,9 +1138,12 @@ export default function UserManagement() {
             <div className="bg-surface-container-lowest p-6 rounded-[28px] border border-outline-variant shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto animate-slideUp text-left space-y-4">
               <div className="flex justify-between items-center border-b border-outline-variant/20 pb-3">
                 <h3 className="text-sm font-bold text-on-surface">
-                  {modalMode === 'create' ? `Register New ${activeRole === 'student' ? 'Student' : 'Teacher'}` : modalMode === 'edit' ? `Edit ${activeRole === 'student' ? 'Student' : 'Teacher'} Profile` : `${activeRole === 'student' ? 'Student' : 'Teacher'} Details`}
+                  {(() => {
+                    const roleLabel = activeRole === 'student' ? t('userManagement.student') : t('userManagement.teacher')
+                    return modalMode === 'create' ? t('userManagement.registerNew', { role: roleLabel }) : modalMode === 'edit' ? t('userManagement.editProfile', { role: roleLabel }) : t('userManagement.details', { role: roleLabel })
+                  })()}
                 </h3>
-                <button 
+                <button
                   onClick={() => setModalOpen(false)}
                   className="hover:bg-surface-container-high p-1 rounded-full cursor-pointer text-outline border-none bg-transparent"
                 >
@@ -1157,7 +1162,7 @@ export default function UserManagement() {
                 {/* 1. General Profile attributes */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-outline font-bold uppercase">First Name <span className="text-error">*</span></label>
+                    <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.firstName')} <span className="text-error">*</span></label>
                     <input
                       type="text"
                       disabled={modalMode === 'view'}
@@ -1168,7 +1173,7 @@ export default function UserManagement() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-outline font-bold uppercase">Last Name <span className="text-error">*</span></label>
+                    <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.lastName')} <span className="text-error">*</span></label>
                     <input
                       type="text"
                       disabled={modalMode === 'view'}
@@ -1182,7 +1187,7 @@ export default function UserManagement() {
                 {modalMode === 'create' && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-outline font-bold uppercase">Email</label>
+                      <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.email')}</label>
                       <input
                         type="email"
                         value={formData.email}
@@ -1191,7 +1196,7 @@ export default function UserManagement() {
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-outline font-bold uppercase">Phone Number <span className="text-error">*</span></label>
+                      <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.phoneNumber')} <span className="text-error">*</span></label>
                       <input
                         type="text"
                         value={formData.phone}
@@ -1202,8 +1207,8 @@ export default function UserManagement() {
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-outline font-bold uppercase">
-                        Secure Password {activeRole === 'teacher' && <span className="text-error">*</span>}
-                        {activeRole === 'student' && <span className="text-outline normal-case font-medium"> (optional — defaults to phone number)</span>}
+                        {t('userManagement.securePassword')} {activeRole === 'teacher' && <span className="text-error">*</span>}
+                        {activeRole === 'student' && <span className="text-outline normal-case font-medium"> {t('userManagement.passwordOptionalHint')}</span>}
                       </label>
                       <input
                         type="password"
@@ -1221,7 +1226,7 @@ export default function UserManagement() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Grade <span className="text-error">*</span></label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.grade')} <span className="text-error">*</span></label>
                         <select
                           disabled={modalMode === 'view' || gradeOptions.length === 0}
                           value={formData.grade}
@@ -1229,12 +1234,12 @@ export default function UserManagement() {
                           className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                         >
                           {gradeOptions.length === 0
-                            ? <option value="">No classes yet</option>
-                            : gradeOptions.map(g => <option key={g} value={g}>Grade {g}</option>)}
+                            ? <option value="">{t('userManagement.noClassesYet')}</option>
+                            : gradeOptions.map(g => <option key={g} value={g}>{t('userManagement.gradeLabel', { grade: g })}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Section <span className="text-error">*</span></label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.section')} <span className="text-error">*</span></label>
                         <select
                           disabled={modalMode === 'view' || sectionOptions.length === 0}
                           value={formData.section}
@@ -1242,12 +1247,12 @@ export default function UserManagement() {
                           className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                         >
                           {sectionOptions.length === 0
-                            ? <option value="">No classes yet</option>
-                            : sectionOptions.map(s => <option key={s} value={s}>Section {s}</option>)}
+                            ? <option value="">{t('userManagement.noClassesYet')}</option>
+                            : sectionOptions.map(s => <option key={s} value={s}>{t('userManagement.sectionLabel', { section: s })}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Roll Number <span className="text-error">*</span></label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.rollNumber')} <span className="text-error">*</span></label>
                         <input
                           type="text"
                           disabled={modalMode === 'view'}
@@ -1261,7 +1266,7 @@ export default function UserManagement() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Father's Name</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.fathersName')}</label>
                         <input
                           type="text"
                           disabled={modalMode === 'view'}
@@ -1271,7 +1276,7 @@ export default function UserManagement() {
                         />
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Mother's Name</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.mothersName')}</label>
                         <input
                           type="text"
                           disabled={modalMode === 'view'}
@@ -1284,7 +1289,7 @@ export default function UserManagement() {
 
                     {/* Enrolled subjects switcher */}
                     <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-[10px] text-outline font-bold uppercase">Enrolled Subjects & Mentors</label>
+                      <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.enrolledSubjectsMentors')}</label>
                       <div className="grid grid-cols-2 gap-3 bg-surface-container-low/30 p-3 rounded-2xl border border-outline-variant/20">
                         {AVAILABLE_SUBJECTS.map((sub) => {
                           const isEnrolled = formData.subjects.includes(sub)
@@ -1307,7 +1312,7 @@ export default function UserManagement() {
                                     onChange={(e) => handleSubjectTeacherChange(sub, e.target.value)}
                                     className="mt-1 px-2 py-1 rounded bg-surface-container-low text-[10px] font-semibold outline-none border border-outline-variant/40"
                                   >
-                                    <option value="">-- Assign Teacher --</option>
+                                    <option value="">{t('userManagement.assignTeacher')}</option>
                                     {eligibleMentorsForSubject(sub)
                                       .map(t => (
                                         <option key={t.user_id} value={t.user_id}>{t.full_name}</option>
@@ -1315,7 +1320,7 @@ export default function UserManagement() {
                                   </select>
                                   {eligibleMentorsForSubject(sub).length === 0 && (
                                     <span className="text-[9px] text-outline-variant italic px-0.5">
-                                      No teacher is assigned to {sub} in this class yet.
+                                      {t('userManagement.noTeacherAssignedToSubject', { subject: sub })}
                                     </span>
                                   )}
                                 </>
@@ -1333,10 +1338,10 @@ export default function UserManagement() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">Faculty Department</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.facultyDepartment')}</label>
                         <input
                           type="text"
-                          placeholder="e.g. Science, Mathematics"
+                          placeholder={t('userManagement.departmentPlaceholder')}
                           disabled={modalMode === 'view'}
                           value={formData.department}
                           onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
@@ -1348,7 +1353,7 @@ export default function UserManagement() {
                     {/* Subjects and Assigned classes switchers */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[10px] text-outline font-bold uppercase">Department Subjects</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.departmentSubjects')}</label>
                         <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-surface-container-low/30 border border-outline-variant/20 max-h-[150px] overflow-y-auto">
                           {AVAILABLE_SUBJECTS.map((sub) => {
                             const isEnrolled = formData.subjects.includes(sub)
@@ -1372,7 +1377,7 @@ export default function UserManagement() {
                       </div>
 
                       <div className="flex flex-col gap-1.5 text-left relative self-start" ref={classDropdownRef}>
-                        <label className="text-[10px] text-outline font-bold uppercase">Lecturing Classes <span className="text-error">*</span></label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.lecturingClasses')} <span className="text-error">*</span></label>
 
                         <button
                           type="button"
@@ -1382,12 +1387,12 @@ export default function UserManagement() {
                         >
                           <span className="truncate text-left">
                             {classKeys.length === 0
-                              ? 'No classes created yet'
+                              ? t('userManagement.noClassesCreatedYet')
                               : formData.assigned_classes.length === 0
-                                ? 'Select classes...'
+                                ? t('userManagement.selectClassesEllipsis')
                                 : formData.assigned_classes.length === 1
-                                  ? `Class ${formData.assigned_classes[0]}`
-                                  : `${formData.assigned_classes.length} classes selected`}
+                                  ? t('userManagement.classLabelSingle', { cls: formData.assigned_classes[0] })
+                                  : t('userManagement.nClassesSelected', { count: formData.assigned_classes.length })}
                           </span>
                           <Icon name={classDropdownOpen ? 'expand_less' : 'expand_more'} className="text-base text-outline shrink-0" />
                         </button>
@@ -1407,7 +1412,7 @@ export default function UserManagement() {
                                     onChange={() => handleToggleClass(cls)}
                                     className="w-3.5 h-3.5 accent-tertiary shrink-0"
                                   />
-                                  <span>Class {cls}</span>
+                                  <span>{t('userManagement.classLabelSingle', { cls })}</span>
                                 </label>
                               )
                             })}
@@ -1416,7 +1421,7 @@ export default function UserManagement() {
 
                         {classKeys.length === 0 && (
                           <p className="text-[10px] text-outline-variant italic px-1">
-                            No classes created yet — add one in the Classes tab first.
+                            {t('userManagement.noClassesCreatedFirst')}
                           </p>
                         )}
                       </div>
@@ -1428,13 +1433,13 @@ export default function UserManagement() {
                         assigned class. */}
                     {formData.assigned_classes.length > 0 && (
                       <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[10px] text-outline font-bold uppercase">Subjects Taught Per Class</label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.subjectsTaughtPerClass')}</label>
                         <div className="flex flex-col gap-2 p-3 rounded-2xl bg-surface-container-low/30 border border-outline-variant/20">
                           {formData.assigned_classes.map((cls) => (
                             <div key={cls} className="flex flex-col gap-1.5 p-2 bg-surface-container-lowest rounded-xl border border-outline-variant/15">
-                              <span className="text-[10px] font-bold text-on-surface">Class {cls}</span>
+                              <span className="text-[10px] font-bold text-on-surface">{t('userManagement.classLabelSingle', { cls })}</span>
                               {formData.subjects.length === 0 ? (
-                                <span className="text-[9px] text-outline-variant italic">Pick Department Subjects above first.</span>
+                                <span className="text-[9px] text-outline-variant italic">{t('userManagement.pickDepartmentSubjectsFirst')}</span>
                               ) : (
                                 <div className="flex flex-wrap gap-1.5">
                                   {formData.subjects.map((sub) => {
@@ -1465,12 +1470,12 @@ export default function UserManagement() {
 
                     {/* Qualifications section */}
                     <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-[10px] text-outline font-bold uppercase">Qualifications & Degrees</label>
+                      <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.qualificationsAndDegrees')}</label>
                       {modalMode !== 'view' && (
                         <div className="flex gap-2">
                           <input
                             type="text"
-                            placeholder="e.g. Master of Education, PhD in Physics"
+                            placeholder={t('userManagement.qualificationPlaceholder')}
                             value={qualificationInput}
                             onChange={(e) => setQualificationInput(e.target.value)}
                             className="flex-1 px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
@@ -1480,11 +1485,11 @@ export default function UserManagement() {
                             onClick={handleAddQualification}
                             className="px-4 bg-secondary-container text-on-secondary-container hover:bg-opacity-95 rounded-xl font-bold cursor-pointer border-none"
                           >
-                            Add
+                            {t('userManagement.add')}
                           </button>
                         </div>
                       )}
-                      
+
                       <div className="space-y-1 mt-1 font-semibold">
                         {formData.qualifications?.map((q, idx) => (
                           <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-surface-container-low border border-outline-variant/35">
@@ -1501,7 +1506,7 @@ export default function UserManagement() {
                           </div>
                         ))}
                         {formData.qualifications?.length === 0 && (
-                          <p className="text-[10px] text-outline italic">No qualifications added.</p>
+                          <p className="text-[10px] text-outline italic">{t('userManagement.noQualificationsAdded')}</p>
                         )}
                       </div>
                     </div>
@@ -1515,7 +1520,7 @@ export default function UserManagement() {
                     onClick={() => setModalOpen(false)}
                     className="px-4 py-2.5 border border-outline hover:bg-surface-container text-xs font-bold rounded-xl cursor-pointer bg-transparent"
                   >
-                    {modalMode === 'view' ? 'Close' : 'Cancel'}
+                    {modalMode === 'view' ? t('userManagement.close') : t('userManagement.cancel')}
                   </button>
                   {modalMode !== 'view' && (
                     <button
@@ -1523,7 +1528,7 @@ export default function UserManagement() {
                       disabled={isSubmitting}
                       className="px-5 py-2.5 bg-primary text-on-primary hover:opacity-95 disabled:opacity-40 rounded-xl text-xs font-bold cursor-pointer border-none shadow-sm flex items-center gap-1"
                     >
-                      {isSubmitting ? 'Saving...' : 'Save Profile'}
+                      {isSubmitting ? t('userManagement.saving') : t('userManagement.saveProfile')}
                     </button>
                   )}
                 </div>

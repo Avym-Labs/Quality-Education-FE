@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -11,6 +12,7 @@ import DateInput from '../../components/common/DateInput'
 import { formatDateDMY, formatIsoDateDMY } from '../../utils/dateFormat'
 
 export default function AcademicsHub() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -307,11 +309,11 @@ export default function AcademicsHub() {
   // teacher/admin individual report modal (both read/write
   // reportsModalStartDate / reportsModalEndDate).
   const DATE_PRESETS = [
-    { value: 'week', label: 'Last Week' },
-    { value: 'month', label: 'Last Month' },
-    { value: '3months', label: 'Last 3 Months' },
-    { value: 'joining', label: 'Since Joining' },
-    { value: 'custom', label: 'Custom Range' },
+    { value: 'week', label: t('academicsHub.lastWeek') },
+    { value: 'month', label: t('academicsHub.lastMonth') },
+    { value: '3months', label: t('academicsHub.last3Months') },
+    { value: 'joining', label: t('academicsHub.sinceJoining') },
+    { value: 'custom', label: t('academicsHub.customRange') },
   ]
   const computePresetRange = (preset) => {
     const end = new Date()
@@ -768,7 +770,7 @@ export default function AcademicsHub() {
       setTests(testRes.data || [])
     } catch (err) {
       console.error(err)
-      setError('Failed to fetch academics database assets.')
+      setError(t('academicsHub.failedToFetchAssets'))
     } finally {
       setLoading(false)
     }
@@ -1030,7 +1032,7 @@ export default function AcademicsHub() {
         link_description: linkPreview?.description || '',
         link_image: linkPreview?.image || ''
       })
-      setSuccess('Study material uploaded successfully!')
+      setSuccess(t('academicsHub.materialUploadedSuccess'))
       setMaterialTitle('')
       setMaterialFile(null)
       setMaterialLinkUrl('')
@@ -1038,21 +1040,21 @@ export default function AcademicsHub() {
       loadAcademicAssets()
     } catch (err) {
       console.error(err)
-      setError('Failed to upload study material.')
+      setError(t('academicsHub.failedToUploadMaterial'))
     } finally {
       setUploadingMaterial(false)
     }
   }
 
   const handleDeleteMaterial = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this study material?')) return
+    if (!window.confirm(t('academicsHub.confirmDeleteMaterial'))) return
     try {
       await api.delete(`/academics/study-materials/${id}`)
-      setSuccess('Study material deleted successfully.')
+      setSuccess(t('academicsHub.materialDeletedSuccess'))
       loadAcademicAssets()
     } catch (err) {
       console.error(err)
-      setError('Failed to delete material.')
+      setError(t('academicsHub.failedToDeleteMaterial'))
     }
   }
 
@@ -1097,28 +1099,28 @@ export default function AcademicsHub() {
         answer_key_url: ansKeyUrl,
         answer_key_name: ansKeyName
       })
-      setSuccess('Test assets and answer keys uploaded successfully!')
+      setSuccess(t('academicsHub.testUploadedSuccess'))
       setTestTitle('')
       setQPaperFile(null)
       setAnsKeyFile(null)
       loadAcademicAssets()
     } catch (err) {
       console.error(err)
-      setError('Failed to upload test keys.')
+      setError(t('academicsHub.failedToUploadTest'))
     } finally {
       setUploadingTest(false)
     }
   }
 
   const handleDeleteTest = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this test package?')) return
+    if (!window.confirm(t('academicsHub.confirmDeleteTest'))) return
     try {
       await api.delete(`/academics/tests/${id}`)
-      setSuccess('Test package deleted successfully.')
+      setSuccess(t('academicsHub.testDeletedSuccess'))
       loadAcademicAssets()
     } catch (err) {
       console.error(err)
-      setError('Failed to delete test package.')
+      setError(t('academicsHub.failedToDeleteTest'))
     }
   }
 
@@ -1163,11 +1165,11 @@ export default function AcademicsHub() {
       })
 
       if (payload.length === 0) {
-        throw new Error('Please input marks for at least one student.')
+        throw new Error(t('academicsHub.pleaseInputMarks'))
       }
 
       await api.post('/results/bulk', payload)
-      setSuccess(`Scores recorded successfully for ${payload.length} students!`)
+      setSuccess(t('academicsHub.scoresRecordedSuccess', { count: payload.length }))
       setRecordTestTitle('')
       
       // Reset marks form
@@ -1180,7 +1182,7 @@ export default function AcademicsHub() {
       fetchFilteredResults()
     } catch (err) {
       console.error(err)
-      setError(err.message || 'Failed to submit marks .')
+      setError(err.message || t('academicsHub.failedToSubmitMarks'))
     } finally {
       setSubmittingMarks(false)
     }
@@ -1188,7 +1190,7 @@ export default function AcademicsHub() {
 
   const handleDownloadCSVTemplate = () => {
     if (studentsList.length === 0) {
-      alert('No students available in the  list.');
+      alert(t('academicsHub.noStudentsInList'));
       return;
     }
     const headers = ['Roll Number', 'Student Name', 'Student User ID', 'Marks Obtained', 'Remarks'];
@@ -1256,10 +1258,10 @@ export default function AcademicsHub() {
           }
         }
         setMarksData(parsedStates);
-        alert(`Successfully imported scores for ${matchCount} students from CSV! Please review the  below and click "Submit Score " to save.`);
+        alert(t('academicsHub.successfullyImportedCsv', { count: matchCount }));
       } catch (err) {
         console.error('Failed to parse CSV:', err);
-        alert('Failed to parse CSV. Please make sure the structure matches the downloaded template.');
+        alert(t('academicsHub.failedToParseCsv'));
       }
     };
     reader.readAsText(file);
@@ -1347,7 +1349,7 @@ export default function AcademicsHub() {
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-                Academic Hub
+                {t('academicsHub.academicHub')}
               </h2>
             </div>
           </div>
@@ -1363,7 +1365,7 @@ export default function AcademicsHub() {
               }`}
             >
               <Icon name="library_books" className="text-sm" />
-              <span>Study Material</span>
+              <span>{t('academicsHub.studyMaterial')}</span>
             </button>
             <button
               onClick={() => handleTabChange('tests')}
@@ -1374,7 +1376,7 @@ export default function AcademicsHub() {
               }`}
             >
               <Icon name="quiz" className="text-sm" />
-              <span>Tests & Answer Keys</span>
+              <span>{t('academicsHub.testsAnswerKeys')}</span>
             </button>
             <button
               onClick={() => handleTabChange('results')}
@@ -1385,7 +1387,7 @@ export default function AcademicsHub() {
               }`}
             >
               <Icon name="grade" className="text-sm" />
-              <span>Grades & Results</span>
+              <span>{t('academicsHub.gradesResults')}</span>
             </button>
             <button
               onClick={() => handleTabChange('reports')}
@@ -1396,7 +1398,7 @@ export default function AcademicsHub() {
               }`}
             >
               <Icon name="bar_chart" className="text-sm" />
-              <span>Performance Reports</span>
+              <span>{t('academicsHub.performanceReports')}</span>
             </button>
             <button
               onClick={() => handleTabChange('schedules')}
@@ -1407,7 +1409,7 @@ export default function AcademicsHub() {
               }`}
             >
               <Icon name="calendar_today" className="text-sm" />
-              <span>Lecture Calendar</span>
+              <span>{t('academicsHub.lectureCalendar')}</span>
             </button>
             {role !== 'admin' && (
               <button
@@ -1419,7 +1421,7 @@ export default function AcademicsHub() {
                 }`}
               >
                 <Icon name="assignment" className="text-sm" />
-                <span>Homework</span>
+                <span>{t('academicsHub.homework')}</span>
               </button>
             )}
           </div>
@@ -1451,14 +1453,14 @@ export default function AcademicsHub() {
             {(role === 'teacher' || role === 'admin') && (
               <form onSubmit={handleUploadMaterial} className="bg-surface-container-lowest p-6 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-4 text-xs text-left">
                 <h3 className="text-xs font-black uppercase text-primary tracking-wider border-b border-outline-variant/15 pb-2">
-                  Upload New Study Resource
+                  {t('academicsHub.uploadNewResource')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Resource Title <span className="text-error">*</span></label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.resourceTitle')} <span className="text-error">*</span></label>
                     <input
                       type="text"
-                      placeholder="e.g. Calculus Introduction Slides"
+                      placeholder={t('academicsHub.resourceTitlePlaceholder')}
                       value={materialTitle}
                       onChange={e => setMaterialTitle(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -1466,26 +1468,26 @@ export default function AcademicsHub() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Target Class</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.targetClass')}</label>
                     <select
                       value={materialClass}
                       onChange={e => setMaterialClass(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {relevantClassOptions.length === 0 && <option value="">No classes yet</option>}
+                      {relevantClassOptions.length === 0 && <option value="">{t('academicsHub.noClassesYet')}</option>}
                       {relevantClassOptions.map(c => (
-                        <option key={c} value={c}>Class {c}</option>
+                        <option key={c} value={c}>{t('academicsHub.classLabel', { cls: c })}</option>
                       ))}
                     </select>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Subject Category</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.subjectCategory')}</label>
                     <select
                       value={materialSubject}
                       onChange={e => setMaterialSubject(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {relevantSubjectOptions.length === 0 && <option value="">No subjects yet</option>}
+                      {relevantSubjectOptions.length === 0 && <option value="">{t('academicsHub.noSubjectsYet')}</option>}
                       {relevantSubjectOptions.map(s => (
                         <option key={s} value={s}>{s}</option>
                       ))}
@@ -1495,7 +1497,7 @@ export default function AcademicsHub() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-outline-variant/10 pt-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Resource File (PDF, PPT, DOC, JPG, etc)</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.resourceFile')}</label>
                     <input
                       type="file"
                       onChange={e => setMaterialFile(e.target.files[0])}
@@ -1503,10 +1505,10 @@ export default function AcademicsHub() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Or Paste a Link</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.orPasteLink')}</label>
                     <input
                       type="url"
-                      placeholder="https://example.com/article"
+                      placeholder={t('academicsHub.linkPlaceholder')}
                       value={materialLinkUrl}
                       onChange={e => setMaterialLinkUrl(e.target.value)}
                       onBlur={fetchLinkPreview}
@@ -1516,13 +1518,13 @@ export default function AcademicsHub() {
                 </div>
 
                 <p className="text-[9px] text-outline font-semibold -mt-2">
-                  Provide a file, a link, or both. <span className="text-error">*</span> at least one is required.
+                  {t('academicsHub.provideFileOrLink')}
                 </p>
 
                 {fetchingLinkPreview && (
                   <div className="text-[10px] text-outline font-semibold flex items-center gap-1.5">
                     <Icon name="refresh" className="text-xs animate-spin" />
-                    Fetching link preview...
+                    {t('academicsHub.fetchingLinkPreview')}
                   </div>
                 )}
 
@@ -1556,7 +1558,7 @@ export default function AcademicsHub() {
                     disabled={uploadingMaterial}
                     className="py-3 px-6 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-md hover:bg-opacity-95 disabled:opacity-50 flex items-center gap-1 cursor-pointer select-none"
                   >
-                    {uploadingMaterial ? 'Uploading...' : 'Publish Study Material'}
+                    {uploadingMaterial ? t('academicsHub.uploading') : t('academicsHub.publishStudyMaterial')}
                   </button>
                 </div>
               </form>
@@ -1564,13 +1566,13 @@ export default function AcademicsHub() {
 
             <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/35 p-5 shadow-sm space-y-4">
               <h3 className="text-xs font-black uppercase text-on-surface tracking-wider border-b border-outline-variant/15 pb-2 text-left">
-                Available Resources
+                {t('academicsHub.availableResources')}
               </h3>
-              
+
               {loading ? (
-                <div className="py-12 text-center text-outline font-semibold">Loading resources...</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('academicsHub.loadingResources')}</div>
               ) : materials.length === 0 ? (
-                <div className="py-12 text-center text-outline font-semibold">No study material found for your class.</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('academicsHub.noStudyMaterialFound')}</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {materials.map(mat => (
@@ -1606,7 +1608,7 @@ export default function AcademicsHub() {
                             <div className="p-4">
                               <div className="flex items-center justify-between gap-2">
                                 {getSubjectBadge(mat.subject)}
-                                <span className="text-[9px] text-outline font-bold">Class {mat.grade}</span>
+                                <span className="text-[9px] text-outline font-bold">{t('academicsHub.classLabel', { cls: mat.grade })}</span>
                               </div>
                               <h4 className="text-xs font-bold text-on-surface mt-2 group-hover:text-primary transition-colors truncate">
                                 {mat.title}
@@ -1625,13 +1627,13 @@ export default function AcademicsHub() {
                           </a>
                           <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 pb-4 px-4">
                             <div className="text-[8px] text-outline font-medium">
-                              Uploaded: {formatDate(mat.created_at)}
+                              {t('academicsHub.uploadedLabel', { date: formatDate(mat.created_at) })}
                             </div>
                             {(role === 'teacher' || role === 'admin') && (
                               <button
                                 onClick={() => handleDeleteMaterial(mat.id)}
                                 className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
-                                title="Delete Material"
+                                title={t('academicsHub.deleteMaterial')}
                               >
                                 <Icon name="delete" className="text-sm" />
                               </button>
@@ -1643,17 +1645,17 @@ export default function AcademicsHub() {
                           <div>
                             <div className="flex items-center justify-between gap-2">
                               {getSubjectBadge(mat.subject)}
-                              <span className="text-[9px] text-outline font-bold">Class {mat.grade}</span>
+                              <span className="text-[9px] text-outline font-bold">{t('academicsHub.classLabel', { cls: mat.grade })}</span>
                             </div>
                             <h4 className="text-xs font-bold text-on-surface mt-2 group-hover:text-primary transition-colors truncate">
                               {mat.title}
                             </h4>
-                            <p className="text-[9px] text-outline font-semibold mt-0.5 truncate">File: {mat.filename}</p>
+                            <p className="text-[9px] text-outline font-semibold mt-0.5 truncate">{t('academicsHub.fileLabel', { name: mat.filename })}</p>
                           </div>
 
                           <div className="flex items-center justify-between border-t border-outline-variant/10 pt-3 mt-4">
                             <div className="text-[8px] text-outline font-medium">
-                              Uploaded: {formatDate(mat.created_at)}
+                              {t('academicsHub.uploadedLabel', { date: formatDate(mat.created_at) })}
                             </div>
                             <div className="flex gap-2">
                               {role === 'student' ? (
@@ -1661,10 +1663,10 @@ export default function AcademicsHub() {
                                   type="button"
                                   onClick={() => setViewingMaterial(mat)}
                                   className="px-3.5 py-2 rounded-2xl bg-primary-fixed hover:bg-primary hover:text-on-primary text-primary font-bold text-[10px] shadow-xs active:scale-95 duration-100 flex items-center gap-1 border-none cursor-pointer animate-fadeIn"
-                                  title="View Resource"
+                                  title={t('academicsHub.viewResource')}
                                 >
                                   <Icon name="visibility" className="text-xs" />
-                                  <span>View Resource</span>
+                                  <span>{t('academicsHub.viewResource')}</span>
                                 </button>
                               ) : (
                                 <>
@@ -1673,7 +1675,7 @@ export default function AcademicsHub() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center hover:bg-primary-fixed hover:text-primary transition-colors text-on-surface"
-                                    title="Download Material"
+                                    title={t('academicsHub.downloadMaterial')}
                                   >
                                     <Icon name="download" className="text-sm" />
                                   </a>
@@ -1681,7 +1683,7 @@ export default function AcademicsHub() {
                                     <button
                                       onClick={() => handleDeleteMaterial(mat.id)}
                                       className="w-8 h-8 rounded-lg bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
-                                      title="Delete Material"
+                                      title={t('academicsHub.deleteMaterial')}
                                     >
                                       <Icon name="delete" className="text-sm" />
                                     </button>
@@ -1708,15 +1710,15 @@ export default function AcademicsHub() {
             {(role === 'teacher' || role === 'admin') && (
               <form onSubmit={handleUploadTest} className="bg-surface-container-lowest p-6 rounded-[24px] border border-outline-variant/35 shadow-sm space-y-4 text-xs text-left">
                 <h3 className="text-xs font-black uppercase text-primary tracking-wider border-b border-outline-variant/15 pb-2">
-                  Publish Question Papers / Keys
+                  {t('academicsHub.publishQuestionPapers')}
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Test Title <span className="text-error">*</span></label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.testTitle')} <span className="text-error">*</span></label>
                     <input
                       type="text"
-                      placeholder="e.g. Physics Midterm Examination"
+                      placeholder={t('academicsHub.testTitlePlaceholder')}
                       value={testTitle}
                       onChange={e => setTestTitle(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -1724,26 +1726,26 @@ export default function AcademicsHub() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Target Class</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.targetClass')}</label>
                     <select
                       value={testClass}
                       onChange={e => setTestClass(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {relevantClassOptions.length === 0 && <option value="">No classes yet</option>}
+                      {relevantClassOptions.length === 0 && <option value="">{t('academicsHub.noClassesYet')}</option>}
                       {relevantClassOptions.map(c => (
-                        <option key={c} value={c}>Class {c}</option>
+                        <option key={c} value={c}>{t('academicsHub.classLabel', { cls: c })}</option>
                       ))}
                     </select>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Subject Category</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.subjectCategory')}</label>
                     <select
                       value={testSubject}
                       onChange={e => setTestSubject(e.target.value)}
                       className="px-3.5 py-2.5 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                     >
-                      {relevantSubjectOptions.length === 0 && <option value="">No subjects yet</option>}
+                      {relevantSubjectOptions.length === 0 && <option value="">{t('academicsHub.noSubjectsYet')}</option>}
                       {relevantSubjectOptions.map(s => (
                         <option key={s} value={s}>{s}</option>
                       ))}
@@ -1753,7 +1755,7 @@ export default function AcademicsHub() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-outline-variant/10 pt-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Question Paper File (Optional)</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.questionPaperFile')}</label>
                     <input 
                       type="file" 
                       onChange={e => setQPaperFile(e.target.files[0])}
@@ -1761,7 +1763,7 @@ export default function AcademicsHub() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Answer Key File (Optional)</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.answerKeyFile')}</label>
                     <input 
                       type="file" 
                       onChange={e => setAnsKeyFile(e.target.files[0])}
@@ -1776,7 +1778,7 @@ export default function AcademicsHub() {
                     disabled={uploadingTest}
                     className="py-3 px-6 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-md hover:bg-opacity-95 disabled:opacity-50 flex items-center gap-1 cursor-pointer select-none"
                   >
-                    {uploadingTest ? 'Publishing...' : 'Upload Test & Keys'}
+                    {uploadingTest ? t('academicsHub.publishing') : t('academicsHub.uploadTestKeys')}
                   </button>
                 </div>
               </form>
@@ -1784,13 +1786,13 @@ export default function AcademicsHub() {
 
             <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/35 p-5 shadow-sm space-y-4">
               <h3 className="text-xs font-black uppercase text-on-surface tracking-wider border-b border-outline-variant/15 pb-2 text-left">
-                Test Papers & Answer Keys
+                {t('academicsHub.testPapersAnswerKeys')}
               </h3>
 
               {loading ? (
-                <div className="py-12 text-center text-outline font-semibold">Loading tests...</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('academicsHub.loadingTests')}</div>
               ) : tests.length === 0 ? (
-                <div className="py-12 text-center text-outline font-semibold">No test keys found for your class.</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('academicsHub.noTestKeysFound')}</div>
               ) : (
                 <div className="space-y-3">
                   {tests.map(test => (
@@ -1798,10 +1800,10 @@ export default function AcademicsHub() {
                       <div>
                         <div className="flex items-center gap-2">
                           {getSubjectBadge(test.subject)}
-                          <span className="text-[9px] text-outline font-bold">Class {test.grade}</span>
+                          <span className="text-[9px] text-outline font-bold">{t('academicsHub.classLabel', { cls: test.grade })}</span>
                         </div>
                         <h4 className="text-xs font-bold text-on-surface mt-1.5">{test.title}</h4>
-                        <p className="text-[8px] text-outline font-semibold mt-0.5">Uploaded on: {formatDate(test.created_at)}</p>
+                        <p className="text-[8px] text-outline font-semibold mt-0.5">{t('academicsHub.uploadedOn', { date: formatDate(test.created_at) })}</p>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0 flex-wrap">
@@ -1813,7 +1815,7 @@ export default function AcademicsHub() {
                             className="flex items-center gap-1 px-3 py-2 bg-surface-container hover:bg-primary-fixed hover:text-primary rounded-xl text-[10px] font-bold text-on-surface transition-colors"
                           >
                             <Icon name="description" className="text-[14px]" />
-                            <span>Question Paper</span>
+                            <span>{t('academicsHub.questionPaper')}</span>
                           </a>
                         )}
                         {test.answer_key_url && (
@@ -1824,14 +1826,14 @@ export default function AcademicsHub() {
                             className="flex items-center gap-1 px-3 py-2 bg-primary-fixed text-primary hover:bg-primary/10 rounded-xl text-[10px] font-bold transition-colors"
                           >
                             <Icon name="key" className="text-[14px]" />
-                            <span>Answer Key</span>
+                            <span>{t('academicsHub.answerKey')}</span>
                           </a>
                         )}
                         {(role === 'teacher' || role === 'admin') && (
                           <button
                             onClick={() => handleDeleteTest(test.id)}
                             className="w-8 h-8 rounded-xl bg-red-50 text-error flex items-center justify-center hover:bg-error hover:text-on-error transition-colors border-none cursor-pointer"
-                            title="Delete Test Package"
+                            title={t('academicsHub.deleteTestPackage')}
                           >
                             <Icon name="delete" className="text-sm" />
                           </button>
@@ -1856,7 +1858,7 @@ export default function AcademicsHub() {
               <div className="flex items-center gap-1.5 border-b border-outline-variant/15 pb-2">
                 <Icon name="filter_alt" className="text-primary text-base" />
                 <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
-                  Search & Filter Results
+                  {t('academicsHub.searchFilterResults')}
                 </h3>
               </div>
 
@@ -1864,27 +1866,27 @@ export default function AcademicsHub() {
                 {role !== 'student' && (
                   <>
                     <div className="flex flex-col gap-1">
-                      <label className="font-bold text-[10px] uppercase text-outline">Class</label>
+                      <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.class')}</label>
                       <select
                         value={filterClass}
                         onChange={e => setFilterClass(e.target.value)}
                         className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                       >
-                        {relevantClassOptions.length === 0 && <option value="">No classes assigned</option>}
+                        {relevantClassOptions.length === 0 && <option value="">{t('academicsHub.noClassesYet')}</option>}
                         {relevantClassOptions.map(c => (
-                          <option key={c} value={c}>Class {c}</option>
+                          <option key={c} value={c}>{t('academicsHub.classLabel', { cls: c })}</option>
                         ))}
                       </select>
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <label className="font-bold text-[10px] uppercase text-outline">Specific Student</label>
+                      <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.specificStudent')}</label>
                       <select
                         value={filterStudentId}
                         onChange={e => setFilterStudentId(e.target.value)}
                         className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                       >
-                        <option value="All">All Students ({studentsList.length})</option>
+                        <option value="All">{t('academicsHub.allStudentsCount', { count: studentsList.length })}</option>
                         {studentsList.map(s => (
                           <option key={s.user_id} value={s.user_id}>{s.full_name}</option>
                         ))}
@@ -1894,13 +1896,13 @@ export default function AcademicsHub() {
                 )}
 
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">Subject</label>
+                  <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.subject')}</label>
                   <select
                     value={filterSubject}
                     onChange={e => setFilterSubject(e.target.value)}
                     className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                   >
-                    <option value="All">All Subjects</option>
+                    <option value="All">{t('academicsHub.allSubjects')}</option>
                     {relevantSubjectOptions.map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
@@ -1908,16 +1910,16 @@ export default function AcademicsHub() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-[10px] uppercase text-outline">Timeframe Preset</label>
+                  <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.timeframePreset')}</label>
                   <select
                     value={dateRange}
                     onChange={e => setDateRange(e.target.value)}
                     className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                   >
-                    <option value="all">All Time</option>
-                    <option value="30days">Last 30 Days</option>
-                    <option value="semester">Current Term / Semester</option>
-                    <option value="custom">Custom Date Range</option>
+                    <option value="all">{t('academicsHub.allTime')}</option>
+                    <option value="30days">{t('academicsHub.last30Days')}</option>
+                    <option value="semester">{t('academicsHub.currentTermSemester')}</option>
+                    <option value="custom">{t('academicsHub.customDateRange')}</option>
                   </select>
                 </div>
               </div>
@@ -1926,7 +1928,7 @@ export default function AcademicsHub() {
               {dateRange === 'custom' && (
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-outline-variant/10 animate-fadeIn">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">Start Date</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.startDate')}</label>
                     <DateInput
                       value={customStartDate}
                       onChange={e => setCustomStartDate(e.target.value)}
@@ -1934,7 +1936,7 @@ export default function AcademicsHub() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] uppercase text-outline">End Date</label>
+                    <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.endDate')}</label>
                     <DateInput
                       value={customEndDate}
                       onChange={e => setCustomEndDate(e.target.value)}
@@ -1948,19 +1950,19 @@ export default function AcademicsHub() {
             {/* Quick stats mini cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-left">
               <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs">
-                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">Tally Tests</span>
+                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.tallyTests')}</span>
                 <h4 className="text-xl font-black text-primary mt-0.5">{totalTests}</h4>
               </div>
               <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs">
-                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">Average Score</span>
+                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.averageScore')}</span>
                 <h4 className="text-xl font-black text-primary mt-0.5">{averageScore}%</h4>
               </div>
               <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs">
-                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">Highest Marks</span>
+                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.highestMarks')}</span>
                 <h4 className="text-xl font-black text-primary mt-0.5">{highestScore}%</h4>
               </div>
               <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-xs">
-                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">Pass Rate</span>
+                <span className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.passRate')}</span>
                 <h4 className="text-xl font-black text-primary mt-0.5">{passRate}%</h4>
               </div>
             </div>
@@ -1970,19 +1972,19 @@ export default function AcademicsHub() {
               <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/35 p-5 shadow-sm space-y-4 text-left">
                 <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2 flex-wrap gap-3">
                   <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
-                    You vs Class Average vs Top Scorer
+                    {t('academicsHub.youVsClassAvgVsTop')}
                   </h3>
                   <div className="flex items-center gap-3 text-[10px] font-bold text-on-surface-variant">
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6351E0]"></span>You</span>
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]"></span>Class Average</span>
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>Top Scorer</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6351E0]"></span>{t('academicsHub.you')}</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]"></span>{t('academicsHub.classAverage')}</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>{t('academicsHub.topScorer')}</span>
                   </div>
                 </div>
 
                 {loadingResults || loadingClassResults ? (
-                  <div className="py-12 text-center text-outline font-semibold text-xs">Loading comparison...</div>
+                  <div className="py-12 text-center text-outline font-semibold text-xs">{t('academicsHub.loadingComparison')}</div>
                 ) : comparisonChartData.length === 0 ? (
-                  <div className="py-12 text-center text-outline font-semibold text-xs">No scores match the selected filters.</div>
+                  <div className="py-12 text-center text-outline font-semibold text-xs">{t('academicsHub.noScoresMatchFilters')}</div>
                 ) : (
                   <div className="overflow-x-auto pr-1">
                     <svg width={chartWidth} height={chartHeight} style={{ minWidth: chartWidth }}>
@@ -2010,13 +2012,13 @@ export default function AcademicsHub() {
                       {comparisonChartData.map((d, i) => (
                         <g key={i}>
                           <circle cx={chartXFor(i)} cy={chartYFor(d.classAvg)} r="3" fill="#94a3b8">
-                            <title>{d.label}: Class Average {d.classAvg}%</title>
+                            <title>{d.label}: {t('academicsHub.classAverage')} {d.classAvg}%</title>
                           </circle>
                           <circle cx={chartXFor(i)} cy={chartYFor(d.classTop)} r="3" fill="#f59e0b">
-                            <title>{d.label}: Top Scorer {d.classTop}%</title>
+                            <title>{d.label}: {t('academicsHub.topScorer')} {d.classTop}%</title>
                           </circle>
                           <circle cx={chartXFor(i)} cy={chartYFor(d.you)} r="3.5" fill="#6351E0">
-                            <title>{d.label}: You {d.you}%</title>
+                            <title>{d.label}: {t('academicsHub.you')} {d.you}%</title>
                           </circle>
                           <text
                             x={chartXFor(i)} y={chartHeight - 8} textAnchor="middle" fontSize="9"
@@ -2042,7 +2044,7 @@ export default function AcademicsHub() {
                   <div className="flex items-center gap-2">
                     <Icon name="add_circle" className="text-primary" />
                     <h3 className="text-xs font-black uppercase text-on-surface tracking-wider">
-                      Record New Class Test Scores ({filterClass})
+                      {t('academicsHub.recordNewScores', { cls: filterClass })}
                     </h3>
                   </div>
                   <Icon name={isRecordScoresOpen ? 'expand_less' : 'expand_more'} className="text-outline" />
@@ -2052,10 +2054,10 @@ export default function AcademicsHub() {
                   <form onSubmit={handleRecordScoresSubmit} className="p-5 border-t border-outline-variant/20 space-y-4 text-left animate-fadeIn">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="flex flex-col gap-1">
-                        <label className="font-bold text-[10px] uppercase text-outline">Test Title <span className="text-error">*</span></label>
+                        <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.testTitle')} <span className="text-error">*</span></label>
                         <input
                           type="text"
-                          placeholder="e.g. Chapter 3 Calculus Quiz"
+                          placeholder={t('academicsHub.recordTestTitlePlaceholder')}
                           value={recordTestTitle}
                           onChange={e => setRecordTestTitle(e.target.value)}
                           className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -2063,20 +2065,20 @@ export default function AcademicsHub() {
                         />
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="font-bold text-[10px] uppercase text-outline">Subject</label>
+                        <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.subject')}</label>
                         <select
                           value={recordSubject}
                           onChange={e => setRecordSubject(e.target.value)}
                           className="px-3.5 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
                         >
-                          {relevantSubjectOptions.length === 0 && <option value="">No subjects assigned</option>}
+                          {relevantSubjectOptions.length === 0 && <option value="">{t('academicsHub.noSubjectsYet')}</option>}
                           {relevantSubjectOptions.map(s => (
                             <option key={s} value={s}>{s}</option>
                           ))}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="font-bold text-[10px] uppercase text-outline">Total Marks <span className="text-error">*</span></label>
+                        <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.totalMarks')} <span className="text-error">*</span></label>
                         <input
                           type="number"
                           value={recordTotalMarks}
@@ -2086,7 +2088,7 @@ export default function AcademicsHub() {
                         />
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="font-bold text-[10px] uppercase text-outline">Test Date <span className="text-error">*</span></label>
+                        <label className="font-bold text-[10px] uppercase text-outline">{t('academicsHub.testDate')} <span className="text-error">*</span></label>
                         <DateInput
                           value={recordDate}
                           onChange={e => setRecordDate(e.target.value)}
@@ -2099,10 +2101,10 @@ export default function AcademicsHub() {
                     {/* CSV Batch Operations */}
                       <div className="flex flex-wrap items-center gap-3.5 bg-surface-container-low/30 p-3.5 rounded-2xl border border-outline-variant/30 text-[10px]">
                         <div className="flex-1 text-left">
-                          <span className="font-bold text-on-surface uppercase block">Excel / CSV Batch Operations</span>
-                          <span className="text-outline font-medium">Download the student template sheet, fill details offline, and upload.</span>
+                          <span className="font-bold text-on-surface uppercase block">{t('academicsHub.csvBatchOps')}</span>
+                          <span className="text-outline font-medium">{t('academicsHub.csvBatchOpsDesc')}</span>
                         </div>
-                      
+
                       <div className="flex gap-2">
                         {/* Download Template button */}
                         <button
@@ -2111,13 +2113,13 @@ export default function AcademicsHub() {
                           className="flex items-center gap-1.5 px-3 py-2 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/50 rounded-xl font-bold cursor-pointer transition-colors"
                         >
                           <Icon name="download" className="text-xs" />
-                          <span>Download Template</span>
+                          <span>{t('academicsHub.downloadTemplate')}</span>
                         </button>
-                        
+
                         {/* Upload CSV button */}
                         <label className="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-xl font-bold cursor-pointer hover:bg-opacity-95 transition-all active:scale-95 duration-100 shadow-xs">
                           <Icon name="upload" className="text-xs" />
-                          <span>Upload Scores (CSV)</span>
+                          <span>{t('academicsHub.uploadScoresCsv')}</span>
                           <input 
                             type="file" 
                             accept=".csv"
@@ -2130,18 +2132,18 @@ export default function AcademicsHub() {
 
                       {/* Student scores rows */}
                       <div className="border-t border-outline-variant/10 pt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
-                        <label className="font-bold text-[10px] uppercase text-outline mb-1 block">Student Scoreboard Sheet</label>
+                        <label className="font-bold text-[10px] uppercase text-outline mb-1 block">{t('academicsHub.studentScoreboardSheet')}</label>
                       {recordEligibleStudents.length === 0 ? (
-                        <p className="text-center py-4 text-outline font-semibold">No students in Class {filterClass} are enrolled in {recordSubject}.</p>
+                        <p className="text-center py-4 text-outline font-semibold">{t('academicsHub.noStudentsEnrolledInSubject', { cls: filterClass, subject: recordSubject })}</p>
                       ) : (
                         recordEligibleStudents.map(s => (
                           <div key={s.user_id} className="flex items-center gap-3 p-2 rounded-xl border border-outline-variant/20 bg-surface-container-low/10">
-                            <span className="text-[10px] font-bold text-outline w-12 shrink-0">Roll #{s.roll_number}</span>
+                            <span className="text-[10px] font-bold text-outline w-12 shrink-0">{t('academicsHub.rollNo', { roll: s.roll_number })}</span>
                             <span className="text-xs font-bold text-on-surface flex-1 truncate">{s.full_name}</span>
-                            
-                            <input 
+
+                            <input
                               type="number"
-                              placeholder="Marks"
+                              placeholder={t('academicsHub.marksPlaceholder')}
                               value={marksData[s.user_id]?.marks || ''}
                               onChange={e => handleMarksDataChange(s.user_id, 'marks', e.target.value)}
                               className="w-20 px-2 py-1.5 rounded-lg border border-outline-variant bg-surface-container-low text-xs text-center"
@@ -2149,10 +2151,10 @@ export default function AcademicsHub() {
                               max={recordTotalMarks}
                               step="0.5"
                             />
-                            
-                            <input 
+
+                            <input
                               type="text"
-                              placeholder="Remarks (Optional)"
+                              placeholder={t('academicsHub.remarksOptionalPlaceholder')}
                               value={marksData[s.user_id]?.remarks || ''}
                               onChange={e => handleMarksDataChange(s.user_id, 'remarks', e.target.value)}
                               className="w-40 md:w-60 px-2.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container-low text-xs"
@@ -2168,7 +2170,7 @@ export default function AcademicsHub() {
                         disabled={submittingMarks}
                           className="py-2.5 px-6 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-md disabled:opacity-50 cursor-pointer select-none border-none"
                         >
-                          {submittingMarks ? 'Recording...' : 'Publish Student Scores'}
+                          {submittingMarks ? t('academicsHub.recording') : t('academicsHub.publishStudentScores')}
                         </button>
                     </div>
                   </form>
@@ -2180,9 +2182,9 @@ export default function AcademicsHub() {
             <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant/35 p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2 flex-wrap gap-2">
                 <h3 className="text-xs font-black uppercase text-on-surface tracking-wider text-left">
-                  Test Score History Records
+                  {t('academicsHub.testScoreHistory')}
                 </h3>
-                
+
                 {filteredResults.length > 0 && (
                   <button
                     type="button"
@@ -2190,28 +2192,28 @@ export default function AcademicsHub() {
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high border border-outline-variant/50 text-[10px] font-bold rounded-xl cursor-pointer hover:bg-surface-container-highest transition-colors active:scale-95 duration-100"
                   >
                     <Icon name="download_for_offline" className="text-xs" />
-                    <span>Export History (CSV)</span>
+                    <span>{t('academicsHub.exportHistoryCsv')}</span>
                   </button>
                 )}
               </div>
 
               {loadingResults ? (
-                <div className="py-12 text-center text-outline font-semibold">Querying scores...</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('academicsHub.queryingScores')}</div>
               ) : filteredResults.length === 0 ? (
-                <div className="py-12 text-center text-outline font-semibold">No scores match the selected filters.</div>
+                <div className="py-12 text-center text-outline font-semibold">{t('academicsHub.noScoresMatchFilters')}</div>
               ) : (
                 <div className="overflow-x-auto pr-1">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-outline-variant/20 text-outline uppercase font-bold text-[9px] tracking-wider">
-                        {role !== 'student' && <th className="pb-3.5 font-bold">Student</th>}
-                        <th className="pb-3.5 font-bold">Test Title</th>
-                        <th className="pb-3.5 font-bold">Subject</th>
-                        <th className="pb-3.5 font-bold">Date</th>
-                        <th className="pb-3.5 font-bold text-center">Score</th>
-                        <th className="pb-3.5 font-bold text-center">Percentage</th>
-                        <th className="pb-3.5 font-bold text-center">Grade</th>
-                        <th className="pb-3.5 font-bold pl-4">Remarks</th>
+                        {role !== 'student' && <th className="pb-3.5 font-bold">{t('academicsHub.student')}</th>}
+                        <th className="pb-3.5 font-bold">{t('academicsHub.testTitleCol')}</th>
+                        <th className="pb-3.5 font-bold">{t('academicsHub.subjectCol')}</th>
+                        <th className="pb-3.5 font-bold">{t('academicsHub.dateCol')}</th>
+                        <th className="pb-3.5 font-bold text-center">{t('academicsHub.scoreCol')}</th>
+                        <th className="pb-3.5 font-bold text-center">{t('academicsHub.percentageCol')}</th>
+                        <th className="pb-3.5 font-bold text-center">{t('academicsHub.gradeCol')}</th>
+                        <th className="pb-3.5 font-bold pl-4">{t('academicsHub.remarksCol')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant/10">
@@ -2219,7 +2221,7 @@ export default function AcademicsHub() {
                         <tr key={r.id} className="hover:bg-surface-container-low/10 transition-colors">
                           {role !== 'student' && (
                             <td className="py-3.5 font-bold text-on-surface">
-                              {r.student_name || studentsList.find(s => s.user_id === r.student_id)?.full_name || 'Student'}
+                              {r.student_name || studentsList.find(s => s.user_id === r.student_id)?.full_name || t('academicsHub.student')}
                             </td>
                           )}
                           <td className="py-3.5 font-semibold text-on-surface-variant">{r.test_title}</td>
@@ -2243,7 +2245,7 @@ export default function AcademicsHub() {
                             </span>
                           </td>
                           <td className="py-3.5 pl-4 text-outline font-semibold italic truncate max-w-[150px]" title={r.remarks}>
-                            {r.remarks || '---'}
+                            {r.remarks || t('academicsHub.noRemarksDash')}
                           </td>
                         </tr>
                       ))}
@@ -2305,14 +2307,14 @@ export default function AcademicsHub() {
                   <div>
                     <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-black flex items-center gap-2">
                       <Icon name="description" className="text-primary text-2xl md:text-3xl" />
-                      <span>Detailed Attendance Report</span>
+                      <span>{t('academicsHub.detailedAttendanceReport')}</span>
                     </h2>
                     <p className="text-xs text-outline font-semibold uppercase tracking-wider mt-0.5">
-                      My Personal Attendance Analytics
+                      {t('academicsHub.myPersonalAttendanceAnalytics')}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
                       onClick={() => {
                         document.body.classList.add('print-modal-active')
                         window.print()
@@ -2323,7 +2325,7 @@ export default function AcademicsHub() {
                       className="flex items-center gap-1 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:opacity-95 border-none cursor-pointer print:hidden"
                     >
                       <Icon name="download" className="text-sm" />
-                      <span>Export PDF</span>
+                      <span>{t('academicsHub.exportPdf')}</span>
                     </button>
                   </div>
                 </div>
@@ -2337,10 +2339,10 @@ export default function AcademicsHub() {
                     <div>
                       <h4 className="text-base font-black text-on-surface capitalize">{user?.full_name}</h4>
                       <p className="text-xs text-on-surface-variant font-semibold">
-                        Grade {user?.grade}-{user?.section} &bull; Roll #{user?.roll_number}
+                        {t('academicsHub.gradeSectionRoll', { grade: user?.grade, section: user?.section, roll: user?.roll_number })}
                       </p>
                       <p className="text-[10px] text-outline font-semibold mt-1">
-                        Report Period: {formatIsoDateDMY(reportsModalStartDate)} - {formatIsoDateDMY(reportsModalEndDate)}
+                        {t('academicsHub.reportPeriod', { start: formatIsoDateDMY(reportsModalStartDate), end: formatIsoDateDMY(reportsModalEndDate) })}
                       </p>
                     </div>
                   </div>
@@ -2348,20 +2350,20 @@ export default function AcademicsHub() {
                   {/* Subject + date range filters */}
                   <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Subject</label>
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.subject')}</label>
                       <select
                         value={filterSubject}
                         onChange={e => setFilterSubject(e.target.value)}
                         className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-semibold outline-none focus:border-primary cursor-pointer"
                       >
-                        <option value="All">All Subjects</option>
+                        <option value="All">{t('academicsHub.allSubjects')}</option>
                         {relevantSubjectOptions.map(s => (
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Period</label>
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.period')}</label>
                       <select
                         value={myReportPreset}
                         onChange={e => applyMyReportPreset(e.target.value)}
@@ -2373,7 +2375,7 @@ export default function AcademicsHub() {
                     {myReportPreset === 'custom' && (
                       <>
                         <div className="flex flex-col gap-1">
-                          <label className="text-[9px] font-bold text-outline uppercase tracking-wider">From</label>
+                          <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.from')}</label>
                           <DateInput
                             value={reportsModalStartDate}
                             min={myJoinDate || undefined}
@@ -2382,7 +2384,7 @@ export default function AcademicsHub() {
                           />
                         </div>
                         <div className="flex flex-col gap-1">
-                          <label className="text-[9px] font-bold text-outline uppercase tracking-wider">To</label>
+                          <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.to')}</label>
                           <DateInput
                             value={reportsModalEndDate}
                             onChange={e => setReportsModalEndDate(e.target.value)}
@@ -2401,35 +2403,35 @@ export default function AcademicsHub() {
                     <>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Total Days</span>
+                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.totalDaysLabel')}</span>
                           <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.schoolDays}</h4>
                           <p className="text-[9px] text-on-surface-variant font-semibold mt-1.5 flex items-center gap-1">
                             <Icon name="calendar_today" className="text-xs text-primary" />
-                            <span>Total Period Days</span>
+                            <span>{t('academicsHub.totalPeriodDays')}</span>
                           </p>
                         </div>
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Present Days</span>
+                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.presentDaysLabel')}</span>
                           <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.present}</h4>
                           <p className="text-[9px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
                             <Icon name="check_circle" className="text-xs" />
-                            <span>Present Days</span>
+                            <span>{t('academicsHub.presentDaysLabel')}</span>
                           </p>
                         </div>
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Absent Days</span>
+                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.absentDaysLabel')}</span>
                           <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{rData.absent}</h4>
                           <p className="text-[9px] text-error font-bold mt-1.5 flex items-center gap-1">
                             <Icon name="cancel" className="text-xs" />
-                            <span>Absent Days</span>
+                            <span>{t('academicsHub.absentDaysLabel')}</span>
                           </p>
                         </div>
                         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Attendance Rate</span>
+                          <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.attendanceRateLabel')}</span>
                           <h4 className={`attendance-pct-card leading-none mt-1 ${rData.rate < 75 ? 'text-error' : 'text-primary'}`}>{rData.rate}%</h4>
                           <p className={`text-[9px] font-bold mt-1.5 flex items-center gap-1 ${rData.rate < 75 ? 'text-error' : 'text-primary'}`}>
                             <Icon name="trending_up" className="text-xs" />
-                            <span>Overall Rate</span>
+                            <span>{t('academicsHub.overallRate')}</span>
                           </p>
                         </div>
                       </div>
@@ -2439,9 +2441,9 @@ export default function AcademicsHub() {
                         <div className="bg-red-50 border border-red-200 text-error rounded-2xl p-4 flex items-start gap-3 text-xs font-bold">
                           <Icon name="error_outline" className="text-[20px] mt-0.5" />
                           <div className="space-y-0.5">
-                            <h5 className="text-xs font-black">Attention Required</h5>
+                            <h5 className="text-xs font-black">{t('academicsHub.attentionRequired')}</h5>
                             <p className="text-[10px] font-semibold text-red-700 leading-normal">
-                              Your attendance rate is below 75%. Please contact your class teacher to review attendance concerns.
+                              {t('academicsHub.attendanceBelow75Student')}
                             </p>
                           </div>
                         </div>
@@ -2449,18 +2451,18 @@ export default function AcademicsHub() {
 
                       {/* Monthly Breakdown */}
                       <div className="space-y-3">
-                        <h3 className="text-sm font-bold text-on-surface">Monthly Breakdown</h3>
+                        <h3 className="text-sm font-bold text-on-surface">{t('academicsHub.monthlyBreakdown')}</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {getMonthlyBreakdown(rData).map((m, idx) => (
                             <div key={idx} className="border border-outline-variant/35 rounded-2xl p-4 space-y-2 bg-surface-container-lowest">
                               <h4 className="text-xs font-black text-on-surface">{m.monthName}</h4>
                               <div className="space-y-1.5 text-[11px] font-medium text-on-surface-variant">
-                                <div className="flex justify-between"><span>Total Days:</span> <span className="font-bold text-on-surface">{m.totalDays}</span></div>
-                                <div className="flex justify-between"><span>Present:</span> <span className="font-bold text-emerald-600">{m.present}</span></div>
-                                <div className="flex justify-between"><span>Absent:</span> <span className="font-bold text-error">{m.absent}</span></div>
+                                <div className="flex justify-between"><span>{t('academicsHub.totalDaysColon')}</span> <span className="font-bold text-on-surface">{m.totalDays}</span></div>
+                                <div className="flex justify-between"><span>{t('academicsHub.presentColon')}</span> <span className="font-bold text-emerald-600">{m.present}</span></div>
+                                <div className="flex justify-between"><span>{t('academicsHub.absentColon')}</span> <span className="font-bold text-error">{m.absent}</span></div>
                               </div>
                               <div className="border-t border-outline-variant/10 pt-2 flex justify-between items-baseline text-xs">
-                                <span className="font-bold text-outline uppercase tracking-wider text-[9px]">Rate:</span>
+                                <span className="font-bold text-outline uppercase tracking-wider text-[9px]">{t('academicsHub.rateColon')}</span>
                                 <span className={`font-black ${m.rate < 75 ? 'text-error' : 'text-primary'}`}>{m.rate}%</span>
                               </div>
                             </div>
@@ -2471,22 +2473,22 @@ export default function AcademicsHub() {
                       {/* Calendar pattern */}
                       <div className="space-y-3">
                         <div className="flex justify-between items-baseline">
-                          <h3 className="text-sm font-bold text-on-surface">Attendance Pattern</h3>
+                          <h3 className="text-sm font-bold text-on-surface">{t('academicsHub.attendancePattern')}</h3>
                           <div className="flex gap-3 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs"></span> Present</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-xs"></span> Absent</span>
-                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-slate-200 rounded-xs"></span> No Record</span>
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs"></span> {t('academicsHub.present')}</span>
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-xs"></span> {t('academicsHub.absent')}</span>
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-slate-200 rounded-xs"></span> {t('academicsHub.noRecord')}</span>
                           </div>
                         </div>
                         <div className="border border-outline-variant/35 rounded-2xl p-4 bg-surface-container-lowest space-y-3">
                           <div className="grid grid-cols-7 gap-2 text-center text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">
-                            <span>Sun</span>
-                            <span>Mon</span>
-                            <span>Tue</span>
-                            <span>Wed</span>
-                            <span>Thu</span>
-                            <span>Fri</span>
-                            <span>Sat</span>
+                            <span>{t('academicsHub.sun')}</span>
+                            <span>{t('academicsHub.mon')}</span>
+                            <span>{t('academicsHub.tue')}</span>
+                            <span>{t('academicsHub.wed')}</span>
+                            <span>{t('academicsHub.thu')}</span>
+                            <span>{t('academicsHub.fri')}</span>
+                            <span>{t('academicsHub.sat')}</span>
                           </div>
                           {renderReportsCalendarGrid(rData)}
                         </div>
@@ -2494,56 +2496,56 @@ export default function AcademicsHub() {
 
                       {/* Test Results */}
                       <div className="space-y-3">
-                        <h3 className="text-sm font-bold text-on-surface">Test Results</h3>
+                        <h3 className="text-sm font-bold text-on-surface">{t('academicsHub.testResults')}</h3>
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                           <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Total Tests</span>
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.totalTests')}</span>
                             <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsTotalTests}</h4>
                             <p className="text-[9px] text-primary font-bold mt-1.5 flex items-center gap-1">
                               <Icon name="quiz" className="text-xs" />
-                              <span>Tests Recorded</span>
+                              <span>{t('academicsHub.testsRecorded')}</span>
                             </p>
                           </div>
                           <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Average Score</span>
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.averageScore')}</span>
                             <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsAverageScore}%</h4>
                             <p className="text-[9px] text-primary font-bold mt-1.5 flex items-center gap-1">
                               <Icon name="analytics" className="text-xs" />
-                              <span>Average</span>
+                              <span>{t('academicsHub.average')}</span>
                             </p>
                           </div>
                           <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Highest Score</span>
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.highestScore')}</span>
                             <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsHighestScore}%</h4>
                             <p className="text-[9px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
                               <Icon name="military_tech" className="text-xs" />
-                              <span>Best</span>
+                              <span>{t('academicsHub.best')}</span>
                             </p>
                           </div>
                           <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Pass Rate</span>
+                            <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.passRate')}</span>
                             <h4 className="attendance-pct-card text-on-surface leading-none mt-1">{myReportsPassRate}%</h4>
                             <p className="text-[9px] text-primary font-bold mt-1.5 flex items-center gap-1">
                               <Icon name="check_circle" className="text-xs" />
-                              <span>&ge; 50%</span>
+                              <span>{t('academicsHub.ge50pct')}</span>
                             </p>
                           </div>
                         </div>
 
                         {myReportsResults.length === 0 ? (
                           <div className="border border-outline-variant/35 rounded-2xl p-6 bg-surface-container-lowest text-center text-xs text-on-surface-variant font-semibold">
-                            No test results recorded for this period{filterSubject !== 'All' ? ` in ${filterSubject}` : ''}.
+                            {t('academicsHub.noTestResultsForPeriod', { subjectSuffix: filterSubject !== 'All' ? t('academicsHub.inSubject', { subject: filterSubject }) : '' })}
                           </div>
                         ) : (
                           <div className="border border-outline-variant/35 rounded-2xl overflow-hidden bg-surface-container-lowest">
                             <table className="w-full text-xs text-left">
                               <thead className="bg-surface-container-low">
                                 <tr>
-                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Test</th>
-                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Subject</th>
-                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Date</th>
-                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Score</th>
-                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">Grade</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">{t('academicsHub.testCol')}</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">{t('academicsHub.subjectCol')}</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">{t('academicsHub.dateCol')}</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">{t('academicsHub.scoreCol')}</th>
+                                  <th className="px-3 py-2 font-bold text-[10px] uppercase text-outline">{t('academicsHub.gradeCol')}</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2590,32 +2592,32 @@ export default function AcademicsHub() {
                             <Icon name="groups" className="text-2xl" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-black text-on-surface">Class Reports</h3>
-                            <p className="text-xs text-on-surface-variant font-medium">Generate reports for entire class or standard</p>
+                            <h3 className="text-lg font-black text-on-surface">{t('academicsHub.classReports')}</h3>
+                            <p className="text-xs text-on-surface-variant font-medium">{t('academicsHub.generateReportsForClass')}</p>
                           </div>
                         </div>
 
                         <div className="space-y-2.5 pt-2">
-                          <button 
+                          <button
                             onClick={handleGenerateReport}
                             className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-2xl font-bold text-xs shadow-sm hover:opacity-95 border-none cursor-pointer"
                           >
                             <Icon name="trending_up" className="text-sm" />
-                            <span>Detailed Class Report</span>
+                            <span>{t('academicsHub.detailedClassReport')}</span>
                           </button>
-                          <button 
+                          <button
                             onClick={() => triggerReportsExport('pdf')}
                             className="w-full flex items-center justify-center gap-2 bg-primary-fixed/40 text-primary py-2.5 rounded-2xl font-bold text-xs hover:bg-primary-fixed/60 border-none cursor-pointer"
                           >
                             <Icon name="download" className="text-sm" />
-                            <span>Quick PDF Export</span>
+                            <span>{t('academicsHub.quickPdfExport')}</span>
                           </button>
-                          <button 
+                          <button
                             onClick={() => triggerReportsExport('csv')}
                             className="w-full flex items-center justify-center gap-2 bg-primary-fixed/20 text-primary py-2.5 rounded-2xl font-bold text-xs hover:bg-primary-fixed/30 border-none cursor-pointer"
                           >
                             <Icon name="download" className="text-sm" />
-                            <span>Export as CSV</span>
+                            <span>{t('academicsHub.exportAsCsv')}</span>
                           </button>
                         </div>
                       </div>
@@ -2627,27 +2629,27 @@ export default function AcademicsHub() {
                             <Icon name="person" className="text-2xl" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-black text-on-surface">Individual Reports</h3>
-                            <p className="text-xs text-on-surface-variant font-medium">Generate detailed reports for specific students</p>
+                            <h3 className="text-lg font-black text-on-surface">{t('academicsHub.individualReports')}</h3>
+                            <p className="text-xs text-on-surface-variant font-medium">{t('academicsHub.generateDetailedReportsForStudents')}</p>
                           </div>
                         </div>
 
                         <div className="flex-1 bg-surface-container-low/30 rounded-2xl p-4 text-xs space-y-2 mt-2 border border-outline-variant/20">
-                          <span className="font-bold text-outline uppercase tracking-wider text-[10px]">Features:</span>
+                          <span className="font-bold text-outline uppercase tracking-wider text-[10px]">{t('academicsHub.featuresLabel')}</span>
                           <ul className="space-y-1.5 font-medium text-on-surface-variant pl-4 list-disc">
-                            <li>Monthly attendance breakdown</li>
-                            <li>Visual attendance pattern</li>
-                            <li>Parent contact information</li>
-                            <li>Attendance alerts & recommendations</li>
+                            <li>{t('academicsHub.monthlyAttendanceBreakdown')}</li>
+                            <li>{t('academicsHub.visualAttendancePattern')}</li>
+                            <li>{t('academicsHub.parentContactInformation')}</li>
+                            <li>{t('academicsHub.attendanceAlertsRecommendations')}</li>
                           </ul>
                         </div>
 
-                        <button 
+                        <button
                           onClick={() => setIsReportsModalOpen(true)}
                           className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-2xl font-bold text-xs shadow-sm hover:opacity-95 border-none cursor-pointer mt-2"
                         >
                           <Icon name="person" className="text-sm" />
-                          <span>Student Report</span>
+                          <span>{t('academicsHub.studentReport')}</span>
                         </button>
                       </div>
 
@@ -2657,7 +2659,7 @@ export default function AcademicsHub() {
                     <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4 text-left">
                       <div className="flex items-center gap-2 pb-1 border-b border-outline-variant/20">
                         <Icon name="filter_list" className="text-on-surface text-[20px]" />
-                        <h4 className="text-sm font-bold text-on-surface">Report Filters (for Class Reports)</h4>
+                        <h4 className="text-sm font-bold text-on-surface">{t('academicsHub.reportFiltersForClassReports')}</h4>
                       </div>
 
                       {reportsExportMessage && (
@@ -2668,7 +2670,7 @@ export default function AcademicsHub() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
                         <div className="sm:col-span-3 flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Period</label>
+                          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.period')}</label>
                           <select
                             value={classReportPreset}
                             onChange={e => applyClassReportPreset(e.target.value)}
@@ -2681,7 +2683,7 @@ export default function AcademicsHub() {
                         {classReportPreset === 'custom' && (
                           <>
                             <div className="sm:col-span-3 flex flex-col gap-1">
-                              <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Start Date</label>
+                              <label className="text-[10px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.startDate')}</label>
                               <DateInput
                                 value={reportsStartDate}
                                 onChange={e => setReportsStartDate(e.target.value)}
@@ -2690,7 +2692,7 @@ export default function AcademicsHub() {
                             </div>
 
                             <div className="sm:col-span-3 flex flex-col gap-1">
-                              <label className="text-[10px] font-bold text-outline uppercase tracking-wider">End Date</label>
+                              <label className="text-[10px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.endDate')}</label>
                               <DateInput
                                 value={reportsEndDate}
                                 onChange={e => setReportsEndDate(e.target.value)}
@@ -2701,7 +2703,7 @@ export default function AcademicsHub() {
                         )}
 
                         <div className="sm:col-span-4 flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Standard</label>
+                          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.standard')}</label>
                           <select
                             value={reportsSelectedClass}
                             onChange={e => setReportsSelectedClass(e.target.value)}
@@ -2714,12 +2716,12 @@ export default function AcademicsHub() {
                         </div>
 
                         <div className="sm:col-span-2">
-                          <button 
+                          <button
                             onClick={handleGenerateReport}
                             className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-xl font-bold text-xs shadow-md hover:opacity-95 border-none cursor-pointer"
                           >
                             <Icon name="trending_up" className="text-sm" />
-                            <span>Generate</span>
+                            <span>{t('academicsHub.generate')}</span>
                           </button>
                         </div>
                       </div>
@@ -2745,7 +2747,7 @@ export default function AcademicsHub() {
                         <div>
                           <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-black flex items-center gap-2 flex-wrap">
                             <Icon name="description" className="text-primary text-2xl md:text-3xl" />
-                            <span>Detailed Attendance Report</span>
+                            <span>{t('academicsHub.detailedAttendanceReport')}</span>
                           </h2>
                           <p className="text-xs text-outline font-semibold uppercase tracking-wider mt-0.5">
                             {reportsSelectedClass.split(' (')[0]} &bull; {formatIsoDateDMY(reportsStartDate)} to {formatIsoDateDMY(reportsEndDate)}
@@ -2755,19 +2757,19 @@ export default function AcademicsHub() {
 
                       {/* Exports */}
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           onClick={() => triggerReportsExport('pdf')}
                           className="flex items-center gap-1.5 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:opacity-95 border-none cursor-pointer"
                         >
                           <Icon name="download" className="text-[16px]" />
-                          <span>Export PDF</span>
+                          <span>{t('academicsHub.exportPdf')}</span>
                         </button>
-                        <button 
+                        <button
                           onClick={() => triggerReportsExport('csv')}
                           className="flex items-center gap-1.5 bg-primary-fixed text-primary px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-fixed-dim border-none cursor-pointer"
                         >
                           <Icon name="download" className="text-[16px]" />
-                          <span>Export CSV</span>
+                          <span>{t('academicsHub.exportCsv')}</span>
                         </button>
                       </div>
                     </div>
@@ -2779,50 +2781,50 @@ export default function AcademicsHub() {
                         <>
                           <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-28">
-                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">Total Students</span>
+                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">{t('academicsHub.totalStudents')}</span>
                               <h4 className="text-2xl font-numeric-bold font-black text-on-surface leading-none mt-1">{cReport.totalStudents}</h4>
-                              <p className="text-[10px] text-on-surface-variant font-semibold mt-2">{reportsSelectedClass.split(' (')[0]} Students</p>
+                              <p className="text-[10px] text-on-surface-variant font-semibold mt-2">{t('academicsHub.studentsLabel', { cls: reportsSelectedClass.split(' (')[0] })}</p>
                             </div>
                             <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-28">
-                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">School Days</span>
+                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">{t('academicsHub.schoolDays')}</span>
                               <h4 className="text-2xl font-numeric-bold font-black text-on-surface leading-none mt-1">{cReport.schoolDays}</h4>
-                              <p className="text-[10px] text-on-surface-variant font-semibold mt-2">Total Records</p>
+                              <p className="text-[10px] text-on-surface-variant font-semibold mt-2">{t('academicsHub.totalRecords')}</p>
                             </div>
                             <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-28">
-                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">Attendance Rate</span>
+                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">{t('academicsHub.attendanceRate')}</span>
                               <h4 className="text-2xl font-numeric-bold font-black text-primary leading-none mt-1">{cReport.overallRate}%</h4>
-                              <p className="text-[10px] text-emerald-600 font-bold mt-2">Overall Rate</p>
+                              <p className="text-[10px] text-emerald-600 font-bold mt-2">{t('academicsHub.overallRate')}</p>
                             </div>
                             <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-28">
-                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">Present Days</span>
+                              <span className="text-outline text-[10px] uppercase font-bold tracking-wider">{t('academicsHub.presentDays')}</span>
                               <h4 className="text-2xl font-numeric-bold font-black text-on-surface leading-none mt-1">{cReport.totalPresent}</h4>
-                              <p className="text-[10px] text-on-surface-variant font-semibold mt-2">Present Days</p>
+                              <p className="text-[10px] text-on-surface-variant font-semibold mt-2">{t('academicsHub.presentDays')}</p>
                             </div>
                           </section>
 
                           {/* Distribution row */}
                           <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4">
-                            <h3 className="text-sm font-bold text-on-surface">Attendance Distribution</h3>
+                            <h3 className="text-sm font-bold text-on-surface">{t('academicsHub.attendanceDistribution')}</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                               <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
                                 <span className="text-2xl font-numeric-bold font-black text-emerald-700">{cReport.distribution.excellent}</span>
-                                <span className="text-xs font-bold text-emerald-800 mt-1">Excellent (≥90%)</span>
+                                <span className="text-xs font-bold text-emerald-800 mt-1">{t('academicsHub.excellent90')}</span>
                                 <span className="text-[10px] text-emerald-600 font-semibold mt-1">
-                                  {cReport.totalStudents > 0 ? roundToOneDecimal((cReport.distribution.excellent / cReport.totalStudents) * 100) : 0}% of students
+                                  {t('academicsHub.pctOfStudents', { pct: cReport.totalStudents > 0 ? roundToOneDecimal((cReport.distribution.excellent / cReport.totalStudents) * 100) : 0 })}
                                 </span>
                               </div>
                               <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
                                 <span className="text-2xl font-numeric-bold font-black text-amber-700">{cReport.distribution.good}</span>
-                                <span className="text-xs font-bold text-amber-800 mt-1">Good (75-89%)</span>
+                                <span className="text-xs font-bold text-amber-800 mt-1">{t('academicsHub.good7589')}</span>
                                 <span className="text-[10px] text-amber-600 font-semibold mt-1">
-                                  {cReport.totalStudents > 0 ? roundToOneDecimal((cReport.distribution.good / cReport.totalStudents) * 100) : 0}% of students
+                                  {t('academicsHub.pctOfStudents', { pct: cReport.totalStudents > 0 ? roundToOneDecimal((cReport.distribution.good / cReport.totalStudents) * 100) : 0 })}
                                 </span>
                               </div>
                               <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
                                 <span className="text-2xl font-numeric-bold font-black text-error">{cReport.distribution.attention}</span>
-                                <span className="text-xs font-bold text-error mt-1">Needs Attention (&lt;75%)</span>
+                                <span className="text-xs font-bold text-error mt-1">{t('academicsHub.needsAttentionBelow75')}</span>
                                 <span className="text-[10px] text-red-500 font-semibold mt-1">
-                                  {cReport.totalStudents > 0 ? roundToOneDecimal((cReport.distribution.attention / cReport.totalStudents) * 100) : 0}% of students
+                                  {t('academicsHub.pctOfStudents', { pct: cReport.totalStudents > 0 ? roundToOneDecimal((cReport.distribution.attention / cReport.totalStudents) * 100) : 0 })}
                                 </span>
                               </div>
                             </div>
@@ -2832,7 +2834,7 @@ export default function AcademicsHub() {
                           <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4">
                             <div className="flex items-center gap-2 pb-1 border-b border-outline-variant/20">
                               <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-black">11</span>
-                              <h3 className="text-sm font-bold text-on-surface">{reportsSelectedClass.split(' (')[0]} Performance</h3>
+                              <h3 className="text-sm font-bold text-on-surface">{t('academicsHub.classPerformance', { cls: reportsSelectedClass.split(' (')[0] })}</h3>
                             </div>
                             <div className="space-y-4">
                               {cReport.students.map((student) => {
@@ -2855,7 +2857,7 @@ export default function AcademicsHub() {
                                       <div>
                                         <p className="text-sm font-bold text-on-surface">{student.name}</p>
                                         <p className="text-[10px] text-on-surface-variant font-medium">
-                                          {student.present}/{student.present + student.absent} days present &bull; {student.role}
+                                          {t('academicsHub.daysPresentBullet', { present: student.present, total: student.present + student.absent, role: student.role })}
                                         </p>
                                       </div>
                                     </div>
@@ -2874,8 +2876,8 @@ export default function AcademicsHub() {
 
                           {/* Individual Student analysis block pattern grid list */}
                           <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4">
-                            <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/20 pb-2">Individual Student Analysis</h3>
-                            
+                            <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/20 pb-2">{t('academicsHub.individualStudentAnalysis')}</h3>
+
                             <div className="space-y-6">
                               {cReport.students.map((student) => {
                                 const isAttentionRequired = student.markedRate < 75
@@ -2888,24 +2890,24 @@ export default function AcademicsHub() {
                                         <h4 className="text-sm font-black text-on-surface capitalize">{student.name}</h4>
                                         <p className="text-[10px] text-on-surface-variant font-semibold flex items-center gap-1">
                                           <Icon name="phone" className="text-xs" />
-                                          <span>Father: {student.phone}</span>
+                                          <span>{t('academicsHub.fatherLabel', { phone: student.phone })}</span>
                                         </p>
                                       </div>
                                       <div className="text-right">
                                         <span className={`text-sm font-numeric-bold font-black ${isAttentionRequired ? 'text-error' : 'text-primary'}`}>
                                           {student.overallRate}%
                                         </span>
-                                        <p className="text-[9px] uppercase font-bold text-outline">{student.present}/{cReport.schoolDays} days</p>
+                                        <p className="text-[9px] uppercase font-bold text-outline">{t('academicsHub.daysOf', { present: student.present, total: cReport.schoolDays })}</p>
                                       </div>
                                     </div>
 
                                     <div className="space-y-1.5">
                                       <div className="flex justify-between text-[10px] font-bold text-on-surface-variant">
-                                        <span>Attendance Pattern</span>
+                                        <span>{t('academicsHub.attendancePattern')}</span>
                                         <div className="flex gap-2">
-                                          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-500 rounded-xs"></span> Present</span>
-                                          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-xs"></span> Absent</span>
-                                          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-slate-200 rounded-xs"></span> No Record</span>
+                                          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-500 rounded-xs"></span> {t('academicsHub.present')}</span>
+                                          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-xs"></span> {t('academicsHub.absent')}</span>
+                                          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-slate-200 rounded-xs"></span> {t('academicsHub.noRecord')}</span>
                                         </div>
                                       </div>
 
@@ -2928,22 +2930,22 @@ export default function AcademicsHub() {
                                     <div className="grid grid-cols-3 gap-2">
                                       <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-xl p-2 text-center">
                                         <span className="text-xs font-bold text-emerald-800">{student.present}</span>
-                                        <p className="text-[9px] uppercase font-bold text-emerald-600 mt-0.5">Present</p>
+                                        <p className="text-[9px] uppercase font-bold text-emerald-600 mt-0.5">{t('academicsHub.present')}</p>
                                       </div>
                                       <div className="bg-red-50/50 border border-red-100/50 rounded-xl p-2 text-center">
                                         <span className="text-xs font-bold text-error">{student.absent}</span>
-                                        <p className="text-[9px] uppercase font-bold text-red-500 mt-0.5">Absent</p>
+                                        <p className="text-[9px] uppercase font-bold text-red-500 mt-0.5">{t('academicsHub.absent')}</p>
                                       </div>
                                       <div className="bg-slate-50 border border-slate-250 rounded-xl p-2 text-center">
                                         <span className="text-xs font-bold text-on-surface-variant">{student.noRecord}</span>
-                                        <p className="text-[9px] uppercase font-bold text-outline mt-0.5">No Record</p>
+                                        <p className="text-[9px] uppercase font-bold text-outline mt-0.5">{t('academicsHub.noRecord')}</p>
                                       </div>
                                     </div>
 
                                     {isAttentionRequired && (
                                       <div className="bg-red-50 border border-red-200 text-error rounded-xl p-3 flex items-start gap-2 text-xs font-bold">
                                         <Icon name="warning" className="text-[16px] mt-0.5" />
-                                        <span>Attention Required: Attendance below 75%. Consider parent meeting.</span>
+                                        <span>{t('academicsHub.attentionRequiredParentMeeting')}</span>
                                       </div>
                                     )}
 
@@ -2957,27 +2959,27 @@ export default function AcademicsHub() {
                           <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/35 shadow-sm space-y-4">
                             <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/20 pb-2 flex items-center gap-1.5">
                               <Icon name="download" className="text-primary text-[18px]" />
-                              <span>Quick Export Options</span>
+                              <span>{t('academicsHub.quickExportOptions')}</span>
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div 
+                              <div
                                 onClick={() => triggerReportsExport('pdf')}
                                 className="border border-dashed border-outline-variant hover:border-primary/55 rounded-2xl p-4 flex gap-3 cursor-pointer hover:bg-surface-container-low transition-all"
                               >
                                 <Icon name="picture_as_pdf" className="text-primary text-2xl mt-0.5" />
                                 <div>
-                                  <h4 className="text-xs font-bold text-on-surface">Export as PDF</h4>
-                                  <p className="text-[10px] text-on-surface-variant font-medium mt-0.5">{reportsSelectedClass.split(' (')[0]} attendance report</p>
+                                  <h4 className="text-xs font-bold text-on-surface">{t('academicsHub.exportAsPdf')}</h4>
+                                  <p className="text-[10px] text-on-surface-variant font-medium mt-0.5">{t('academicsHub.classAttendanceReport', { cls: reportsSelectedClass.split(' (')[0] })}</p>
                                 </div>
                               </div>
-                              <div 
+                              <div
                                 onClick={() => triggerReportsExport('csv')}
                                 className="border border-dashed border-outline-variant hover:border-primary/55 rounded-2xl p-4 flex gap-3 cursor-pointer hover:bg-surface-container-low transition-all"
                               >
                                 <Icon name="table_view" className="text-primary text-2xl mt-0.5" />
                                 <div>
-                                  <h4 className="text-xs font-bold text-on-surface">Export as CSV</h4>
-                                  <p className="text-[10px] text-on-surface-variant font-medium mt-0.5">{reportsSelectedClass.split(' (')[0]} spreadsheet format</p>
+                                  <h4 className="text-xs font-bold text-on-surface">{t('academicsHub.exportAsCsv')}</h4>
+                                  <p className="text-[10px] text-on-surface-variant font-medium mt-0.5">{t('academicsHub.classSpreadsheetFormat', { cls: reportsSelectedClass.split(' (')[0] })}</p>
                                 </div>
                               </div>
                             </div>
@@ -3034,7 +3036,7 @@ export default function AcademicsHub() {
                 <div className="absolute inset-0 pointer-events-none flex flex-wrap items-center justify-center gap-16 overflow-hidden opacity-[0.03] select-none">
                   {Array.from({ length: 24 }).map((_, i) => (
                     <span key={i} className="text-xs font-black rotate-[-25deg] tracking-widest uppercase">
-                      Educore Secure Preview Only
+                      {t('academicsHub.educoreSecurePreviewOnly')}
                     </span>
                   ))}
                 </div>
@@ -3068,18 +3070,18 @@ export default function AcademicsHub() {
                   return (
                     <div className="text-center p-8 max-w-sm rounded-2xl border border-dashed border-outline-variant bg-surface-container-low/20">
                       <Icon name="menu_book" className="text-4xl text-primary" />
-                      <h4 className="font-bold text-xs mt-2 text-on-surface">Secure Document Stream</h4>
+                      <h4 className="font-bold text-xs mt-2 text-on-surface">{t('academicsHub.secureDocumentStream')}</h4>
                       <p className="text-[10px] text-outline font-semibold mt-1">
-                        Resource files of format .{ext} are streamed securely in-app. Local download is disabled by administrator policy.
+                        {t('academicsHub.secureStreamDesc', { ext })}
                       </p>
-                      <a 
+                      <a
                         href={getAttachmentUrl(viewingMaterial.file_url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-xl text-[10px] font-bold shadow-xs hover:bg-opacity-95 text-decoration-none"
                       >
                         <Icon name="open_in_new" className="text-xs" />
-                        <span>Stream Live View</span>
+                        <span>{t('academicsHub.streamLiveView')}</span>
                       </a>
                     </div>
                   )
@@ -3090,7 +3092,7 @@ export default function AcademicsHub() {
               {/* Secure Footnote */}
               <div className="p-3 bg-surface-container-low border-t border-outline-variant/20 text-center text-[9px] font-bold text-outline uppercase tracking-wider flex items-center justify-center gap-1.5">
                 <Icon name="lock" className="text-[13px] text-primary" />
-                <span>Protected by Educore Security Shield Policy &bull; Local copies disallowed</span>
+                <span>{t('academicsHub.protectedByEducoreSecurityShield')}</span>
               </div>
 
             </div>
@@ -3110,11 +3112,11 @@ export default function AcademicsHub() {
                 <div>
                   <h3 className="text-base font-black text-on-surface flex items-center gap-2">
                     <Icon name="person" className="text-primary" />
-                    <span>Individual Student Report</span>
+                    <span>{t('academicsHub.individualStudentReport')}</span>
                   </h3>
-                  <p className="text-xs text-on-surface-variant font-medium">Generate detailed attendance report for a specific student</p>
+                  <p className="text-xs text-on-surface-variant font-medium">{t('academicsHub.generateDetailedAttendanceReportForStudent')}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsReportsModalOpen(false)}
                   className="hover:bg-surface-container-high p-1.5 rounded-full border-none bg-transparent cursor-pointer text-on-surface"
                 >
@@ -3124,9 +3126,9 @@ export default function AcademicsHub() {
 
               {/* Modal Filters Row */}
               <div className="p-6 bg-surface-container-low/20 border-b border-outline-variant/10 grid grid-cols-1 sm:grid-cols-4 gap-3">
-                
+
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Filter by Standard</label>
+                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.filterByStandard')}</label>
                   <select
                     value={reportsModalStandard}
                     onChange={e => {
@@ -3142,13 +3144,13 @@ export default function AcademicsHub() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Select Student</label>
+                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.selectStudent')}</label>
                   <select
                     value={reportsModalSelectedStudentId}
                     onChange={e => setReportsModalSelectedStudentId(e.target.value)}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-1.5 px-2.5 focus:outline-none focus:border-primary text-xs font-semibold cursor-pointer"
                   >
-                    <option value="">Choose student...</option>
+                    <option value="">{t('academicsHub.chooseStudentEllipsis')}</option>
                     {reportsModalStudents.map(st => (
                       <option key={st.user_id} value={st.user_id}>{st.full_name}</option>
                     ))}
@@ -3156,7 +3158,7 @@ export default function AcademicsHub() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Period</label>
+                  <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.period')}</label>
                   <select
                     value={modalReportPreset}
                     onChange={e => applyModalReportPreset(e.target.value)}
@@ -3169,7 +3171,7 @@ export default function AcademicsHub() {
                 {modalReportPreset === 'custom' && (
                   <>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">Start Date</label>
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.startDate')}</label>
                       <DateInput
                         value={reportsModalStartDate}
                         onChange={e => setReportsModalStartDate(e.target.value)}
@@ -3178,7 +3180,7 @@ export default function AcademicsHub() {
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">End Date</label>
+                      <label className="text-[9px] font-bold text-outline uppercase tracking-wider">{t('academicsHub.endDate')}</label>
                       <DateInput
                         value={reportsModalEndDate}
                         onChange={e => setReportsModalEndDate(e.target.value)}
@@ -3201,9 +3203,9 @@ export default function AcademicsHub() {
                         {reportsModalStandard.includes('11') ? '11' : reportsModalStandard.replace('Standard ', '').split('-')[0]}
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-on-surface">{reportsModalStandard.split(' (')[0]} Selected</h4>
+                        <h4 className="text-xs font-bold text-on-surface">{t('academicsHub.standardSelected', { std: reportsModalStandard.split(' (')[0] })}</h4>
                         <p className="text-[10px] text-on-surface-variant font-medium">
-                          {reportsModalStudents.length} students available for selection
+                          {t('academicsHub.studentsAvailableForSelection', { count: reportsModalStudents.length })}
                         </p>
                       </div>
                     </div>
@@ -3222,31 +3224,31 @@ export default function AcademicsHub() {
                             </span>
                             <span className="text-[10px] text-on-surface-variant font-medium flex items-center gap-0.5">
                               <Icon name="phone" className="text-xs" />
-                              <span>Father: {activeModalStudentReport.phone}</span>
+                              <span>{t('academicsHub.fatherLabel', { phone: activeModalStudentReport.phone })}</span>
                             </span>
                           </div>
                           <p className="text-[9px] text-outline font-semibold mt-1">
-                            Report Period: {formatIsoDateDMY(reportsModalStartDate)} - {formatIsoDateDMY(reportsModalEndDate)}
+                            {t('academicsHub.reportPeriod', { start: formatIsoDateDMY(reportsModalStartDate), end: formatIsoDateDMY(reportsModalEndDate) })}
                           </p>
                           <p className="text-[9px] text-outline font-semibold">
-                            Generated: {formatDateDMY(new Date())} at {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            {t('academicsHub.generatedAt', { date: formatDateDMY(new Date()), time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) })}
                           </p>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button 
+                        <button
                           onClick={() => triggerModalStudentExport('pdf', activeModalStudentReport.name)}
                           className="flex items-center gap-1 bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:opacity-95 border-none cursor-pointer"
                         >
                           <Icon name="download" className="text-sm" />
-                          <span>Export PDF</span>
+                          <span>{t('academicsHub.exportPdf')}</span>
                         </button>
-                        <button 
+                        <button
                           onClick={() => triggerModalStudentExport('csv', activeModalStudentReport.name)}
                           className="flex items-center gap-1 bg-primary-fixed text-primary px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-fixed-dim border-none cursor-pointer"
                         >
                           <Icon name="download" className="text-sm" />
-                          <span>Export CSV</span>
+                          <span>{t('academicsHub.exportCsv')}</span>
                         </button>
                       </div>
                     </div>
@@ -3255,41 +3257,41 @@ export default function AcademicsHub() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-fadeIn">
                       {/* Total Days */}
                       <div className="bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Total Days</span>
+                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.totalDaysLabel')}</span>
                         <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{activeModalStudentReport.schoolDays}</h4>
                         <p className="text-[9px] text-on-surface-variant font-semibold mt-1.5 flex items-center gap-1">
                           <Icon name="calendar_today" className="text-xs text-primary" />
-                          <span>Total Days</span>
+                          <span>{t('academicsHub.totalDaysLabel')}</span>
                         </p>
                       </div>
 
                       {/* Present Days */}
                       <div className="bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Present Days</span>
+                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.presentDaysLabel')}</span>
                         <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{activeModalStudentReport.present}</h4>
                         <p className="text-[9px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
                           <Icon name="check_circle" className="text-xs" />
-                          <span>Present Days</span>
+                          <span>{t('academicsHub.presentDaysLabel')}</span>
                         </p>
                       </div>
 
                       {/* Absent Days */}
                       <div className="bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Absent Days</span>
+                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.absentDaysLabel')}</span>
                         <h4 className="text-xl font-numeric-bold font-black text-on-surface leading-none mt-1">{activeModalStudentReport.absent}</h4>
                         <p className="text-[9px] text-error font-bold mt-1.5 flex items-center gap-1">
                           <Icon name="cancel" className="text-xs" />
-                          <span>Absent Days</span>
+                          <span>{t('academicsHub.absentDaysLabel')}</span>
                         </p>
                       </div>
 
                       {/* Attendance Rate */}
                       <div className="bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/35 shadow-xs flex flex-col justify-between h-24">
-                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">Attendance Rate</span>
+                        <span className="text-outline text-[9px] uppercase font-bold tracking-wider">{t('academicsHub.attendanceRateLabel')}</span>
                         <h4 className="text-xl font-numeric-bold font-black text-error leading-none mt-1">{activeModalStudentReport.rate}%</h4>
                         <p className="text-[9px] text-error font-bold mt-1.5 flex items-center gap-1">
                           <Icon name="trending_up" className="text-xs" />
-                          <span>Attendance Rate</span>
+                          <span>{t('academicsHub.attendanceRateLabel')}</span>
                         </p>
                       </div>
                     </div>
@@ -3299,9 +3301,9 @@ export default function AcademicsHub() {
                       <div className="bg-red-50 border border-red-200 text-error rounded-2xl p-4 flex items-start gap-3 text-xs font-bold animate-fadeIn">
                         <Icon name="error_outline" className="text-[20px] mt-0.5" />
                         <div className="space-y-0.5">
-                          <h5 className="text-xs font-black">Attention Required</h5>
+                          <h5 className="text-xs font-black">{t('academicsHub.attentionRequired')}</h5>
                           <p className="text-[10px] font-semibold text-red-700 leading-normal">
-                            This student's attendance is below 75%. Consider scheduling a parent meeting to discuss attendance concerns.
+                            {t('academicsHub.attentionRequiredThisStudent')}
                           </p>
                         </div>
                       </div>
@@ -3309,18 +3311,18 @@ export default function AcademicsHub() {
 
                     {/* Monthly Breakdown Section */}
                     <div className="space-y-3 animate-fadeIn">
-                      <h3 className="text-sm font-bold text-on-surface">Monthly Breakdown</h3>
+                      <h3 className="text-sm font-bold text-on-surface">{t('academicsHub.monthlyBreakdown')}</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {getMonthlyBreakdown(activeModalStudentReport).map((m, idx) => (
                           <div key={idx} className="border border-outline-variant/35 rounded-2xl p-4 space-y-2 bg-surface-container-lowest">
                             <h4 className="text-xs font-black text-on-surface">{m.monthName}</h4>
                             <div className="space-y-1.5 text-[11px] font-medium text-on-surface-variant">
-                              <div className="flex justify-between"><span>Total Days:</span> <span className="font-bold text-on-surface">{m.totalDays}</span></div>
-                              <div className="flex justify-between"><span>Present:</span> <span className="font-bold text-emerald-600">{m.present}</span></div>
-                              <div className="flex justify-between"><span>Absent:</span> <span className="font-bold text-error">{m.absent}</span></div>
+                              <div className="flex justify-between"><span>{t('academicsHub.totalDaysColon')}</span> <span className="font-bold text-on-surface">{m.totalDays}</span></div>
+                              <div className="flex justify-between"><span>{t('academicsHub.presentColon')}</span> <span className="font-bold text-emerald-600">{m.present}</span></div>
+                              <div className="flex justify-between"><span>{t('academicsHub.absentColon')}</span> <span className="font-bold text-error">{m.absent}</span></div>
                             </div>
                             <div className="border-t border-outline-variant/10 pt-2 flex justify-between items-baseline text-xs">
-                              <span className="font-bold text-outline uppercase tracking-wider text-[9px]">Rate:</span>
+                              <span className="font-bold text-outline uppercase tracking-wider text-[9px]">{t('academicsHub.rateColon')}</span>
                               <span className={`font-black ${m.rate < 75 ? 'text-error' : 'text-primary'}`}>{m.rate}%</span>
                             </div>
                           </div>
@@ -3331,24 +3333,24 @@ export default function AcademicsHub() {
                     {/* Attendance Pattern Calendar Section */}
                     <div className="space-y-3 animate-fadeIn">
                       <div className="flex justify-between items-baseline flex-wrap gap-2">
-                        <h3 className="text-sm font-bold text-on-surface">Attendance Pattern</h3>
+                        <h3 className="text-sm font-bold text-on-surface">{t('academicsHub.attendancePattern')}</h3>
                         <div className="flex gap-3 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs"></span> Present</span>
-                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-xs"></span> Absent</span>
-                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-slate-200 rounded-xs"></span> No Record</span>
+                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs"></span> {t('academicsHub.present')}</span>
+                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-red-500 rounded-xs"></span> {t('academicsHub.absent')}</span>
+                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-slate-200 rounded-xs"></span> {t('academicsHub.noRecord')}</span>
                         </div>
                       </div>
                       
                       <div className="border border-outline-variant/35 rounded-2xl p-4 bg-surface-container-lowest space-y-3">
                         {/* Weekday headers */}
                         <div className="grid grid-cols-7 gap-2 text-center text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">
-                          <span>Sun</span>
-                          <span>Mon</span>
-                          <span>Tue</span>
-                          <span>Wed</span>
-                          <span>Thu</span>
-                          <span>Fri</span>
-                          <span>Sat</span>
+                          <span>{t('academicsHub.sun')}</span>
+                          <span>{t('academicsHub.mon')}</span>
+                          <span>{t('academicsHub.tue')}</span>
+                          <span>{t('academicsHub.wed')}</span>
+                          <span>{t('academicsHub.thu')}</span>
+                          <span>{t('academicsHub.fri')}</span>
+                          <span>{t('academicsHub.sat')}</span>
                         </div>
                         {/* Day cells */}
                         {renderReportsCalendarGrid(activeModalStudentReport)}
@@ -3359,7 +3361,7 @@ export default function AcademicsHub() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
                     <Icon name="person" className="text-6xl text-outline mb-3" />
-                    <p className="text-sm font-bold">Select a student to generate their individual report</p>
+                    <p className="text-sm font-bold">{t('academicsHub.selectStudentToGenerate')}</p>
                   </div>
                 )}
               </div>

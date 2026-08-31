@@ -1,14 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import PerformanceAreaChart from '../../components/charts/PerformanceAreaChart'
+import SubjectMasteryRadar from '../../components/charts/SubjectMasteryRadar'
+import TestResultsPieChart from '../../components/charts/TestResultsPieChart'
+import ScoreDistributionHistogram from '../../components/charts/ScoreDistributionHistogram'
 
 export default function StudentResultReport() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
-  
+
   const [results, setResults] = useState([])
   const [studentStats, setStudentStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -53,8 +59,8 @@ export default function StudentResultReport() {
   const classSize = studentStats?.class_size
   const currentRank = classRank ? `#${classRank}` : '—'
   const rankPercentile = classRank && classSize
-    ? `Top ${Math.max(1, Math.round((classRank / classSize) * 100))}% of Class`
-    : 'Not ranked yet'
+    ? t('studentResultReport.topPercentOfClass', { pct: Math.max(1, Math.round((classRank / classSize) * 100)) })
+    : t('studentDashboard.notRankedYet')
   const performanceTrend = studentStats?.performance_trend || []
 
   // Real per-subject breakdown from already-fetched results — no fabricated chapters.
@@ -90,7 +96,7 @@ export default function StudentResultReport() {
               className="text-primary cursor-pointer active:scale-95 transition-transform"
               onClick={() => navigate('/student/dashboard')}
             />
-            <h1 className="font-title-lg text-title-lg text-primary font-bold">Student Performance</h1>
+            <h1 className="font-title-lg text-title-lg text-primary font-bold">{t('studentResultReport.title')}</h1>
           </div>
           <button className="text-primary p-2 hover:bg-surface-container rounded-full transition-colors">
             <Icon name="more_vert" />
@@ -108,7 +114,7 @@ export default function StudentResultReport() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-12 pl-12 pr-4 bg-surface-container-lowest border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-all shadow-sm text-sm" 
-              placeholder="Search student records by subject or title..." 
+              placeholder={t('studentResultReport.searchPlaceholder')}
               type="text"
             />
           </div>
@@ -128,20 +134,20 @@ export default function StudentResultReport() {
                   </span>
                 </div>
               )}
-              <div className="absolute bottom-0 right-0 bg-primary text-on-primary text-[10px] px-2 py-0.5 rounded-full font-bold">PRO</div>
+              <div className="absolute bottom-0 right-0 bg-primary text-on-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{t('studentResultReport.proBadge')}</div>
             </div>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold mb-1">{user?.full_name}</h2>
             <div className="flex gap-2 mb-4">
-              <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full font-semibold text-xs">Roll #{user?.roll_number}</span>
-              <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full font-semibold text-xs">Grade {user?.grade}-{user?.section}</span>
+              <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full font-semibold text-xs">{t('studentResultReport.rollNumber', { n: user?.roll_number })}</span>
+              <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full font-semibold text-xs">{t('studentResultReport.gradeSection', { grade: user?.grade, section: user?.section })}</span>
             </div>
             <div className="w-full grid grid-cols-2 gap-4 border-t border-outline-variant pt-4">
               <div>
-                <p className="text-on-surface-variant text-xs font-semibold">Current Rank</p>
+                <p className="text-on-surface-variant text-xs font-semibold">{t('studentDashboard.currentRank')}</p>
                 <p className="text-primary font-bold text-lg">{currentRank}</p>
               </div>
               <div>
-                <p className="text-on-surface-variant text-xs font-semibold">Avg Marks</p>
+                <p className="text-on-surface-variant text-xs font-semibold">{t('studentResultReport.avgMarks')}</p>
                 <p className="text-primary font-bold text-lg">{avgMarks}%</p>
               </div>
             </div>
@@ -160,27 +166,27 @@ export default function StudentResultReport() {
                     : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant hover:bg-surface-container-high'
                 }`}
               >
-                Last 5 Tests
+                {t('studentResultReport.last5Tests')}
               </button>
-              <button 
+              <button
                 onClick={() => setTestLimit(10)}
                 className={`px-4 py-2 rounded-full font-semibold text-xs transition-all ${
-                  testLimit === 10 
-                    ? 'bg-primary text-white shadow-sm' 
+                  testLimit === 10
+                    ? 'bg-primary text-white shadow-sm'
                     : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant hover:bg-surface-container-high'
                 }`}
               >
-                Last 10 Tests
+                {t('studentResultReport.last10Tests')}
               </button>
-              <button 
+              <button
                 onClick={() => setTestLimit(100)}
                 className={`px-4 py-2 rounded-full font-semibold text-xs transition-all ${
-                  testLimit === 100 
-                    ? 'bg-primary text-white shadow-sm' 
+                  testLimit === 100
+                    ? 'bg-primary text-white shadow-sm'
                     : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant hover:bg-surface-container-high'
                 }`}
               >
-                All Tests
+                {t('studentResultReport.allTests')}
               </button>
             </div>
 
@@ -188,27 +194,27 @@ export default function StudentResultReport() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <Icon name="analytics" className="text-primary mb-2" />
-                <p className="text-on-surface-variant text-xs font-semibold">Avg Marks</p>
+                <p className="text-on-surface-variant text-xs font-semibold">{t('studentResultReport.avgMarks')}</p>
                 <h3 className="font-bold text-lg">{avgMarks}%</h3>
               </div>
 
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <Icon name="military_tech" className="text-primary mb-2" />
-                <p className="text-on-surface-variant text-xs font-semibold">Highest</p>
+                <p className="text-on-surface-variant text-xs font-semibold">{t('common.highest')}</p>
                 <h3 className="font-bold text-lg">{highestScore}%</h3>
-                <p className="text-on-surface-variant text-[10px]">Recent High</p>
+                <p className="text-on-surface-variant text-[10px]">{t('studentResultReport.recentHigh')}</p>
               </div>
 
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <Icon name="leaderboard" className="text-primary mb-2" />
-                <p className="text-on-surface-variant text-xs font-semibold">Rank</p>
+                <p className="text-on-surface-variant text-xs font-semibold">{t('studentResultReport.rank')}</p>
                 <h3 className="font-bold text-lg">{currentRank}</h3>
                 <p className="text-on-surface-variant text-[10px]">{rankPercentile}</p>
               </div>
 
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <Icon name="history_edu" className="text-primary mb-2" />
-                <p className="text-on-surface-variant text-xs font-semibold">Total Tests</p>
+                <p className="text-on-surface-variant text-xs font-semibold">{t('studentResultReport.totalTests')}</p>
                 <h3 className="font-bold text-lg">{totalTests}</h3>
               </div>
             </div>
@@ -217,99 +223,108 @@ export default function StudentResultReport() {
 
         </div>
 
-        {/* Main Analytics Bento Grid */}
+        {/* Main Analytics Bento Grid - New Improved Visualizations */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-lg">
           
-          {/* Performance Chart */}
+          {/* Performance Trend - Area Chart */}
           <div className="lg:col-span-2 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-title-lg text-title-lg font-bold">Marks Trend</h3>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-primary rounded-full"></div>
-                  <span className="text-[12px] font-semibold">You</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-surface-container-highest rounded-full"></div>
-                  <span className="text-[12px] font-semibold">Class Avg</span>
-                </div>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-title-lg text-title-lg font-bold">{t('teacherPerfAnalytics.performanceTrend')}</h3>
             </div>
-            
+
             {performanceTrend.length === 0 ? (
               <div className="h-64 flex items-center justify-center text-sm text-on-surface-variant font-semibold">
-                No test results recorded yet
+                {t('studentResultReport.noTestResultsYet')}
               </div>
             ) : (
-              <div className="h-64 flex flex-col justify-between">
-                <svg className="w-full flex-1 overflow-visible" viewBox="0 0 400 150" preserveAspectRatio="none">
-                  <polyline
-                    fill="none" stroke="#c7c4d8" strokeDasharray="4" strokeLinecap="round" strokeWidth="2"
-                    points={performanceTrend.map((t, idx) => `${(idx / Math.max(1, performanceTrend.length - 1)) * 400},${150 - (t.class_average * 1.3)}`).join(' ')}
-                  />
-                  <polyline
-                    fill="none" stroke="#3525cd" strokeLinecap="round" strokeWidth="4"
-                    points={performanceTrend.map((t, idx) => `${(idx / Math.max(1, performanceTrend.length - 1)) * 400},${150 - (t.personal * 1.3)}`).join(' ')}
-                  />
-                  {performanceTrend.map((t, idx) => (
-                    <circle key={idx} cx={(idx / Math.max(1, performanceTrend.length - 1)) * 400} cy={150 - (t.personal * 1.3)} fill="#3525cd" r="4" />
-                  ))}
-                </svg>
-                <div className="flex justify-between px-2 mt-2">
-                  {performanceTrend.map((t, idx) => (
-                    <div key={idx} className="text-[10px] font-bold text-on-surface-variant truncate max-w-[80px]">{t.test_title}</div>
-                  ))}
-                </div>
-              </div>
+              <PerformanceAreaChart 
+                trendData={performanceTrend} 
+                height={220}
+                showClassAvg={true}
+                showTopper={true}
+                showTarget={true}
+                targetValue={75}
+              />
             )}
           </div>
 
-          {/* Chapter Performance */}
-          <div className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant flex flex-col justify-between">
-            <h3 className="font-title-lg text-title-lg font-bold">Subject Analysis</h3>
+          {/* Subject Mastery Radar */}
+          <div className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant">
+            <h3 className="font-title-lg text-title-lg font-bold mb-4">{t('studentResultReport.subjectMastery')}</h3>
             {subjectBreakdown.length === 0 ? (
-              <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No results recorded yet</p>
-            ) : (
-              <div className="space-y-4">
-                {subjectBreakdown.map((s) => (
-                  <div key={s.subject}>
-                    <div className="flex justify-between mb-1 text-sm font-semibold">
-                      <span>{s.subject}</span>
-                      <span className="text-primary font-bold">{s.avg}%</span>
-                    </div>
-                    <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${s.avg}%` }}></div>
-                    </div>
-                  </div>
-                ))}
+              <div className="h-64 flex items-center justify-center text-sm text-on-surface-variant font-semibold">
+                {t('studentResultReport.noSubjectData')}
               </div>
+            ) : (
+              <SubjectMasteryRadar 
+                subjects={subjectBreakdown.map(s => ({ subject: s.subject, score: s.avg }))}
+                size={240}
+                showLegend={true}
+              />
             )}
+          </div>
+
+          {/* Test Results Distribution - Pie Chart */}
+          <div className="lg:col-span-2 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant">
+            <h3 className="font-title-lg text-title-lg font-bold mb-4">{t('studentResultReport.testDistribution')}</h3>
+            <TestResultsPieChart 
+              results={useMemo(() => {
+                const bySubject = {};
+                results.forEach(r => {
+                  if (!r.subject) return;
+                  bySubject[r.subject] = bySubject[r.subject] || { count: 0, scores: [] };
+                  bySubject[r.subject].count++;
+                  bySubject[r.subject].scores.push(r.percentage);
+                });
+                return Object.entries(bySubject).map(([subject, data]) => ({
+                  subject,
+                  count: data.count,
+                  avgScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length)
+                }));
+              }, [results])}
+              size={280}
+              innerRadius={50}
+              showLegend={true}
+              title={t('studentResultReport.testsBySubject')}
+            />
+          </div>
+
+          {/* Score Distribution Histogram */}
+          <div className="lg:col-span-2 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant">
+            <h3 className="font-title-lg text-title-lg font-bold mb-4">{t('adminDashboard.scoreDistribution')}</h3>
+            <ScoreDistributionHistogram 
+              scores={results.map(r => r.percentage)}
+              height={220}
+              binCount={10}
+              showNormalCurve={true}
+              targetLine={40}
+            />
           </div>
 
           {/* Test Performance Table */}
-          <div className="lg:col-span-2 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant">
+          <div className="lg:col-span-3 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-title-lg text-title-lg font-bold">Recent Test Performance</h3>
+              <h3 className="font-title-lg text-title-lg font-bold">{t('studentResultReport.recentTestPerformance')}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-outline-variant">
-                    <th className="pb-3 font-bold text-xs text-on-surface-variant">Test Name</th>
-                    <th className="pb-3 font-bold text-xs text-on-surface-variant">Date</th>
-                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-right">Marks</th>
-                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-right">Class Avg</th>
-                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-center">Grade</th>
+                    <th className="pb-3 font-bold text-xs text-on-surface-variant">{t('studentResultReport.testNameCol')}</th>
+                    <th className="pb-3 font-bold text-xs text-on-surface-variant">{t('studentResultReport.dateCol')}</th>
+                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-right">{t('studentResultReport.marksCol')}</th>
+                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-right">{t('studentResultReport.classAvgCol')}</th>
+                    <th className="pb-3 font-bold text-xs text-on-surface-variant text-center">{t('studentResultReport.gradeCol')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
                   {loading ? (
                     <tr>
-                      <td colSpan="5" className="py-4 text-center text-on-surface-variant text-sm">Loading test records...</td>
+                      <td colSpan="5" className="py-4 text-center text-on-surface-variant text-sm">{t('studentResultReport.loadingTestRecords')}</td>
                     </tr>
                   ) : filteredResults.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="py-4 text-center text-on-surface-variant text-sm">No test records found.</td>
+                      <td colSpan="5" className="py-4 text-center text-on-surface-variant text-sm">{t('studentResultReport.noTestRecordsFound')}</td>
                     </tr>
                   ) : (
                     filteredResults.map((r, idx) => {
@@ -344,14 +359,14 @@ export default function StudentResultReport() {
                   {latestRemark.created_by_name?.[0] || 'T'}
                 </div>
                 <div>
-                  <h4 className="font-title-lg text-base font-bold leading-tight">Teacher&apos;s Remarks</h4>
-                  <p className="text-on-surface-variant text-xs">{latestRemark.created_by_name || 'Teacher'} • {latestRemark.subject}</p>
+                  <h4 className="font-title-lg text-base font-bold leading-tight">{t('studentResultReport.teachersRemarks')}</h4>
+                  <p className="text-on-surface-variant text-xs">{latestRemark.created_by_name || t('studentResultReport.teacherFallback')} • {latestRemark.subject}</p>
                 </div>
               </div>
               <blockquote className="bg-surface p-4 rounded-xl italic border-l-4 border-primary text-xs text-on-surface-variant leading-relaxed">
-                &quot;{latestRemark.remarks}&quot;
+                "{latestRemark.remarks}"
               </blockquote>
-              <p className="text-right text-[10px] text-outline">On: {latestRemark.test_title}</p>
+              <p className="text-right text-[10px] text-outline">{t('studentResultReport.onTestLabel', { title: latestRemark.test_title })}</p>
             </div>
           )}
 
@@ -364,14 +379,14 @@ export default function StudentResultReport() {
             className="flex items-center justify-center gap-2 bg-surface-container-highest text-on-surface px-6 py-3 rounded-full font-semibold text-sm hover:bg-surface-dim transition-all active:scale-95 cursor-pointer"
           >
             <Icon name="file_download" />
-            Download Excel
+            {t('studentResultReport.downloadExcel')}
           </button>
-          <button 
+          <button
             onClick={() => window.print()}
             className="flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-3 rounded-full font-semibold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 cursor-pointer"
           >
             <Icon name="picture_as_pdf" />
-            Download PDF Report
+            {t('studentResultReport.downloadPdfReport')}
           </button>
         </section>
 

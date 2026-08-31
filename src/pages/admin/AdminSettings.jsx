@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import LanguageSelector from '../../components/common/LanguageSelector'
 
 export default function AdminSettings() {
   const navigate = useNavigate()
@@ -290,6 +291,7 @@ export default function AdminSettings() {
                 {activeView === 'my-profile' && 'Account Credentials'}
                 {activeView === 'teachers' && 'Faculty Access Control'}
                 {activeView === 'students' && 'Student Access Control'}
+                {activeView === 'language' && 'Language'}
                 {activeView === 'switch-profile' && 'Switch Account'}
               </h2>
               <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
@@ -297,6 +299,7 @@ export default function AdminSettings() {
                 {activeView === 'my-profile' && 'Edit your administrative login profile.'}
                 {activeView === 'teachers' && 'Manage faculty email and password credentials.'}
                 {activeView === 'students' && 'Manage student email and password credentials.'}
+                {activeView === 'language' && 'Choose your preferred app language.'}
               </p>
             </div>
           </div>
@@ -353,6 +356,21 @@ export default function AdminSettings() {
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Student Access Control</h4>
                   <p className="text-[10px] text-outline font-semibold">Modify student emails, phone numbers, and passwords</p>
+                </div>
+              </div>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
+            </div>
+
+            {/* Language */}
+            <div
+              onClick={() => setActiveView('language')}
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="language" className="text-secondary text-xl" />
+                <div className="text-left">
+                  <h4 className="text-xs font-bold text-on-surface">Language</h4>
+                  <p className="text-[10px] text-outline font-semibold">Choose English or Gujarati for your account</p>
                 </div>
               </div>
               <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
@@ -470,6 +488,24 @@ export default function AdminSettings() {
                 {submittingSelf ? 'Saving credentials...' : 'Save Profile Changes'}
               </button>
             </form>
+          </section>
+        )}
+
+        {/* View 2b: Language */}
+        {activeView === 'language' && (
+          <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn">
+            <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
+              <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Language</h3>
+              <button
+                onClick={() => setActiveView('menu')}
+                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
+              >
+                <Icon name="arrow_back" className="text-[12px]" />
+                <span>Settings List</span>
+              </button>
+            </div>
+
+            <LanguageSelector />
           </section>
         )}
 

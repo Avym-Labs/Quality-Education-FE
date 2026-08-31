@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -7,6 +8,7 @@ import Icon from '../../components/common/Icon'
 import DateInput from '../../components/common/DateInput'
 
 export default function TestPerformanceAnalytics() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -31,6 +33,7 @@ export default function TestPerformanceAnalytics() {
   const [marksData, setMarksData] = useState({}) // student_user_id -> { marks: number|string, remarks: string, status: 'unsaved' | 'saved' }
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageIsSuccess, setMessageIsSuccess] = useState(false)
 
   // Remarks modal
   const [remarkStudent, setRemarkStudent] = useState(null)
@@ -73,7 +76,8 @@ export default function TestPerformanceAnalytics() {
                 initialMarks[userId] = { ...parsed.marksData[userId], status: 'unsaved' }
               }
             })
-            setMessage('Restored your saved draft for this class and subject.')
+            setMessage(t('testPerformanceAnalytics.restoredDraft'))
+            setMessageIsSuccess(true)
             setTimeout(() => setMessage(''), 4000)
           } catch (err) {
             console.error('Failed to parse saved draft:', err)
@@ -83,7 +87,8 @@ export default function TestPerformanceAnalytics() {
         setMarksData(initialMarks)
       } catch (err) {
         console.error('Failed to load students for marks upload:', err)
-        setMessage('Error loading student records.')
+        setMessage(t('testPerformanceAnalytics.errorLoadingStudents'))
+        setMessageIsSuccess(false)
       } finally {
         setLoading(false)
       }
@@ -165,11 +170,13 @@ export default function TestPerformanceAnalytics() {
   const handlePublish = async () => {
     setMessage('')
     if (!testTitle.trim()) {
-      setMessage('Please enter a test title before publishing.')
+      setMessage(t('testPerformanceAnalytics.enterTestTitle'))
+      setMessageIsSuccess(false)
       return
     }
     if (!selectedClass || !selectedSubject) {
-      setMessage('Please select a class and subject before publishing.')
+      setMessage(t('testPerformanceAnalytics.selectClassAndSubject'))
+      setMessageIsSuccess(false)
       return
     }
     try {
@@ -190,7 +197,8 @@ export default function TestPerformanceAnalytics() {
         }))
 
       if (payload.length === 0) {
-        setMessage('Please enter marks for at least one student before publishing.')
+        setMessage(t('testPerformanceAnalytics.enterMarksForOneStudent'))
+        setMessageIsSuccess(false)
         return
       }
 
@@ -210,11 +218,13 @@ export default function TestPerformanceAnalytics() {
       // Published results are no longer a draft
       if (draftKey) localStorage.removeItem(draftKey)
 
-      setMessage('Results published successfully!')
+      setMessage(t('testPerformanceAnalytics.resultsPublishedSuccess'))
+      setMessageIsSuccess(true)
       setTimeout(() => setMessage(''), 4000)
     } catch (err) {
       console.error('Failed to upload results bulk:', err)
-      setMessage('Failed to publish results. Please check your data.')
+      setMessage(t('testPerformanceAnalytics.failedToPublish'))
+      setMessageIsSuccess(false)
     }
   }
 
@@ -237,7 +247,7 @@ export default function TestPerformanceAnalytics() {
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-                Upload Results
+                {t('testPerformanceAnalytics.uploadResults')}
               </h2>
             </div>
           </div>
@@ -247,9 +257,9 @@ export default function TestPerformanceAnalytics() {
               onChange={(e) => setSelectedClass(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             >
-              {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
+              {assignedClasses.length === 0 && <option value="">{t('testPerformanceAnalytics.noClassesAssigned')}</option>}
               {assignedClasses.map(cls => (
-                <option key={cls} value={cls}>Class {cls}</option>
+                <option key={cls} value={cls}>{t('testPerformanceAnalytics.classLabel', { cls })}</option>
               ))}
             </select>
             <select
@@ -257,7 +267,7 @@ export default function TestPerformanceAnalytics() {
               onChange={(e) => setSelectedSubject(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             >
-              {subjects.length === 0 && <option value="">No subjects assigned</option>}
+              {subjects.length === 0 && <option value="">{t('testPerformanceAnalytics.noSubjectsAssigned')}</option>}
               {subjects.map(subj => (
                 <option key={subj} value={subj}>{subj}</option>
               ))}
@@ -268,18 +278,18 @@ export default function TestPerformanceAnalytics() {
         {/* Test details form section */}
         <section className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">Test Title</label>
-            <input 
+            <label className="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">{t('testPerformanceAnalytics.testTitle')}</label>
+            <input
               type="text"
               value={testTitle}
               onChange={(e) => setTestTitle(e.target.value)}
-              placeholder="e.g. Chapter 4 Integration Test"
+              placeholder={t('testPerformanceAnalytics.titlePlaceholder')}
               className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">Total Marks</label>
-            <input 
+            <label className="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">{t('testPerformanceAnalytics.totalMarks')}</label>
+            <input
               type="number"
               value={totalMarks}
               onChange={(e) => setTotalMarks(e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))}
@@ -287,7 +297,7 @@ export default function TestPerformanceAnalytics() {
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">Test Date</label>
+            <label className="block text-[10px] uppercase font-bold text-on-surface-variant mb-1">{t('testPerformanceAnalytics.testDate')}</label>
             <DateInput
               value={testDate}
               onChange={(e) => setTestDate(e.target.value)}
@@ -299,26 +309,26 @@ export default function TestPerformanceAnalytics() {
         {/* Live Analytics Bento Cards */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-surface-container-lowest p-4 rounded-3xl shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28">
-            <h3 className="text-[10px] uppercase font-bold text-on-surface-variant">Class Average</h3>
+            <h3 className="text-[10px] uppercase font-bold text-on-surface-variant">{t('testPerformanceAnalytics.classAverage')}</h3>
             <div className="flex items-baseline gap-1 mt-2">
               <span className="text-3xl font-numeric-bold text-primary font-bold">{classAverage}</span>
               <span className="text-sm font-semibold text-on-surface-variant">/{totalMarks}</span>
             </div>
-            <p className="text-[10px] text-emerald-600 font-bold mt-1">Average Perf: {averagePercentage}%</p>
+            <p className="text-[10px] text-emerald-600 font-bold mt-1">{t('testPerformanceAnalytics.averagePerf', { pct: averagePercentage })}</p>
           </div>
 
           <div className="bg-surface-container-lowest p-4 rounded-3xl shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28">
-            <h3 className="text-[10px] uppercase font-bold text-on-surface-variant">Completion</h3>
+            <h3 className="text-[10px] uppercase font-bold text-on-surface-variant">{t('testPerformanceAnalytics.completion')}</h3>
             <div className="flex items-baseline gap-1 mt-2">
               <span className="text-3xl font-numeric-bold text-on-surface font-bold">{totalEntered}</span>
-              <span className="text-sm font-semibold text-on-surface-variant">/{students.length} Students</span>
+              <span className="text-sm font-semibold text-on-surface-variant">{t('testPerformanceAnalytics.ofStudents', { count: students.length })}</span>
             </div>
-            <p className="text-[10px] text-on-surface-variant font-medium mt-1">Ready to publish</p>
+            <p className="text-[10px] text-on-surface-variant font-medium mt-1">{t('testPerformanceAnalytics.readyToPublish')}</p>
           </div>
 
           {/* Histogram distribution */}
           <div className="bg-surface-container-lowest p-4 rounded-3xl shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28">
-            <h3 className="text-[10px] uppercase font-bold text-on-surface-variant">Score Distribution</h3>
+            <h3 className="text-[10px] uppercase font-bold text-on-surface-variant">{t('testPerformanceAnalytics.scoreDistribution')}</h3>
             <div className="flex items-end justify-between gap-1.5 h-12 mt-1">
               {[
                 { bin: '0-40%', count: distribution.bin1 },
@@ -348,8 +358,8 @@ export default function TestPerformanceAnalytics() {
         {/* Message alerts */}
         {message && (
           <div className={`p-3 rounded-xl text-center text-xs font-bold ${
-            message.includes('successfully') 
-              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+            messageIsSuccess
+              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
               : 'bg-primary-container/20 text-primary border border-primary/20'
           }`}>
             {message}
@@ -363,11 +373,11 @@ export default function TestPerformanceAnalytics() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant/30 text-on-surface-variant font-label-md text-xs">
-                    <th className="px-4 py-3.5 w-16">Roll</th>
-                    <th className="px-4 py-3.5 min-w-[150px]">Student Name</th>
-                    <th className="px-4 py-3.5 w-24 text-center">Marks ({totalMarks})</th>
-                    <th className="px-4 py-3.5 w-16 text-center">Grade</th>
-                    <th className="px-4 py-3.5 w-24 text-center">Remarks</th>
+                    <th className="px-4 py-3.5 w-16">{t('testPerformanceAnalytics.roll')}</th>
+                    <th className="px-4 py-3.5 min-w-[150px]">{t('testPerformanceAnalytics.studentName')}</th>
+                    <th className="px-4 py-3.5 w-24 text-center">{t('testPerformanceAnalytics.marks', { total: totalMarks })}</th>
+                    <th className="px-4 py-3.5 w-16 text-center">{t('testPerformanceAnalytics.grade')}</th>
+                    <th className="px-4 py-3.5 w-24 text-center">{t('testPerformanceAnalytics.remarks')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/20">
@@ -375,13 +385,13 @@ export default function TestPerformanceAnalytics() {
                     <tr>
                       <td colSpan="5" className="px-4 py-12 text-center text-xs font-bold text-on-surface-variant">
                         <span className="animate-spin inline-block rounded-full h-4 w-4 border-b-2 border-primary mr-2"></span>
-                        Loading student spreadsheet...
+                        {t('testPerformanceAnalytics.loadingSpreadsheet')}
                       </td>
                     </tr>
                   ) : students.length === 0 ? (
                     <tr>
                       <td colSpan="5" className="px-4 py-12 text-center text-xs font-bold text-on-surface-variant">
-                        No students enrolled in this class.
+                        {t('testPerformanceAnalytics.noStudentsEnrolled')}
                       </td>
                     </tr>
                   ) : (
@@ -399,11 +409,11 @@ export default function TestPerformanceAnalytics() {
                               {data.status === 'saved' ? (
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">
                                   <Icon name="check_circle" className="text-[10px]" filled />
-                                  <span>Saved</span>
+                                  <span>{t('testPerformanceAnalytics.saved')}</span>
                                 </span>
                               ) : (
                                 <span className="text-[9px] font-bold text-outline uppercase tracking-wider mt-0.5">
-                                  Unsaved
+                                  {t('testPerformanceAnalytics.unsaved')}
                                 </span>
                               )}
                             </div>
@@ -452,18 +462,19 @@ export default function TestPerformanceAnalytics() {
               onClick={() => {
                 if (!draftKey) return
                 localStorage.setItem(draftKey, JSON.stringify({ testTitle, testType, totalMarks, testDate, marksData }))
-                setMessage('Draft saved. It will be restored next time you open this class and subject.')
+                setMessage(t('testPerformanceAnalytics.draftSaved'))
+                setMessageIsSuccess(true)
                 setTimeout(() => setMessage(''), 3000)
               }}
               className="flex-1 py-3 rounded-2xl border border-primary text-primary font-bold text-xs active:bg-primary/10 transition-all hover:bg-surface-container-low"
             >
-              Save Draft
+              {t('testPerformanceAnalytics.saveDraft')}
             </button>
-            <button 
+            <button
               onClick={handlePublish}
               className="flex-1 py-3 rounded-2xl bg-primary text-on-primary font-bold text-xs shadow-md shadow-primary/20 active:scale-95 transition-transform"
             >
-              Publish Results
+              {t('testPerformanceAnalytics.publishResults')}
             </button>
           </div>
         </div>
@@ -473,26 +484,26 @@ export default function TestPerformanceAnalytics() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 animate-fade-in">
             <div className="bg-surface rounded-[24px] p-6 w-full max-w-md shadow-2xl border border-outline-variant/30 space-y-4">
               <h3 className="font-title-lg text-sm text-primary font-bold">
-                Student Remarks: {remarkStudent.full_name}
+                {t('testPerformanceAnalytics.studentRemarks', { name: remarkStudent.full_name })}
               </h3>
-              <textarea 
+              <textarea
                 value={tempRemark}
                 onChange={(e) => setTempRemark(e.target.value)}
                 className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl p-3 text-xs focus:ring-1 focus:ring-primary focus:outline-none min-h-[100px]"
-                placeholder="Write student feedback or private observations..."
+                placeholder={t('testPerformanceAnalytics.remarksPlaceholder')}
               />
               <div className="flex justify-end gap-3">
-                <button 
+                <button
                   onClick={() => setRemarkStudent(null)}
                   className="px-4 py-2 bg-surface-variant hover:bg-surface-container-high rounded-xl text-xs font-bold text-on-surface"
                 >
-                  Cancel
+                  {t('testPerformanceAnalytics.cancel')}
                 </button>
-                <button 
+                <button
                   onClick={saveRemark}
                   className="px-4 py-2 bg-primary text-on-primary hover:opacity-95 rounded-xl text-xs font-bold shadow-sm"
                 >
-                  Save
+                  {t('testPerformanceAnalytics.save')}
                 </button>
               </div>
             </div>

@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import AttendanceCountBars from '../../components/charts/AttendanceCountBars'
+import ExplodedPieChart from '../../components/charts/ExplodedPieChart'
 
 export default function TeacherDashboard() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [homeworkCount, setHomeworkCount] = useState(0)
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
@@ -37,31 +41,26 @@ export default function TeacherDashboard() {
         const grade = parts[0]
         const section = parts[1]
 
-        const res = await api.get('/results', {
-          params: {
-            grade,
-            section,
-            subject: performerSubject
-          }
-        })
+        const resultsRes = await api.get('/results', { params: { grade, section, subject: performerSubject } })
 
-        if (res.data && res.data.length > 0) {
+        if (resultsRes.data && resultsRes.data.length > 0) {
           const studentScores = {}
-          res.data.forEach(r => {
+          resultsRes.data.forEach(r => {
             if (r.student && r.student.full_name) {
-              const name = r.student.full_name
-              if (!studentScores[name]) {
-                studentScores[name] = []
+              const key = r.student_id || r.student.full_name
+              if (!studentScores[key]) {
+                studentScores[key] = { name: r.student.full_name, scores: [] }
               }
-              studentScores[name].push(r.percentage)
+              studentScores[key].scores.push(r.percentage)
             }
           })
 
-          const sortedStudents = Object.keys(studentScores).map(name => {
-            const scores = studentScores[name]
-            const avg = scores.reduce((a, b) => a + b, 0) / scores.length
+          const sortedStudents = Object.entries(studentScores).map(([studentId, entry]) => {
+            const avg = entry.scores.reduce((a, b) => a + b, 0) / entry.scores.length
             return {
-              name,
+              studentId,
+              name: entry.name,
+              initials: entry.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
               score: Math.round(avg * 10) / 10
             }
           }).sort((a, b) => b.score - a.score)
@@ -127,11 +126,11 @@ export default function TeacherDashboard() {
         setShowSwitchModal(false)
         navigate(`/${switched.role}/dashboard`, { replace: true })
       } else {
-        setSwitchError('Failed to switch account profile.')
+        setSwitchError(t('teacherDashboard.switchFailed'))
       }
     } catch (err) {
       console.error(err)
-      setSwitchError('An error occurred during account switch.')
+      setSwitchError(t('teacherDashboard.switchErrorGeneric'))
     } finally {
       setSwitchingTo(null)
     }
@@ -224,7 +223,7 @@ export default function TeacherDashboard() {
         if (cancelled) return
         setPresentCount(summaryRes.data.present)
         setAbsentCount(summaryRes.data.absent)
-        setPresentCaption(target ? `Class ${target.classKey} · ${target.subject}` : '')
+        setPresentCaption(target ? t('teacherDashboard.classSubjectLabel', { classKey: target.classKey, subject: target.subject }) : '')
       } catch (err) {
         console.error('Failed to load present-today summary:', err)
       }
@@ -262,9 +261,21 @@ export default function TeacherDashboard() {
     subject: e.subject,
     room: e.room,
   }))
-  const subjectPerformance = teacherStats?.subject_performance || []
   const weeklyAttendance = teacherStats?.weekly_attendance || []
   const attendanceWarnings = teacherStats?.attendance_warnings || []
+  const classSubjectPairs = teacherStats?.class_subject_performance || []
+
+  // Cycles through the teacher's real (class, subject) assignments every 10s,
+  // driving both the attendance and performance donuts together.
+  const [pairCycleIndex, setPairCycleIndex] = useState(0)
+  useEffect(() => {
+    if (classSubjectPairs.length <= 1) return
+    const timer = setInterval(() => {
+      setPairCycleIndex(prev => (prev + 1) % classSubjectPairs.length)
+    }, 10000)
+    return () => clearInterval(timer)
+  }, [classSubjectPairs.length])
+  const cyclePair = classSubjectPairs[pairCycleIndex % Math.max(1, classSubjectPairs.length)] || null
 
   const todayDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -275,14 +286,14 @@ export default function TeacherDashboard() {
 
   const getGreeting = () => {
     const hrs = new Date().getHours()
-    if (hrs >= 5 && hrs < 12) return 'Good Morning'
-    if (hrs >= 12 && hrs < 18) return 'Good Afternoon'
-    return 'Good Evening'
+    if (hrs >= 5 && hrs < 12) return t('common.goodMorning')
+    if (hrs >= 12 && hrs < 18) return t('common.goodAfternoon')
+    return t('common.goodEvening')
   }
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-4 mt-stack-md lg:h-[calc(100vh-100px)] lg:overflow-hidden pb-4 text-left">
+      <div className="flex flex-col gap-4 mt-stack-md pb-4 text-left">
         
         {/* Welcome Greeting Banner Widget */}
         <section className="bg-gradient-to-br from-[#6351E0] to-[#8F43F2] p-5 rounded-[24px] text-white shadow-lg relative overflow-hidden flex flex-col justify-between select-none animate-fadeIn flex-shrink-0">
@@ -293,24 +304,24 @@ export default function TeacherDashboard() {
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 z-10 text-left">
             <div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight leading-tight">
-                {getGreeting()}, {user?.full_name?.split(' ')[0] || 'Teacher'}! 👋
+                {getGreeting()}, {user?.full_name?.split(' ')[0] || t('teacherDashboard.greetingName')}! 👋
               </h2>
             </div>
-            <button 
+            <button
               onClick={() => setShowSwitchModal(true)}
               className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 w-fit border-none cursor-pointer self-start sm:self-center"
             >
               <Icon name="swap_horiz" className="text-sm" />
-              <span>Switch Profile</span>
+              <span>{t('teacherDashboard.switchProfile')}</span>
             </button>
           </div>
         </section>
 
         {/* 2-Column Responsive Dashboard Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 lg:min-h-0 lg:items-stretch">
-          
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:items-start">
+
           {/* Left Column - Main Stats & Graphs */}
-          <div className="lg:col-span-8 flex flex-col gap-4 lg:h-full lg:min-h-0">
+          <div className="lg:col-span-8 flex flex-col gap-4">
             
             {/* Stats Bento Grid */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
@@ -320,7 +331,7 @@ export default function TeacherDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-[#e2dfff] flex items-center justify-center text-[#6351E0] shrink-0">
                     <Icon name="groups" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Total Students</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('teacherDashboard.totalStudents')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{teacherStats?.total_students ?? 0}</h3>
@@ -336,7 +347,7 @@ export default function TeacherDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
                     <Icon name="check_circle" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Present Today</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('teacherDashboard.presentToday')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{presentCount}</h3>
@@ -355,7 +366,7 @@ export default function TeacherDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
                     <Icon name="analytics" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Average Attd.</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('teacherDashboard.averageAttd')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{teacherStats?.attendance_rate ?? 0}%</h3>
@@ -371,7 +382,7 @@ export default function TeacherDashboard() {
                   <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
                     <Icon name="sick" className="text-base" />
                   </div>
-                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">Leave Requests</span>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block truncate">{t('teacherDashboard.leaveRequests')}</span>
                 </div>
                 <div className="mt-auto z-10 w-full">
                   <h3 className="text-3xl font-black text-on-surface tracking-tight leading-none">{pendingLeaveCount}</h3>
@@ -379,83 +390,120 @@ export default function TeacherDashboard() {
               </div>
             </section>
 
-            {/* Consolidated Graphs Carousel */}
-            <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col justify-between lg:flex-1 lg:min-h-0">
-              <div className="flex justify-between items-center gap-2 mb-2 w-full">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <h3 className="font-title-lg text-sm text-on-surface font-bold truncate">
-                    {activeChart === 'performance' ? 'Class Performance Overview' : 'Weekly Class Attendance'}
-                  </h3>
-                  <span className="px-2 py-0.5 bg-[#e2dfff] text-[#3323cc] rounded-full text-[9px] font-bold shrink-0">Grade 10-A</span>
-                </div>
-                <select
-                  value={activeChart}
-                  onChange={(e) => setActiveChart(e.target.value)}
-                  className="w-fit px-2 py-0.5 rounded-lg border border-outline bg-surface-container-low text-[10px] font-bold outline-none focus:border-primary cursor-pointer text-on-surface shrink-0"
-                >
-                  <option value="performance">Academics Performance</option>
-                  <option value="attendance">Weekly Attendance</option>
-                </select>
-              </div>
+            {/* New Improved Visualizations - cycles through the teacher's real class+subject assignments every 10s */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
 
-              <div className="flex-1 transition-all duration-300 lg:min-h-0">
-                {activeChart === 'performance' ? (
-                  subjectPerformance.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-xs text-on-surface-variant font-semibold">
-                      No recorded results yet
-                    </div>
-                  ) : (
-                  <div className="animate-fadeIn h-full flex flex-col justify-between">
-                    {/* Custom Bar Graph */}
-                    <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-4 min-h-0">
-                      {subjectPerformance.map((s, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group" name={`bar-group-${idx}`}>
-                          <div className="relative w-full h-full flex items-end justify-center">
-                            <div
-                              className="w-full max-w-[40px] rounded-t-lg transition-all duration-500 hover:opacity-90 bg-[#6351E0]"
-                              style={{ height: `${s.score}%` }}
-                            ></div>
-                            <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
-                              {s.score}%
-                            </span>
-                          </div>
+              {/* Attendance by class + subject */}
+              <div className="bg-white p-6 rounded-[24px] shadow-sm border border-outline-variant/35 min-h-[340px] lg:min-h-[420px] flex flex-col">
+                {cyclePair ? (
+                  <div key={pairCycleIndex} className="flex flex-col flex-1 animate-card-swap">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                          <Icon name="event_available" className="text-lg" />
                         </div>
-                      ))}
+                        <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">{t('nav.attendance')}</span>
+                      </div>
+                      {cyclePair.attendance_rate < 50 && cyclePair.total_records > 0 && (
+                        <span className="flex items-center gap-1 bg-error-container text-error px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide">
+                          <Icon name="warning" className="text-[11px]" filled />
+                          {t('teacherDashboard.atRisk')}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                      {subjectPerformance.map((s, idx) => (
-                        <span key={idx} className="flex-1 text-center truncate">{s.name}</span>
-                      ))}
-                    </div>
+
+                    <p className="text-xs font-bold text-primary mb-1">
+                      {t('teacherDashboard.classSubjectLabel', { classKey: cyclePair.class_key, subject: cyclePair.subject })}
+                    </p>
+
+                    <h2 className="text-5xl font-black tracking-tight leading-none mt-1 text-on-surface">
+                      {cyclePair.attendance_rate}<span className="text-2xl">%</span>
+                    </h2>
+
+                    {cyclePair.total_records > 0 ? (
+                      <div className="mt-4 flex-1">
+                        <AttendanceCountBars present={cyclePair.present_count} total={cyclePair.total_records} height={180} />
+                      </div>
+                    ) : (
+                      <p className="text-xs font-semibold text-on-surface-variant mt-4">{t('teacherDashboard.noAttendanceMarked')}</p>
+                    )}
                   </div>
-                  )
                 ) : (
-                  <div className="animate-fadeIn h-full flex flex-col justify-between">
-                    {/* Weekly Attendance Bars */}
-                    <div className="flex-1 flex items-end gap-4 pb-2 px-2 pt-4 min-h-0">
-                      {weeklyAttendance.map((d, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                          <div className="relative w-full h-full flex items-end justify-center">
-                            <div
-                              className="w-full max-w-[40px] rounded-t-lg bg-emerald-500 transition-all duration-500 hover:opacity-90"
-                              style={{ height: `${d.rate}%` }}
-                            ></div>
-                            <span className="absolute -top-7 bg-on-surface text-surface text-[10px] py-0.5 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold z-10">
-                              {d.rate}%
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-wider pt-2 border-t border-outline-variant/20">
-                      {weeklyAttendance.map((d, idx) => (
-                        <span key={idx} className="flex-1 text-center truncate">{d.day}</span>
-                      ))}
-                    </div>
+                  <div className="flex-1 flex items-center justify-center text-xs text-on-surface-variant font-semibold">
+                    {t('teacherDashboard.noClassesAssigned')}
+                  </div>
+                )}
+
+                {classSubjectPairs.length > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 mt-5">
+                    {classSubjectPairs.map((p, idx) => (
+                      <span
+                        key={`${p.class_key}-${p.subject}`}
+                        className={`h-1.5 rounded-full transition-all ${idx === pairCycleIndex ? 'w-5 bg-emerald-500' : 'w-1.5 bg-slate-200'}`}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
-            </div>
+
+              {/* Student performance by class + subject */}
+              <div className="bg-white p-6 rounded-[24px] shadow-sm border border-outline-variant/35 min-h-[340px] lg:min-h-[420px] flex flex-col">
+                {cyclePair ? (
+                  <div key={pairCycleIndex} className="flex flex-col flex-1 animate-card-swap">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+                          <Icon name="insights" className="text-lg" />
+                        </div>
+                        <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">{t('teacherDashboard.performance')}</span>
+                      </div>
+                      {cyclePair.results_count > 0 && cyclePair.pass_rate < 50 && (
+                        <span className="flex items-center gap-1 bg-error-container text-error px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide">
+                          <Icon name="warning" className="text-[11px]" filled />
+                          {t('teacherDashboard.lowPassRate')}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs font-bold text-primary mb-1">
+                      {t('teacherDashboard.classSubjectLabel', { classKey: cyclePair.class_key, subject: cyclePair.subject })}
+                    </p>
+
+                    {cyclePair.results_count > 0 ? (
+                      <div className="flex-1 min-h-0">
+                        <ExplodedPieChart
+                          data={[
+                            { name: t('common.highest'), value: cyclePair.highest_score, color: '#F59E0B' },
+                            { name: t('common.average'), value: cyclePair.avg_score, color: '#06B6D4' },
+                            { name: t('common.lowest'), value: cyclePair.lowest_score, color: '#F43F5E' },
+                            { name: t('common.passRate'), value: cyclePair.pass_rate, color: '#10B981' },
+                          ]}
+                          height={400}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-xs font-semibold text-on-surface-variant mt-4">{t('teacherDashboard.noResultsRecorded')}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-xs text-on-surface-variant font-semibold">
+                    {t('teacherDashboard.noClassesAssigned')}
+                  </div>
+                )}
+
+                {classSubjectPairs.length > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 mt-5">
+                    {classSubjectPairs.map((p, idx) => (
+                      <span
+                        key={`${p.class_key}-${p.subject}`}
+                        className={`h-1.5 rounded-full transition-all ${idx === pairCycleIndex ? 'w-5 bg-primary' : 'w-1.5 bg-slate-200'}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </section>
 
           </div>
 
@@ -464,11 +512,11 @@ export default function TeacherDashboard() {
             
             {/* Today's Schedule */}
             <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col lg:flex-1 lg:min-h-0 space-y-3">
-              <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Today's Class Schedule</h3>
+              <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">{t('teacherDashboard.todaysClassSchedule')}</h3>
               <div className="space-y-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
                 {todayClasses.length === 0 ? (
                   <div className="text-center py-4 text-xs text-on-surface-variant font-semibold">
-                    No classes scheduled today
+                    {t('teacherDashboard.noClassesScheduledToday')}
                   </div>
                 ) : todayClasses.map((cls, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F2]/40 border border-outline-variant/20 hover:border-primary/30 transition-all duration-200 shadow-xs">
@@ -487,7 +535,7 @@ export default function TeacherDashboard() {
             {/* Student Performance Card (Top & Bottom Performers) */}
             <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 space-y-3 flex-shrink-0">
               <div className="flex justify-between items-center">
-                <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">Student Performers</h3>
+                <h3 className="font-title-lg text-sm text-on-surface font-bold text-left">{t('teacherDashboard.studentPerformers')}</h3>
                 {classOptions.length > 0 && subjectOptions.length > 0 && (
                 <div className="flex gap-1.5">
                   {/* Class selector */}
@@ -520,11 +568,11 @@ export default function TeacherDashboard() {
                 <div className="space-y-1.5 text-left">
                   <div className="flex items-center gap-1 text-emerald-600 font-bold text-[10px] uppercase tracking-wider">
                     <Icon name="trending_up" className="text-[12px] font-variation-settings-fill" />
-                    <span>Top 3 Students</span>
+                    <span>{t('teacherDashboard.top3Students')}</span>
                   </div>
                   <div className="space-y-1">
                     {topPerformers.length === 0 && (
-                      <div className="text-[10px] text-on-surface-variant font-semibold py-1">No results recorded yet</div>
+                      <div className="text-[10px] text-on-surface-variant font-semibold py-1">{t('teacherDashboard.noResultsRecorded')}</div>
                     )}
                     {topPerformers.map((student, idx) => (
                       <div key={idx} className="flex justify-between items-center text-xs p-1.5 bg-emerald-50/40 rounded-lg border border-emerald-100/30">
@@ -544,11 +592,11 @@ export default function TeacherDashboard() {
                 <div className="space-y-1.5 text-left">
                   <div className="flex items-center gap-1 text-rose-600 font-bold text-[10px] uppercase tracking-wider">
                     <Icon name="trending_down" className="text-[12px]" />
-                    <span>Bottom 3 Students</span>
+                    <span>{t('teacherDashboard.bottom3Students')}</span>
                   </div>
                   <div className="space-y-1">
                     {bottomPerformers.length === 0 && (
-                      <div className="text-[10px] text-on-surface-variant font-semibold py-1">No results recorded yet</div>
+                      <div className="text-[10px] text-on-surface-variant font-semibold py-1">{t('teacherDashboard.noResultsRecorded')}</div>
                     )}
                     {bottomPerformers.map((student, idx) => (
                       <div key={idx} className="flex justify-between items-center text-xs p-1.5 bg-rose-50/40 rounded-lg border border-rose-100/30">
@@ -569,18 +617,18 @@ export default function TeacherDashboard() {
             {/* Attendance Alerts */}
             <div className="bg-white p-5 rounded-[24px] shadow-sm border border-outline-variant/35 flex flex-col lg:flex-1 lg:min-h-0 space-y-3">
               <div className="flex justify-between items-center">
-                <h3 className="font-title-lg text-sm text-on-surface font-bold">Low Attendance</h3>
-                <span 
+                <h3 className="font-title-lg text-sm text-on-surface font-bold">{t('teacherDashboard.lowAttendance')}</h3>
+                <span
                   onClick={() => navigate('/teacher/attendance')}
                   className="text-primary font-bold text-xs cursor-pointer hover:underline"
                 >
-                  View History
+                  {t('teacherDashboard.viewHistory')}
                 </span>
               </div>
               <div className="space-y-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto pr-0.5 hide-scrollbar">
                 {attendanceWarnings.length === 0 ? (
                   <div className="text-center py-4 text-xs text-on-surface-variant font-semibold">
-                    No attendance warnings
+                    {t('teacherDashboard.noAttendanceWarnings')}
                   </div>
                 ) : attendanceWarnings.map((w, idx) => {
                   const pct = parseFloat(w.rate)
@@ -600,11 +648,11 @@ export default function TeacherDashboard() {
                         </div>
                         <div className="text-left">
                           <h4 className="font-bold text-xs text-on-surface">{w.name}</h4>
-                          <p className="text-[10px] text-on-surface-variant font-medium">{w.rate} Overall Attendance</p>
+                          <p className="text-[10px] text-on-surface-variant font-medium">{w.rate} {t('teacherDashboard.overallAttendance')}</p>
                         </div>
                       </div>
                       <div className={`font-bold text-xs uppercase tracking-wider ${critical ? 'text-error' : 'text-orange-500'}`}>
-                        {critical ? 'Critical' : 'Warning'}
+                        {critical ? t('teacherDashboard.critical') : t('teacherDashboard.warning')}
                       </div>
                     </div>
                   )
@@ -624,9 +672,9 @@ export default function TeacherDashboard() {
             <div className="flex justify-between items-center pb-3 border-b border-outline-variant/15 mb-4">
               <h3 className="font-title-lg text-base text-on-surface font-bold flex items-center gap-2">
                 <Icon name="swap_horiz" className="text-primary" />
-                <span>Switch Profile</span>
+                <span>{t('teacherDashboard.switchProfile')}</span>
               </h3>
-              <button 
+              <button
                 onClick={() => setShowSwitchModal(false)}
                 className="text-outline hover:text-on-surface cursor-pointer p-1 rounded-full hover:bg-surface-container"
               >
@@ -644,7 +692,7 @@ export default function TeacherDashboard() {
             <div className="space-y-2.5">
               {savedAccounts.length === 0 ? (
                 <div className="text-center py-4 bg-surface-container-low/40 rounded-2xl border border-outline-variant/15 text-xs text-on-surface-variant font-semibold">
-                  No other profiles found. You can add an existing account to switch between profiles.
+                  {t('teacherDashboard.noOtherProfiles')}
                 </div>
               ) : (
                 savedAccounts.map(acc => (
@@ -680,7 +728,7 @@ export default function TeacherDashboard() {
                 className="w-full flex items-center justify-center gap-2 mt-4 py-3 border-2 border-dashed border-outline-variant hover:bg-surface-container-low rounded-2xl transition-colors text-xs font-bold text-primary"
               >
                 <Icon name="person_add" className="text-sm" />
-                <span>Add Existing Account</span>
+                <span>{t('common.addExistingAccount')}</span>
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import ConversationSidebar from '../../components/chat/ConversationSidebar'
@@ -7,6 +8,7 @@ import api from '../../api/axios'
 import Icon from '../../components/common/Icon'
 
 export default function ChatConversation() {
+  const { t } = useTranslation()
   const { conversationId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -68,7 +70,7 @@ export default function ChatConversation() {
           id: match.other_user_id,
           full_name: match.other_user_name,
           avatar: match.other_user_avatar,
-          role: match.other_user_role || 'Contact'
+          role: match.other_user_role || t('chatConversation.contact')
         })
       } else {
         // Fallback: decode recipient user ID from conversationId and fetch profile
@@ -80,14 +82,14 @@ export default function ChatConversation() {
             id: userRes.data.id,
             full_name: userRes.data.full_name,
             avatar: userRes.data.avatar,
-            role: userRes.data.role || 'Contact'
+            role: userRes.data.role || t('chatConversation.contact')
           })
         } catch (err) {
           setRecipient({
             id: otherUserId,
-            full_name: 'Recipient',
+            full_name: t('chatConversation.recipientFallback'),
             avatar: null,
-            role: 'Contact'
+            role: t('chatConversation.contact')
           })
         }
       }
@@ -241,7 +243,7 @@ export default function ChatConversation() {
       }
     } catch (err) {
       console.error('Failed to upload files:', err)
-      alert('Failed to upload attachment(s). Please try again.')
+      alert(t('chatConversation.failedToUpload'))
       setIsUploading(false)
       return
     }
@@ -313,14 +315,14 @@ export default function ChatConversation() {
     })
 
     const formatHeaderDate = (dateStr) => {
-      if (dateStr === 'Unknown') return 'System Messages'
+      if (dateStr === 'Unknown') return t('chatConversation.systemMessages')
       const date = new Date(dateStr)
       const now = new Date()
       const yesterday = new Date()
       yesterday.setDate(now.getDate() - 1)
 
-      if (date.toDateString() === now.toDateString()) return 'Today'
-      if (date.toDateString() === yesterday.toDateString()) return 'Yesterday'
+      if (date.toDateString() === now.toDateString()) return t('chatConversation.today')
+      if (date.toDateString() === yesterday.toDateString()) return t('chatConversation.yesterday')
       return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })
     }
 
@@ -367,11 +369,11 @@ export default function ChatConversation() {
                             className="w-full px-2.5 py-1.5 hover:bg-surface-container-low rounded-lg text-[10px] font-bold text-on-surface flex items-center gap-1.5 cursor-pointer border-none bg-transparent"
                           >
                             <Icon name="edit" className="text-xs" />
-                            <span>Edit</span>
+                            <span>{t('chatConversation.edit')}</span>
                           </button>
                           <button
                             onClick={() => {
-                              if (window.confirm('Are you sure you want to delete this message?')) {
+                              if (window.confirm(t('chatConversation.confirmDeleteMessage'))) {
                                 ws.send(JSON.stringify({
                                   action: 'delete',
                                   message_id: msg.id
@@ -382,7 +384,7 @@ export default function ChatConversation() {
                             className="w-full px-2.5 py-1.5 hover:bg-red-50 rounded-lg text-[10px] font-bold text-error flex items-center gap-1.5 cursor-pointer border-none bg-transparent"
                           >
                             <Icon name="delete" className="text-xs" />
-                            <span>Delete</span>
+                            <span>{t('chatConversation.delete')}</span>
                           </button>
                         </div>
                       )}
@@ -457,7 +459,7 @@ export default function ChatConversation() {
                               <Icon name="description" className="text-xl" />
                               <div className="text-left min-w-0 flex-1">
                                 <p className="text-[10px] font-bold truncate leading-tight">{fileName}</p>
-                                <p className="text-[8px] opacity-75 font-semibold uppercase">document</p>
+                                <p className="text-[8px] opacity-75 font-semibold uppercase">{t('chatConversation.document')}</p>
                               </div>
                               <Icon name="download" className="text-base" />
                             </a>
@@ -479,7 +481,7 @@ export default function ChatConversation() {
                     {formatMsgTime(msg.created_at)}
                   </span>
                   {msg.is_edited && !msg.is_deleted && (
-                    <span className="text-[8px] text-outline font-medium italic">(edited)</span>
+                    <span className="text-[8px] text-outline font-medium italic">{t('chatConversation.edited')}</span>
                   )}
                   {isMine && !msg.is_deleted && (
                     <Icon
@@ -538,11 +540,11 @@ export default function ChatConversation() {
 
               <div className="text-left">
                 <h3 className="text-xs font-bold text-on-surface leading-tight">
-                  {recipient?.full_name || 'Loading Chat...'}
+                  {recipient?.full_name || t('chatConversation.loadingChat')}
                 </h3>
                 <p className="text-[9px] text-outline font-semibold uppercase flex items-center gap-1 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-400'}`} />
-                  <span>{isConnected ? 'connected' : 'connecting'}</span>
+                  <span>{isConnected ? t('chatConversation.connected') : t('chatConversation.connecting')}</span>
                 </p>
               </div>
             </div>
@@ -622,7 +624,7 @@ export default function ChatConversation() {
               <form onSubmit={handleSaveEdit} className="flex gap-2 items-center">
                 <div className="flex-1 bg-surface-container-low border border-outline rounded-2xl px-4 py-2 flex items-center justify-between gap-2 min-w-0">
                   <div className="flex flex-col min-w-0 flex-1 text-left">
-                    <span className="text-[9px] text-primary font-bold uppercase">Editing Message</span>
+                    <span className="text-[9px] text-primary font-bold uppercase">{t('chatConversation.editingMessage')}</span>
                     <input
                       type="text"
                       value={editingText}
@@ -680,7 +682,7 @@ export default function ChatConversation() {
                         >
                           <Icon name="description" className="text-lg" />
                         </button>
-                        <span className="text-[9px] font-bold text-outline">Document</span>
+                        <span className="text-[9px] font-bold text-outline">{t('chatConversation.documentLabel')}</span>
                       </div>
 
                       {/* Camera */}
@@ -695,7 +697,7 @@ export default function ChatConversation() {
                         >
                           <Icon name="photo_camera" className="text-lg" />
                         </button>
-                        <span className="text-[9px] font-bold text-outline">Camera</span>
+                        <span className="text-[9px] font-bold text-outline">{t('chatConversation.camera')}</span>
                       </div>
 
                       {/* Gallery */}
@@ -710,7 +712,7 @@ export default function ChatConversation() {
                         >
                           <Icon name="image" className="text-lg" />
                         </button>
-                        <span className="text-[9px] font-bold text-outline">Gallery</span>
+                        <span className="text-[9px] font-bold text-outline">{t('chatConversation.gallery')}</span>
                       </div>
 
                       {/* Audio */}
@@ -725,7 +727,7 @@ export default function ChatConversation() {
                         >
                           <Icon name="volume_up" className="text-lg" />
                         </button>
-                        <span className="text-[9px] font-bold text-outline">Audio</span>
+                        <span className="text-[9px] font-bold text-outline">{t('chatConversation.audio')}</span>
                       </div>
                     </div>
                   )}
@@ -735,7 +737,7 @@ export default function ChatConversation() {
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder={isUploading ? "Uploading file(s)..." : "Type your message..."}
+                  placeholder={isUploading ? t('chatConversation.uploadingFiles') : t('chatConversation.typeMessage')}
                   disabled={isUploading}
                   className="flex-1 px-4 py-3 border border-outline bg-surface-container-low rounded-2xl text-xs font-semibold focus:outline-none focus:border-primary text-on-surface disabled:opacity-75"
                 />

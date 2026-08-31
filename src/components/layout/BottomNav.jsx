@@ -1,36 +1,37 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import Icon from '../common/Icon'
 
 const NAV_ITEMS = {
   student: [
-    { icon: 'home', label: 'Home', path: '/student/dashboard' },
-    { icon: 'school', label: 'Academics', path: '/student/academics' },
-    { icon: 'chat', label: 'Chat', path: '/student/chat' },
-    { icon: 'settings', label: 'Account', path: '/student/settings' },
+    { icon: 'home', labelKey: 'nav.home', path: '/student/dashboard' },
+    { icon: 'school', labelKey: 'nav.academics', path: '/student/academics' },
+    { icon: 'chat', labelKey: 'nav.chat', path: '/student/chat' },
+    { icon: 'settings', labelKey: 'nav.account', path: '/student/settings' },
   ],
   teacher: [
-    { icon: 'home', label: 'Home', path: '/teacher/dashboard' },
-    { icon: 'calendar_today', label: 'Attendance', path: '/teacher/attendance' },
-    { icon: 'school', label: 'Academics', path: '/teacher/academics' },
-    { icon: 'chat', label: 'Chat', path: '/teacher/chat' },
-    { icon: 'settings', label: 'Account', path: '/teacher/settings' },
+    { icon: 'home', labelKey: 'nav.home', path: '/teacher/dashboard' },
+    { icon: 'calendar_today', labelKey: 'nav.attendance', path: '/teacher/attendance' },
+    { icon: 'school', labelKey: 'nav.academics', path: '/teacher/academics' },
+    { icon: 'chat', labelKey: 'nav.chat', path: '/teacher/chat' },
+    { icon: 'settings', labelKey: 'nav.account', path: '/teacher/settings' },
   ],
   admin: [
-    { icon: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
-    { icon: 'group', label: 'Users', path: '/admin/users' },
-    { icon: 'school', label: 'Academics', path: '/admin/academics' },
-    { icon: 'campaign', label: 'Announce', path: '/admin/announcements' },
-    { icon: 'chat', label: 'Chat', path: '/admin/chat' },
-    { icon: 'settings', label: 'Account', path: '/admin/settings' },
+    { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard' },
+    { icon: 'group', labelKey: 'nav.users', path: '/admin/users' },
+    { icon: 'school', labelKey: 'nav.academics', path: '/admin/academics' },
+    { icon: 'campaign', labelKey: 'nav.announce', path: '/admin/announcements' },
+    { icon: 'chat', labelKey: 'nav.chat', path: '/admin/chat' },
+    { icon: 'settings', labelKey: 'nav.account', path: '/admin/settings' },
   ],
   superadmin: [
-    { icon: 'dashboard', label: 'Dashboard', path: '/superadmin/dashboard' },
-    { icon: 'shield', label: 'Admins', path: '/superadmin/admins' },
-    { icon: 'payments', label: 'Payments', path: '/superadmin/payments' },
-    { icon: 'settings', label: 'Account', path: '/superadmin/settings' },
+    { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/superadmin/dashboard' },
+    { icon: 'shield', labelKey: 'nav.admins', path: '/superadmin/admins' },
+    { icon: 'payments', labelKey: 'nav.payments', path: '/superadmin/payments' },
+    { icon: 'settings', labelKey: 'nav.account', path: '/superadmin/settings' },
   ],
 }
 
@@ -38,7 +39,8 @@ export default function BottomNav({ role = 'student' }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
-  
+  const { t } = useTranslation()
+
   const items = NAV_ITEMS[role] || NAV_ITEMS.student
   
   // Instagram Switch Account states
@@ -182,11 +184,11 @@ export default function BottomNav({ role = 'student' }) {
   return (
     <>
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface-container-lowest shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] rounded-t-xl pb-safe">
-        {items.map(({ icon, label, path }, index) => {
+        {items.map(({ icon, labelKey, path }, index) => {
           const isActive = location.pathname === path || location.pathname.startsWith(path + '/')
           // Long-press-to-switch-account is not available to students.
           const isLast = index === items.length - 1 && role !== 'student'
-          const isChat = label.toLowerCase() === 'chat'
+          const isChat = icon === 'chat'
           
           return (
             <NavLink
@@ -214,7 +216,7 @@ export default function BottomNav({ role = 'student' }) {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium mt-0.5">{label}</span>
+              <span className="text-[10px] font-medium mt-0.5">{t(labelKey)}</span>
             </NavLink>
           )
         })}
@@ -233,14 +235,14 @@ export default function BottomNav({ role = 'student' }) {
             <div className="w-12 h-1 bg-outline-variant rounded-full mx-auto mb-4" />
             
             <h3 className="text-sm font-black text-primary uppercase tracking-wider text-center mb-4">
-              Switch Accounts
+              {t('common.switchAccounts')}
             </h3>
 
             {/*  list */}
             <div className="flex-1 overflow-y-auto space-y-3 mb-5 pr-1">
               {savedAccounts.length === 0 ? (
                 <div className="text-center py-6 text-outline font-semibold">
-                  No other saved profiles found.
+                  {t('common.noSavedProfiles')}
                 </div>
               ) : (
                 savedAccounts.map(acc => {
@@ -282,14 +284,14 @@ export default function BottomNav({ role = 'student' }) {
                 className="w-full flex items-center justify-center gap-1.5 py-3.5 border border-dashed border-primary/45 hover:bg-primary/5 rounded-2xl transition-colors text-xs font-bold text-primary cursor-pointer border-medium"
               >
                 <Icon name="person_add" className="text-sm" />
-                <span>Add Existing Account</span>
+                <span>{t('common.addExistingAccount')}</span>
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => setIsOpen(false)}
                 className="w-full py-3.5 bg-surface-container-high hover:bg-surface-container-highest rounded-2xl text-xs font-bold text-on-surface transition-colors cursor-pointer"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
 

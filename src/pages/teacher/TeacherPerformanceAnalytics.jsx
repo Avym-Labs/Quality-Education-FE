@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import PerformanceAreaChart from '../../components/charts/PerformanceAreaChart'
+import ScoreDistributionHistogram from '../../components/charts/ScoreDistributionHistogram'
+import StudentRiskQuadrant from '../../components/charts/StudentRiskQuadrant'
+import SubjectHeatmap from '../../components/charts/SubjectHeatmap'
 
 export default function TeacherPerformanceAnalytics() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const assignedClasses = user?.assigned_classes || []
@@ -28,10 +34,15 @@ export default function TeacherPerformanceAnalytics() {
       setError('')
       try {
         const [grade, section] = selectedClass.split('-')
-        const res = await api.get('/results', {
-          params: { grade, section: section || '', subject: selectedSubject }
-        })
+        const [res, attendanceRes] = await Promise.all([
+          api.get('/results', { params: { grade, section: section || '', subject: selectedSubject } }),
+          api.get('/attendance/class-summary', { params: { grade, section: section || '' } }).catch(() => ({ data: [] })),
+        ])
         const results = res.data || []
+        const attendanceMap = {}
+        ;(attendanceRes.data || []).forEach(a => {
+          attendanceMap[a.student_id] = a.attendance_percentage
+        })
 
         if (results.length === 0) {
           setStats(null)
@@ -69,6 +80,7 @@ export default function TeacherPerformanceAnalytics() {
             const list = testGroups[title]
             return roundTo1(list.reduce((a, b) => a + b, 0) / list.length)
           }).slice(-5)
+          const highestTrends = testOrder.map(title => Math.max(...testGroups[title])).slice(-5)
 
           // Build each student's real chronological score history for this class/subject,
           // then compare their most recent test against the one before it.
@@ -79,7 +91,7 @@ export default function TeacherPerformanceAnalytics() {
             byStudent[key].push(r)
           })
 
-          const insights = Object.values(byStudent).map(studentResults => {
+          const perStudent = Object.entries(byStudent).map(([studentId, studentResults]) => {
             const sorted = studentResults
               .slice()
               .sort((a, b) => new Date(a.test_date || a.created_at) - new Date(b.test_date || b.created_at))
@@ -91,14 +103,18 @@ export default function TeacherPerformanceAnalytics() {
             const previous = prior ? Math.round(prior.percentage) : null
             const diff = previous !== null ? current - previous : null
             return {
+              studentId,
               name,
               initial: initials || 'ST',
               current,
               previous,
               change: diff !== null ? Math.abs(diff) : null,
-              up: diff !== null ? diff >= 0 : null
+              up: diff !== null ? diff >= 0 : null,
+              attendance: attendanceMap[studentId]
             }
-          }).sort((a, b) => b.current - a.current).slice(0, 5)
+          }).sort((a, b) => b.current - a.current)
+
+          const insights = perStudent.slice(0, 5)
 
           setStats({
             classAverage,
@@ -107,12 +123,15 @@ export default function TeacherPerformanceAnalytics() {
             lowest,
             distribution,
             insights,
-            trends: trends.length > 0 ? trends : [classAverage]
+            allStudents: perStudent,
+            allScores: marksPctList,
+            trends: trends.length > 0 ? trends : [classAverage],
+            highestTrends: highestTrends.length > 0 ? highestTrends : [highest]
           })
         }
       } catch (err) {
         console.error('Failed to load performance analytics:', err)
-        setError('Failed to load performance analytics.')
+        setError(t('teacherPerfAnalytics.fetchFailed'))
         setStats(null)
       } finally {
         setLoading(false)
@@ -147,7 +166,7 @@ export default function TeacherPerformanceAnalytics() {
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-                Performance Analytics
+                {t('studentDashboard.performanceAnalytics')}
               </h2>
             </div>
           </div>
@@ -157,9 +176,9 @@ export default function TeacherPerformanceAnalytics() {
               onChange={(e) => setSelectedClass(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
+              {assignedClasses.length === 0 && <option value="">{t('teacherPerfAnalytics.noClassesAssigned')}</option>}
               {assignedClasses.map(cls => (
-                <option key={cls} value={cls}>Class {cls}</option>
+                <option key={cls} value={cls}>{t('teacherPerfAnalytics.classOption', { cls })}</option>
               ))}
             </select>
             <select
@@ -167,7 +186,7 @@ export default function TeacherPerformanceAnalytics() {
               onChange={(e) => setSelectedSubject(e.target.value)}
               className="bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-1.5 text-xs font-semibold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              {subjects.length === 0 && <option value="">No subjects assigned</option>}
+              {subjects.length === 0 && <option value="">{t('teacherPerfAnalytics.noSubjectsAssigned')}</option>}
               {subjects.map(subj => (
                 <option key={subj} value={subj}>{subj}</option>
               ))}
@@ -178,7 +197,7 @@ export default function TeacherPerformanceAnalytics() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-2">
             <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
-            <span className="text-xs text-on-surface-variant font-bold">Recalculating analytics...</span>
+            <span className="text-xs text-on-surface-variant font-bold">{t('teacherPerfAnalytics.recalculating')}</span>
           </div>
         ) : error ? (
           <div className="p-4 bg-error-container rounded-xl text-error text-sm font-semibold">
@@ -187,9 +206,9 @@ export default function TeacherPerformanceAnalytics() {
         ) : !stats ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2 bg-surface-container-lowest rounded-[24px] border border-outline-variant/30">
             <Icon name="query_stats" className="text-4xl text-on-surface-variant" />
-            <p className="text-sm font-bold text-on-surface">No test results recorded yet</p>
+            <p className="text-sm font-bold text-on-surface">{t('teacherPerfAnalytics.noTestResults')}</p>
             <p className="text-xs text-on-surface-variant max-w-xs">
-              Record marks for Class {selectedClass} in {selectedSubject} to see performance analytics here.
+              {t('teacherPerfAnalytics.recordMarksPrompt', { cls: selectedClass, subject: selectedSubject })}
             </p>
           </div>
         ) : (
@@ -197,7 +216,7 @@ export default function TeacherPerformanceAnalytics() {
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Class Average */}
               <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
-                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">Class Average</span>
+                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">{t('teacherPerfAnalytics.classAverage')}</span>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="font-numeric-bold text-3xl text-primary font-bold">{stats.classAverage}</span>
                   <span className="text-xs font-semibold text-primary">%</span>
@@ -205,112 +224,138 @@ export default function TeacherPerformanceAnalytics() {
                 {trendDelta !== null ? (
                   <div className={`mt-2 flex items-center gap-1 text-[10px] font-bold ${trendDelta >= 0 ? 'text-emerald-600' : 'text-error'}`}>
                     <Icon name={trendDelta >= 0 ? 'trending_up' : 'trending_down'} className="text-xs" />
-                    <span>{trendDelta >= 0 ? '+' : ''}{trendDelta}% since first recorded test</span>
+                    <span>{trendDelta >= 0 ? '+' : ''}{trendDelta}{t('teacherPerfAnalytics.sinceFirstRecordedTest')}</span>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-on-surface-variant font-bold mt-2">Only one test recorded so far</p>
+                  <p className="text-[10px] text-on-surface-variant font-bold mt-2">{t('teacherPerfAnalytics.onlyOneTest')}</p>
                 )}
               </div>
 
               {/* Pass percentage */}
               <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
-                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">Pass Rate</span>
+                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">{t('common.passRate')}</span>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="font-numeric-bold text-3xl text-secondary font-bold">{stats.passRate}</span>
                   <span className="text-xs font-semibold text-secondary">%</span>
                 </div>
                 <div className={`mt-2 flex items-center gap-1 text-[10px] font-bold ${targetMet ? 'text-emerald-600' : 'text-amber-600'}`}>
                   <Icon name={targetMet ? 'check_circle' : 'warning'} className="text-xs" />
-                  <span>{targetMet ? `Above ${PASS_RATE_TARGET}% target` : `Below ${PASS_RATE_TARGET}% target`}</span>
+                  <span>{targetMet ? t('teacherPerfAnalytics.aboveTarget', { target: PASS_RATE_TARGET }) : t('teacherPerfAnalytics.belowTarget', { target: PASS_RATE_TARGET })}</span>
                 </div>
               </div>
 
               {/* Highest score */}
               <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
-                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">Highest Score</span>
+                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">{t('teacherPerfAnalytics.highestScore')}</span>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="font-numeric-bold text-3xl text-on-surface font-bold">{stats.highest}</span>
                   <span className="text-xs font-semibold text-on-surface-variant">%</span>
                 </div>
-                <p className="text-[10px] text-on-surface-variant font-bold mt-2">Excellent top rank</p>
+                <p className="text-[10px] text-on-surface-variant font-bold mt-2">{t('teacherPerfAnalytics.excellentTopRank')}</p>
               </div>
 
               {/* Lowest score */}
               <div className="bg-surface-container-lowest p-stack-md rounded-[24px] shadow-sm border border-outline-variant/30 flex flex-col justify-between h-28 cursor-default">
-                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">Lowest Score</span>
+                <span className="text-on-surface-variant font-label-md text-[10px] font-bold uppercase tracking-wider">{t('teacherPerfAnalytics.lowestScore')}</span>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="font-numeric-bold text-3xl text-error font-bold">{stats.lowest}</span>
                   <span className="text-xs font-semibold text-on-surface-variant">%</span>
                 </div>
                 <div className="mt-2 flex items-center gap-1 text-error text-[10px] font-bold">
                   <Icon name="warning" className="text-xs" />
-                  <span>Needs attention</span>
+                  <span>{t('teacherPerfAnalytics.needsAttention')}</span>
                 </div>
               </div>
             </section>
 
-            {/* Charts Visual Bento */}
+            {/* Charts Visual Bento - New Improved Visualizations */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
               
-              {/* Trend Chart (Col Span 8) */}
-              <div className="lg:col-span-8 bg-surface-container-lowest p-5 rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col justify-between h-64">
+              {/* Performance Trend - Area Chart (Col Span 8) */}
+              <div className="lg:col-span-8 bg-surface-container-lowest p-5 rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col overflow-hidden">
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider">Last 5 Tests Trend</h4>
+                  <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider">{t('teacherPerfAnalytics.performanceTrend')}</h4>
                   {trendDelta !== null && (
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
                       trendDelta >= 0 ? 'bg-primary/10 text-primary' : 'bg-error-container text-error'
                     }`}>
                       <Icon name={trendDelta >= 0 ? 'auto_graph' : 'trending_down'} className="text-xs" />
-                      <span>{trendDelta >= 0 ? 'Trending up' : 'Trending down'}</span>
+                      <span>{trendDelta >= 0 ? t('teacherPerfAnalytics.trendingUp') : t('teacherPerfAnalytics.trendingDown')}</span>
                     </span>
                   )}
                 </div>
-                
-                {/* Horizontal bar heights */}
-                <div className="flex-1 flex items-end gap-5 pb-2 pt-6 px-4">
-                  {stats.trends.map((val, idx) => (
-                    <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative">
-                      <div 
-                        className={`w-full max-w-[32px] rounded-t transition-all duration-300 hover:opacity-90 ${
-                          idx === stats.trends.length - 1 ? 'bg-primary' : 'bg-primary-fixed-dim'
-                        }`}
-                        style={{ height: `${val}%` }}
-                      ></div>
-                      <span className="absolute -top-6 text-[9px] font-bold bg-on-surface text-surface py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        {val}%
-                      </span>
-                      <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider">
-                        {idx === stats.trends.length - 1 ? 'Now' : `T${idx + 1}`}
-                      </span>
-                    </div>
-                  ))}
+
+                <div className="h-[220px]">
+                  <PerformanceAreaChart
+                    trendData={stats.trends.map((val, idx) => ({
+                      test_title: idx === stats.trends.length - 1 ? t('common.now') : t('common.testN', { n: idx + 1 }),
+                      personal: val,
+                      topper: stats.highestTrends[idx]
+                    }))}
+                    height={220}
+                    showClassAvg={false}
+                    showTopper={true}
+                    showTarget={true}
+                    targetValue={75}
+                    personalLabel={t('teacherPerfAnalytics.classAverage')}
+                    topperLabel={t('teacherPerfAnalytics.highestScore')}
+                  />
                 </div>
               </div>
 
-              {/* Marks Distribution Card (Col Span 4) */}
-              <div className="lg:col-span-4 bg-surface-container-lowest p-5 rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col justify-between">
-                <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider mb-3">Marks Distribution</h4>
-                <div className="space-y-2.5">
-                  {[
-                    { label: '81 - 100%', count: stats.distribution.bin4, color: 'bg-primary' },
-                    { label: '61 - 80%', count: stats.distribution.bin3, color: 'bg-secondary' },
-                    { label: '41 - 60%', count: stats.distribution.bin2, color: 'bg-amber-500' },
-                    { label: '0 - 40%', count: stats.distribution.bin1, color: 'bg-error' },
-                  ].map((b, idx) => {
-                    const total = Object.values(stats.distribution).reduce((a, b) => a + b, 0) || 1
-                    const pct = (b.count / total) * 100
-                    return (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-bold text-on-surface-variant">
-                          <span>{b.label}</span>
-                          <span>{b.count} Stud. ({Math.round(pct)}%)</span>
-                        </div>
-                        <div className="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
-                          <div className={`${b.color} h-full rounded-full`} style={{ width: `${pct}%` }}></div>
-                        </div>
-                      </div>
-                    )
-                  })}
+              {/* Score Distribution Histogram (Col Span 4) */}
+              <div className="lg:col-span-4 bg-surface-container-lowest p-5 rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col overflow-hidden">
+                <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider mb-3">{t('adminDashboard.scoreDistribution')}</h4>
+                <div className="h-[220px]">
+                  <ScoreDistributionHistogram
+                    scores={stats.allScores}
+                    height={220}
+                    binCount={10}
+                    showNormalCurve={true}
+                    targetLine={40}
+                  />
+                </div>
+              </div>
+
+            </div>
+
+            {/* Additional Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+              {/* Student Risk Quadrant - real score vs. real attendance */}
+              <div className="bg-surface-container-lowest p-5 rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col overflow-hidden">
+                <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider mb-3">{t('teacherPerfAnalytics.studentRiskQuadrant')}</h4>
+                <div className="h-[280px]">
+                  <StudentRiskQuadrant
+                    students={stats.allStudents
+                      .filter(s => s.attendance !== undefined)
+                      .map(s => ({
+                        name: s.name,
+                        attendance: s.attendance,
+                        performance: s.current,
+                        initials: s.initial
+                      }))}
+                    height={280}
+                    attendanceThreshold={75}
+                    performanceThreshold={60}
+                  />
+                </div>
+              </div>
+
+              {/* Subject Heatmap */}
+              <div className="bg-surface-container-lowest p-5 rounded-[28px] shadow-sm border border-outline-variant/35 flex flex-col overflow-hidden">
+                <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider mb-3">{t('adminDashboard.subjectPerformanceHeatmap')}</h4>
+                <div className="h-[280px]">
+                  <SubjectHeatmap
+                    students={stats.insights.map(ins => ({
+                      name: ins.name,
+                      scores: { [selectedSubject]: ins.current },
+                      initials: ins.initial
+                    }))}
+                    subjects={[selectedSubject]}
+                    height={280}
+                    cellSize={50}
+                  />
                 </div>
               </div>
 
@@ -319,17 +364,17 @@ export default function TeacherPerformanceAnalytics() {
             {/* Student Insights Table */}
             <section className="space-y-3">
               <div className="flex justify-between items-center">
-                <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider">Student Academic Insights</h4>
+                <h4 className="font-title-lg text-xs text-on-surface font-bold uppercase tracking-wider">{t('teacherPerfAnalytics.studentAcademicInsights')}</h4>
               </div>
               <div className="bg-surface-container-lowest rounded-[28px] shadow-sm border border-outline-variant/35 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-surface-container-low/40 text-on-surface-variant font-label-md text-xs border-b border-outline-variant/20">
-                        <th className="px-5 py-3 w-1/3">Student</th>
-                        <th className="px-5 py-3 text-center">Current Score</th>
-                        <th className="px-5 py-3 text-center">Previous Score</th>
-                        <th className="px-5 py-3 text-center">Delta Progress</th>
+                        <th className="px-5 py-3 w-1/3">{t('teacherPerfAnalytics.studentCol')}</th>
+                        <th className="px-5 py-3 text-center">{t('teacherPerfAnalytics.currentScoreCol')}</th>
+                        <th className="px-5 py-3 text-center">{t('teacherPerfAnalytics.previousScoreCol')}</th>
+                        <th className="px-5 py-3 text-center">{t('teacherPerfAnalytics.deltaProgressCol')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant/15">
@@ -358,7 +403,7 @@ export default function TeacherPerformanceAnalytics() {
                                 <span>{ins.change}%</span>
                               </span>
                             ) : (
-                              <span className="text-[10px] font-bold text-on-surface-variant uppercase bg-surface-container-low px-2 py-0.5 rounded-full">New</span>
+                              <span className="text-[10px] font-bold text-on-surface-variant uppercase bg-surface-container-low px-2 py-0.5 rounded-full">{t('teacherPerfAnalytics.newBadge')}</span>
                             )}
                           </td>
                         </tr>

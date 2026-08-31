@@ -5,6 +5,7 @@ import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import AccountSidebar from '../../components/layout/AccountSidebar'
 import Icon from '../../components/common/Icon'
+import LanguageSelector from '../../components/common/LanguageSelector'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -220,6 +221,7 @@ export default function SettingsPage() {
               {activeView === 'my-academic-profile' && 'Academic Profile'}
               {activeView === 'profile-details' && 'Account Credentials'}
               {activeView === 'preferences' && 'User Preferences'}
+              {activeView === 'language' && 'Language'}
               {activeView === 'support' && 'Help & FAQ'}
               {activeView === 'switch-profile' && 'Switch Account'}
             </h2>
@@ -228,6 +230,7 @@ export default function SettingsPage() {
               {activeView === 'my-academic-profile' && 'Faculty credentials & achievements'}
               {activeView === 'profile-details' && 'Modify your metadata & credentials'}
               {activeView === 'preferences' && 'Alert notifications & toggles'}
+              {activeView === 'language' && 'Choose your preferred app language'}
               {activeView === 'support' && 'FAQ center & support assistance'}
               {activeView === 'switch-profile' && 'Manage multi-account profile logins'}
             </p>
@@ -294,6 +297,21 @@ export default function SettingsPage() {
                 <div className="text-left">
                   <h4 className="text-xs font-bold text-on-surface">Notification Preferences</h4>
                   <p className="text-[10px] text-outline font-semibold">Toggle push notifications and email summaries</p>
+                </div>
+              </div>
+              <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
+            </div>
+
+            {/* Language */}
+            <div
+              onClick={() => setActiveView('language')}
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="language" className="text-secondary text-xl" />
+                <div className="text-left">
+                  <h4 className="text-xs font-bold text-on-surface">Language</h4>
+                  <p className="text-[10px] text-outline font-semibold">Choose English or Gujarati for your account</p>
                 </div>
               </div>
               <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
@@ -646,6 +664,24 @@ export default function SettingsPage() {
                 </label>
               </div>
             </div>
+          </section>
+        )}
+
+        {/* View 4b: Language */}
+        {effectiveView === 'language' && (
+          <section className={`bg-surface-container-lowest rounded-[24px] md:rounded-2xl p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn ${activeView === 'menu' ? 'hidden md:block' : ''}`}>
+            <div className="flex justify-between items-center pb-2 border-b border-outline-variant/15">
+              <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Language</h3>
+              <button
+                onClick={() => setActiveView('menu')}
+                className="md:hidden text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5"
+              >
+                <Icon name="arrow_back" className="text-[12px]" />
+                <span>Back</span>
+              </button>
+            </div>
+
+            <LanguageSelector />
           </section>
         )}
 

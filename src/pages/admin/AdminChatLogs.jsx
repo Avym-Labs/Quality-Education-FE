@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function AdminChatLogs() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,7 +24,7 @@ export default function AdminChatLogs() {
       setLogs(data || [])
     } catch (err) {
       console.error('Failed to load chat logs:', err)
-      setError('Failed to fetch surveillance logs from server.')
+      setError(t('adminChatLogs.failedToFetch'))
     } finally {
       setLoading(false)
     }
@@ -97,21 +99,21 @@ export default function AdminChatLogs() {
             </button>
             <div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-                Chat Logs
+                {t('adminChatLogs.title')}
               </h2>
               <p className="text-on-surface-variant text-xs font-semibold mt-0.5">
-                Audit student-teacher chat sessions and media files.
+                {t('adminChatLogs.subtitle')}
               </p>
             </div>
           </div>
-          
+
           {/* Refresh Action */}
           <button
             onClick={loadChatLogs}
             className="flex items-center gap-1.5 px-4 py-2 bg-surface-container-low hover:bg-surface-container-high rounded-xl text-xs font-bold text-primary border border-outline-variant/30 transition-colors shadow-xs active:scale-95 duration-100 cursor-pointer select-none"
           >
             <Icon name="refresh" className="text-sm" />
-            <span>Refresh Logs</span>
+            <span>{t('adminChatLogs.refreshLogs')}</span>
           </button>
         </section>
 
@@ -119,9 +121,9 @@ export default function AdminChatLogs() {
         <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/30 shadow-xs flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" />
-            <input 
+            <input
               type="text"
-              placeholder="Search by sender/receiver name, email, or message content..."
+              placeholder={t('adminChatLogs.searchPlaceholder')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-surface-container-low/30 border border-outline-variant rounded-xl py-2 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none text-xs font-semibold"
@@ -129,15 +131,15 @@ export default function AdminChatLogs() {
           </div>
           
           <div className="flex items-center gap-2">
-            <label className="text-[10px] uppercase font-bold text-outline shrink-0">Role Involved:</label>
+            <label className="text-[10px] uppercase font-bold text-outline shrink-0">{t('adminChatLogs.roleInvolved')}</label>
             <select
               value={roleFilter}
               onChange={e => setRoleFilter(e.target.value)}
               className="bg-surface-container-low/30 border border-outline-variant rounded-xl px-3 py-2 text-xs font-semibold text-on-surface focus:outline-none"
             >
-              <option value="All">All Conversations</option>
-              <option value="Student">Involves Students</option>
-              <option value="Teacher">Involves Teachers</option>
+              <option value="All">{t('adminChatLogs.allConversations')}</option>
+              <option value="Student">{t('adminChatLogs.involvesStudents')}</option>
+              <option value="Teacher">{t('adminChatLogs.involvesTeachers')}</option>
             </select>
           </div>
         </div>
@@ -146,7 +148,7 @@ export default function AdminChatLogs() {
         {loading ? (
           <div className="py-20 text-center text-outline font-semibold flex flex-col items-center justify-center gap-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span>Fetching surveillance logs...</span>
+            <span>{t('adminChatLogs.fetchingLogs')}</span>
           </div>
         ) : error ? (
           <div className="bg-error-container text-on-error-container p-4 rounded-2xl text-xs font-bold text-center">
@@ -155,7 +157,7 @@ export default function AdminChatLogs() {
         ) : filteredLogs.length === 0 ? (
           <div className="bg-surface-container-lowest p-12 text-center rounded-2xl border border-outline-variant/30 shadow-xs">
             <Icon name="visibility_off" className="text-4xl text-outline" />
-            <p className="text-xs text-outline font-bold mt-2">No chat logs match active search filters.</p>
+            <p className="text-xs text-outline font-bold mt-2">{t('adminChatLogs.noLogsMatchFilters')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -194,11 +196,11 @@ export default function AdminChatLogs() {
                 {/* Message Body Content */}
                 <div className="text-xs leading-relaxed text-left space-y-2 pl-1.5">
                   {log.is_deleted ? (
-                    <p className="text-outline font-semibold italic line-through">[Message Deleted by User]</p>
+                    <p className="text-outline font-semibold italic line-through">{t('adminChatLogs.messageDeleted')}</p>
                   ) : (
                     <>
                       {log.content && <p className="font-semibold text-on-surface-variant whitespace-pre-wrap">{log.content}</p>}
-                      {log.is_edited && <span className="text-[8px] text-outline font-semibold italic">(Edited)</span>}
+                      {log.is_edited && <span className="text-[8px] text-outline font-semibold italic">{t('adminChatLogs.edited')}</span>}
                     </>
                   )}
 

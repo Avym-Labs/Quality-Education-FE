@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -7,12 +8,14 @@ import Icon from '../../components/common/Icon'
 import DateInput from '../../components/common/DateInput'
 
 export default function TeacherResults() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
 
   // Tab: 'upload' | 'history'
   const [activeTab, setActiveTab] = useState('upload')
   const [message, setMessage] = useState('')
+  const [messageIsSuccess, setMessageIsSuccess] = useState(false)
 
   // History State
   const [resultsHistory, setResultsHistory] = useState([])
@@ -108,7 +111,8 @@ export default function TeacherResults() {
   const handleSaveGrades = async (e) => {
     e.preventDefault()
     if (!testTitle) {
-      setMessage('Please enter a test/exam title.')
+      setMessage(t('teacherResults.enterTestTitle'))
+      setMessageIsSuccess(false)
       return
     }
 
@@ -142,14 +146,16 @@ export default function TeacherResults() {
       }
 
       if (payload.length === 0) {
-        setMessage('Please enter marks for at least one student.')
+        setMessage(t('teacherResults.enterMarksForOneStudent'))
+        setMessageIsSuccess(false)
         setSubmittingMarks(false)
         return
       }
 
       await api.post('/results/bulk', payload)
-      setMessage('Grades uploaded successfully!')
-      
+      setMessage(t('teacherResults.gradesUploadedSuccess'))
+      setMessageIsSuccess(true)
+
       // Clear marks
       const cleared = {}
       students.forEach(s => {
@@ -161,19 +167,20 @@ export default function TeacherResults() {
       setTimeout(() => setMessage(''), 4000)
     } catch (err) {
       console.error(err)
-      setMessage('Failed to save grades. Try again.')
+      setMessage(t('teacherResults.failedToSaveGrades'))
+      setMessageIsSuccess(false)
     } finally {
       setSubmittingMarks(false)
     }
   }
 
   const handleDeleteHistoryItem = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this result record?')) return
+    if (!window.confirm(t('teacherResults.confirmDeleteRecord'))) return
     try {
       await api.delete(`/results/${id}`)
       setResultsHistory(prev => prev.filter(r => r.id !== id))
     } catch (err) {
-      alert('Failed to delete grade record.')
+      alert(t('teacherResults.failedToDeleteRecord'))
     }
   }
 
@@ -198,14 +205,14 @@ export default function TeacherResults() {
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              Grades & Results
+              {t('teacherResults.title')}
             </h2>
           </div>
         </section>
 
         {message && (
           <div className={`p-3 rounded-xl text-center text-xs font-bold ${
-            message.includes('successfully') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-primary-container/20 text-primary border border-primary/20'
+            messageIsSuccess ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-primary-container/20 text-primary border border-primary/20'
           }`}>
             {message}
           </div>
@@ -221,17 +228,17 @@ export default function TeacherResults() {
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            Upload Grades
+            {t('teacherResults.uploadGrades')}
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('history')}
             className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition-all ${
-              activeTab === 'history' 
-                ? 'border-primary text-primary' 
+              activeTab === 'history'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            Gradebook Ledger
+            {t('teacherResults.gradebookLedger')}
           </button>
         </div>
 
@@ -242,38 +249,38 @@ export default function TeacherResults() {
             {/* Left: Test Details */}
             <div className="lg:col-span-4">
               <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/30 shadow-sm space-y-4">
-                <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/15 pb-2">Test Parameters</h3>
-                
+                <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/15 pb-2">{t('teacherResults.testParameters')}</h3>
+
                 <div className="space-y-3 text-xs">
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Assigned Class</label>
-                    <select 
-                      value={selectedClass} 
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('teacherResults.assignedClass')}</label>
+                    <select
+                      value={selectedClass}
                       onChange={e => setSelectedClass(e.target.value)}
                       className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary cursor-pointer font-semibold"
                     >
-                      {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
-                      {assignedClasses.map(cls => <option key={cls} value={cls}>Class {cls}</option>)}
+                      {assignedClasses.length === 0 && <option value="">{t('teacherResults.noClassesAssigned')}</option>}
+                      {assignedClasses.map(cls => <option key={cls} value={cls}>{t('teacherResults.classLabel', { cls })}</option>)}
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Subject</label>
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('teacherResults.subject')}</label>
                     <select
                       value={selectedSubject}
                       onChange={e => setSelectedSubject(e.target.value)}
                       className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary cursor-pointer font-semibold"
                     >
-                      {subjects.length === 0 && <option value="">No subjects assigned</option>}
+                      {subjects.length === 0 && <option value="">{t('teacherResults.noSubjectsAssigned')}</option>}
                       {subjects.map(subj => <option key={subj} value={subj}>{subj}</option>)}
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Test / Exam Title <span className="text-error">*</span></label>
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('teacherResults.testExamTitle')} <span className="text-error">*</span></label>
                     <input
                       type="text"
-                      placeholder="e.g. Unit 3 Trigonometry"
+                      placeholder={t('teacherResults.titlePlaceholder')}
                       value={testTitle}
                       onChange={e => setTestTitle(e.target.value)}
                       className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold"
@@ -281,31 +288,31 @@ export default function TeacherResults() {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Test Type</label>
-                    <select 
-                      value={testType} 
+                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('teacherResults.testType')}</label>
+                    <select
+                      value={testType}
                       onChange={e => setTestType(e.target.value)}
                       className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary cursor-pointer font-semibold"
                     >
-                      <option value="MCQ">MCQ Test</option>
-                      <option value="Unit">Unit Test</option>
-                      <option value="Chapter">Chapter Test</option>
-                      <option value="Exam">Final Exam</option>
+                      <option value="MCQ">{t('teacherResults.mcqTest')}</option>
+                      <option value="Unit">{t('teacherResults.unitTest')}</option>
+                      <option value="Chapter">{t('teacherResults.chapterTest')}</option>
+                      <option value="Exam">{t('teacherResults.finalExam')}</option>
                     </select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Total Marks</label>
-                      <input 
-                        type="number" 
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('teacherResults.totalMarks')}</label>
+                      <input
+                        type="number"
                         value={totalMarks}
                         onChange={e => setTotalMarks(parseInt(e.target.value) || 0)}
                         className="px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low outline-none focus:border-primary font-semibold text-center"
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">Test Date</label>
+                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('teacherResults.testDate')}</label>
                       <DateInput
                         value={testDate}
                         onChange={e => setTestDate(e.target.value)}
@@ -320,14 +327,14 @@ export default function TeacherResults() {
             {/* Right: Students Marks Input */}
             <div className="lg:col-span-8">
               <section className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/30 shadow-sm space-y-4">
-                <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/15 pb-2">Student Ledger</h3>
-                
+                <h3 className="text-sm font-bold text-on-surface border-b border-outline-variant/15 pb-2">{t('teacherResults.studentLedger')}</h3>
+
                 {loadingStudents ? (
                   <div className="flex justify-center py-10">
                     <Icon name="progress_activity" className="animate-spin text-primary text-3xl" />
                   </div>
                 ) : students.length === 0 ? (
-                  <p className="text-xs text-on-surface-variant italic py-6 text-center">No students registered in this class.</p>
+                  <p className="text-xs text-on-surface-variant italic py-6 text-center">{t('teacherResults.noStudentsRegistered')}</p>
                 ) : (
                   <form onSubmit={handleSaveGrades} className="space-y-4">
                     <div className="max-h-[350px] overflow-y-auto space-y-3 pr-1">
@@ -336,10 +343,10 @@ export default function TeacherResults() {
                           <span className="col-span-5 text-xs font-bold text-on-surface truncate">{student.full_name}</span>
                           
                           <div className="col-span-3 flex items-center gap-1.5 justify-end">
-                            <input 
-                              type="number" 
+                            <input
+                              type="number"
                               step="0.5"
-                              placeholder="Marks"
+                              placeholder={t('teacherResults.marksPlaceholder')}
                               value={marksData[student.user_id]?.marks ?? ''}
                               onChange={e => handleMarksChange(student.user_id, 'marks', e.target.value)}
                               className="w-16 px-2 py-1 rounded-lg border border-outline-variant bg-surface-container-lowest text-xs outline-none text-center focus:border-primary font-bold"
@@ -348,9 +355,9 @@ export default function TeacherResults() {
                           </div>
 
                           <div className="col-span-3">
-                            <input 
-                              type="text" 
-                              placeholder="Remarks"
+                            <input
+                              type="text"
+                              placeholder={t('teacherResults.remarksPlaceholder')}
                               value={marksData[student.user_id]?.remarks ?? ''}
                               onChange={e => handleMarksChange(student.user_id, 'remarks', e.target.value)}
                               className="w-full px-2.5 py-1 rounded-lg border border-outline-variant bg-surface-container-lowest text-xs outline-none focus:border-primary"
@@ -364,12 +371,12 @@ export default function TeacherResults() {
                       ))}
                     </div>
 
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       disabled={submittingMarks}
                       className="w-full py-3 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:bg-opacity-95 cursor-pointer disabled:opacity-50"
                     >
-                      {submittingMarks ? 'Uploading grades...' : 'Save All Grades'}
+                      {submittingMarks ? t('teacherResults.uploadingGrades') : t('teacherResults.saveAllGrades')}
                     </button>
                   </form>
                 )}
@@ -384,9 +391,9 @@ export default function TeacherResults() {
             {/* Search Bar */}
             <div className="relative">
               <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg" />
-              <input 
-                type="text" 
-                placeholder="Search by student, test name, or subject..."
+              <input
+                type="text"
+                placeholder={t('teacherResults.searchPlaceholder')}
                 value={historySearch}
                 onChange={e => setHistorySearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-xl bg-surface-container-lowest text-xs outline-none focus:border-primary"
@@ -400,7 +407,7 @@ export default function TeacherResults() {
             ) : filteredHistory.length === 0 ? (
               <div className="text-center py-12 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl">
                 <Icon name="book" className="text-outline text-5xl" />
-                <p className="text-sm text-on-surface-variant font-semibold mt-2">No grade history items found.</p>
+                <p className="text-sm text-on-surface-variant font-semibold mt-2">{t('teacherResults.noGradeHistory')}</p>
               </div>
             ) : (
               <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/35 shadow-sm overflow-hidden">
@@ -408,12 +415,12 @@ export default function TeacherResults() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-surface-container-low border-b border-outline-variant/25">
-                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Student</th>
-                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Subject</th>
-                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Exam / Test</th>
-                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Score</th>
-                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">Grade</th>
-                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase text-right">Delete</th>
+                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">{t('teacherResults.student')}</th>
+                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">{t('teacherResults.subjectCol')}</th>
+                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">{t('teacherResults.examTest')}</th>
+                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">{t('teacherResults.score')}</th>
+                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase">{t('teacherResults.grade')}</th>
+                        <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase text-right">{t('teacherResults.delete')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant/15 text-xs">

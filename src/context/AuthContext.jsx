@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import i18n from '../i18n'
 import api from '../api/axios'
 
 const AuthContext = createContext(null)
@@ -24,6 +25,16 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // Persists the language choice to this account's own profile (not just
+  // this device) and updates the cached user so the switch takes effect
+  // immediately without waiting on the next poll.
+  const changeLanguage = useCallback(async (language) => {
+    const { data } = await api.patch('/auth/me/language', { language })
+    localStorage.setItem('user', JSON.stringify(data))
+    setUser(data)
+    return data
+  }, [])
+
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     const storedUser = localStorage.getItem('user')
@@ -36,6 +47,15 @@ export function AuthProvider({ children }) {
     setLoading(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Language is a per-account preference, not a per-device one — whichever
+  // account is active drives the UI language. A fresh/different account
+  // that never set one defaults to "en" from the backend, so switching
+  // accounts (or logging out to no account) naturally falls back to English
+  // unless that specific account chose Gujarati itself.
+  useEffect(() => {
+    i18n.changeLanguage(user?.preferred_language || 'en')
+  }, [user?.preferred_language, user?.id])
 
   // Keeps every page's view of assigned_classes/subjects/etc. fresh without
   // each one having to remember to refetch itself — a single shared poll,
@@ -164,7 +184,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, switchAccount, addAccount, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, switchAccount, addAccount, refreshUser, changeLanguage }}>
       {children}
     </AuthContext.Provider>
   )

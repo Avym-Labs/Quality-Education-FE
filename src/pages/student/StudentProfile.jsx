@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function StudentProfile() {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -51,7 +53,7 @@ export default function StudentProfile() {
         setStudentStats(statsRes.data)
       } catch (err) {
         console.error(err)
-        setError('Failed to fetch profile details.')
+        setError(t('studentProfile.failedToFetchProfile'))
       } finally {
         setLoading(false)
       }
@@ -137,14 +139,14 @@ export default function StudentProfile() {
               className="text-primary cursor-pointer active:scale-95 transition-transform"
               onClick={() => navigate('/student/dashboard')}
             />
-            <h1 className="font-title-lg text-title-lg text-primary font-bold">Student Profile</h1>
+            <h1 className="font-title-lg text-title-lg text-primary font-bold">{t('studentProfile.title')}</h1>
           </div>
           <div className="flex items-center gap-2">
             <Icon
               name="logout"
               className="text-primary cursor-pointer active:scale-95 transition-transform"
               onClick={handleLogout}
-              title="Logout"
+              title={t('common.signOut')}
             />
           </div>
         </div>
@@ -175,19 +177,19 @@ export default function StudentProfile() {
             </h2>
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
               <span className="px-3 py-1 bg-primary-container text-on-primary-container text-xs font-semibold rounded-full">
-                Grade {studentInfo?.grade || '10'}-{studentInfo?.section || 'A'}
+                {t('studentProfile.gradeSection', { grade: studentInfo?.grade || '10', section: studentInfo?.section || 'A' })}
               </span>
               <span className="px-3 py-1 bg-surface-variant text-on-surface-variant text-xs font-semibold rounded-full">
-                Roll No: {studentInfo?.roll_number || 'N/A'}
+                {t('studentProfile.rollNo', { roll: studentInfo?.roll_number || t('studentProfile.notAvailable') })}
               </span>
             </div>
           </div>
           <div className="hidden md:flex flex-col items-end gap-2">
-            <button 
+            <button
               onClick={() => window.print()}
               className="bg-primary text-on-primary px-6 py-2 rounded-full font-semibold text-sm hover:bg-primary-container hover:text-on-primary-container transition-all active:scale-95"
             >
-              Print Details
+              {t('studentProfile.printDetails')}
             </button>
           </div>
         </section>
@@ -207,7 +209,7 @@ export default function StudentProfile() {
             </div>
             <div>
               <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">{attendancePct}%</p>
-              <p className="text-xs font-semibold text-on-surface-variant">Attendance</p>
+              <p className="text-xs font-semibold text-on-surface-variant">{t('studentProfile.attendance')}</p>
             </div>
           </div>
 
@@ -221,7 +223,7 @@ export default function StudentProfile() {
             </div>
             <div>
               <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">{classRank ? `#${classRank}` : '—'}</p>
-              <p className="text-xs font-semibold text-on-surface-variant">Class Rank {classSize ? `of ${classSize}` : ''}</p>
+              <p className="text-xs font-semibold text-on-surface-variant">{classSize ? t('studentProfile.classRankOf', { size: classSize }) : t('studentProfile.classRank')}</p>
             </div>
           </div>
 
@@ -238,7 +240,7 @@ export default function StudentProfile() {
             </div>
             <div>
               <p className="font-numeric-bold text-numeric-bold text-on-surface font-bold">{performancePct}%</p>
-              <p className="text-xs font-semibold text-on-surface-variant">Avg. Performance</p>
+              <p className="text-xs font-semibold text-on-surface-variant">{t('studentProfile.avgPerformance')}</p>
             </div>
           </div>
         </section>
@@ -246,12 +248,12 @@ export default function StudentProfile() {
         {/* Horizontal Tab Navigation */}
         <nav className="flex gap-4 overflow-x-auto no-scrollbar pb-2 border-b border-outline-variant/20">
           {[
-            { id: 'profile', label: 'Profile' },
-            { id: 'attendance', label: 'Attendance' },
-            { id: 'results', label: 'Results' },
-            { id: 'homework', label: 'Homework' },
-            { id: 'leave', label: 'Leave History' },
-            { id: 'achievements', label: 'Achievements' },
+            { id: 'profile', label: t('studentProfile.tabProfile') },
+            { id: 'attendance', label: t('studentProfile.tabAttendance') },
+            { id: 'results', label: t('studentProfile.tabResults') },
+            { id: 'homework', label: t('studentProfile.tabHomework') },
+            { id: 'leave', label: t('studentProfile.tabLeave') },
+            { id: 'achievements', label: t('studentProfile.tabAchievements') },
           ].map((tab) => {
             const isActive = activeTab === tab.id
             return (
@@ -277,16 +279,16 @@ export default function StudentProfile() {
           <div className="space-y-stack-md">
             {/* Personal Details */}
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Personal Details</h3>
+              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.personalDetails')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
-                
+
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center">
                     <Icon name="email" className="text-on-surface-variant" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Email Address</p>
-                    <p className="text-sm font-semibold text-on-surface">{studentInfo?.email || 'N/A'}</p>
+                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">{t('studentProfile.emailAddress')}</p>
+                    <p className="text-sm font-semibold text-on-surface">{studentInfo?.email || t('studentProfile.notAvailable')}</p>
                   </div>
                 </div>
 
@@ -295,8 +297,8 @@ export default function StudentProfile() {
                     <Icon name="phone" className="text-on-surface-variant" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Phone Number</p>
-                    <p className="text-sm font-semibold text-on-surface">{studentInfo?.phone || 'N/A'}</p>
+                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">{t('studentProfile.phoneNumber')}</p>
+                    <p className="text-sm font-semibold text-on-surface">{studentInfo?.phone || t('studentProfile.notAvailable')}</p>
                   </div>
                 </div>
 
@@ -305,7 +307,7 @@ export default function StudentProfile() {
 
             {/* Parent Contact */}
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Parent Contact Information</h3>
+              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.parentContactInfo')}</h3>
               <div className="space-y-3">
                 {/* Father */}
                 <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-lg">
@@ -314,8 +316,8 @@ export default function StudentProfile() {
                       <Icon name="man" className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-on-surface">{studentInfo?.father_name || 'Not provided'}</p>
-                      <p className="text-xs text-on-surface-variant">Father</p>
+                      <p className="text-sm font-bold text-on-surface">{studentInfo?.father_name || t('studentProfile.notProvided')}</p>
+                      <p className="text-xs text-on-surface-variant">{t('studentProfile.father')}</p>
                     </div>
                   </div>
                 </div>
@@ -326,8 +328,8 @@ export default function StudentProfile() {
                       <Icon name="woman" className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-on-surface">{studentInfo?.mother_name || 'Not provided'}</p>
-                      <p className="text-xs text-on-surface-variant">Mother</p>
+                      <p className="text-sm font-bold text-on-surface">{studentInfo?.mother_name || t('studentProfile.notProvided')}</p>
+                      <p className="text-xs text-on-surface-variant">{t('studentProfile.mother')}</p>
                     </div>
                   </div>
                 </div>
@@ -340,7 +342,7 @@ export default function StudentProfile() {
         {activeTab === 'attendance' && (
           <div className="space-y-stack-md">
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-6">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Monthly Attendance</h3>
+              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.monthlyAttendance')}</h3>
               <div className="h-48 flex items-end justify-around gap-2 px-4 pt-2">
                 {monthlyAttendance().map((m, idx, arr) => (
                   <div key={m.label} className={`w-full bg-primary-container/20 rounded-t-lg relative group h-[85%] ${idx === arr.length - 1 ? 'border-2 border-dashed border-primary' : ''}`}>
@@ -350,26 +352,26 @@ export default function StudentProfile() {
                 ))}
               </div>
               <p className="mt-12 text-center text-sm font-semibold text-on-surface-variant">
-                Current term status: <span className="text-primary font-bold">{attendancePct >= 85 ? 'Excellent' : 'Needs Attention'}</span>
+                {t('studentProfile.currentTermStatus')} <span className="text-primary font-bold">{attendancePct >= 85 ? t('studentProfile.excellent') : t('studentProfile.needsAttention')}</span>
               </p>
             </div>
-            
+
             {/* Logs List */}
             {attendanceRecords.length > 0 && (
               <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
-                <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Recent Records</h3>
+                <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.recentRecords')}</h3>
                 <div className="space-y-2">
                   {attendanceRecords.slice(0, 10).map((r) => (
                     <div key={r.id} className="flex justify-between items-center p-3 bg-surface-container-low rounded-lg">
                       <div>
-                        <p className="text-sm font-bold text-on-surface">{r.subject || 'General Class'}</p>
+                        <p className="text-sm font-bold text-on-surface">{r.subject || t('studentProfile.generalClass')}</p>
                         <p className="text-xs text-on-surface-variant">{formatDate(r.date)}</p>
                       </div>
                       <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full capitalize ${
                         r.status === 'present' ? 'bg-green-100 text-green-700' :
                         r.status === 'late' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
                       }`}>
-                        {r.status}
+                        {r.status === 'present' ? t('common.statusPresent') : r.status === 'late' ? t('common.statusLate') : t('common.statusAbsent')}
                       </span>
                     </div>
                   ))}
@@ -383,16 +385,16 @@ export default function StudentProfile() {
         {activeTab === 'results' && (
           <div className="space-y-stack-md">
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Mid-Term Results</h3>
+              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.midTermResults')}</h3>
               {results.length === 0 ? (
-                <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No results recorded yet.</p>
+                <p className="text-sm text-on-surface-variant font-semibold text-center py-6">{t('studentProfile.noResultsRecorded')}</p>
               ) : (
                 <div className="space-y-3">
                   {results.map((res, index) => (
                     <div key={res.id || index} className="flex justify-between items-center py-3 border-b border-outline-variant/10 last:border-b-0">
                       <div>
                         <span className="text-sm font-bold text-on-surface block">{res.subject}</span>
-                        <span className="text-xs text-on-surface-variant">{res.test_title} ({res.test_type || 'Test'})</span>
+                        <span className="text-xs text-on-surface-variant">{res.test_title} ({res.test_type || t('studentProfile.test')})</span>
                       </div>
                       <div className="text-right">
                         <span className="font-bold text-primary">{res.marks_obtained}/{res.total_marks}</span>
@@ -411,14 +413,14 @@ export default function StudentProfile() {
           <div className="space-y-stack-md">
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Pending Tasks</h3>
+                <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.pendingTasks')}</h3>
                 <span className="bg-error text-on-error text-xs px-2.5 py-1 rounded-full font-bold">
-                  {homeworks.length} Active
+                  {t('studentProfile.nActive', { count: homeworks.length })}
                 </span>
               </div>
               <div className="space-y-4">
                 {homeworks.length === 0 ? (
-                  <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No homework assigned yet.</p>
+                  <p className="text-sm text-on-surface-variant font-semibold text-center py-6">{t('studentProfile.noHomeworkAssigned')}</p>
                 ) : (
                   homeworks.map((hw) => (
                     <div key={hw.id} className="p-4 border border-outline-variant/30 hover:border-primary/20 rounded-lg">
@@ -430,7 +432,7 @@ export default function StudentProfile() {
                       </div>
                       <p className="text-xs text-on-surface-variant mt-1">{hw.description}</p>
                       <p className="text-[10px] font-bold text-error bg-error-container/40 inline-block px-2 py-0.5 rounded mt-2">
-                        Due: {formatDate(hw.due_date)}
+                        {t('studentProfile.due', { date: formatDate(hw.due_date) })}
                       </p>
                     </div>
                   ))
@@ -444,9 +446,9 @@ export default function StudentProfile() {
         {activeTab === 'leave' && (
           <div className="space-y-stack-md">
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Recent Leave Requests</h3>
+              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.recentLeaveRequests')}</h3>
               {leaves.length === 0 ? (
-                <p className="text-sm text-on-surface-variant font-semibold text-center py-6">No leave requests yet.</p>
+                <p className="text-sm text-on-surface-variant font-semibold text-center py-6">{t('studentProfile.noLeaveRequestsYet')}</p>
               ) : (
                 <div className="space-y-3">
                   {leaves.map((l) => (
@@ -482,7 +484,7 @@ export default function StudentProfile() {
         {activeTab === 'achievements' && (
           <div className="space-y-stack-md">
             <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 space-y-4">
-              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Achievement Gallery</h3>
+              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">{t('studentProfile.achievementGallery')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                 {/* Consistency King — only awarded on real sustained attendance */}
@@ -491,8 +493,8 @@ export default function StudentProfile() {
                     <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center mb-3 shadow-md">
                       <Icon name="workspace_premium" className="text-on-primary-container text-3xl" />
                     </div>
-                    <p className="font-bold text-on-surface">Consistency King</p>
-                    <p className="text-xs text-on-surface-variant mt-1">Awarded for {attendancePct}% overall attendance</p>
+                    <p className="font-bold text-on-surface">{t('studentProfile.consistencyKing')}</p>
+                    <p className="text-xs text-on-surface-variant mt-1">{t('studentProfile.awardedForAttendance', { pct: attendancePct })}</p>
                   </div>
                 )}
 
@@ -502,14 +504,14 @@ export default function StudentProfile() {
                     <div className="w-16 h-16 rounded-full bg-tertiary-container flex items-center justify-center mb-3 shadow-md">
                       <Icon name="military_tech" className="text-on-tertiary-container text-3xl" />
                     </div>
-                    <p className="font-bold text-on-surface">Top Scorer</p>
-                    <p className="text-xs text-on-surface-variant mt-1">Ranked #{classRank} of {classSize} in your class ({performancePct}% avg)</p>
+                    <p className="font-bold text-on-surface">{t('studentProfile.topScorer')}</p>
+                    <p className="text-xs text-on-surface-variant mt-1">{t('studentProfile.rankedOfClass', { rank: classRank, size: classSize, pct: performancePct })}</p>
                   </div>
                 )}
 
                 {attendancePct < 85 && !isTopFivePercent && (
                   <p className="text-sm text-on-surface-variant font-semibold text-center py-6 md:col-span-3">
-                    No achievements unlocked yet. Keep up your attendance and test scores!
+                    {t('studentProfile.noAchievementsYet')}
                   </p>
                 )}
 

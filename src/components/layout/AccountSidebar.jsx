@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { id: 'my-academic-profile', icon: 'account_box', label: 'My Profile', teacherOnly: true },
   { id: 'profile-details', icon: 'account_circle', label: 'Account Credentials' },
   { id: 'preferences', icon: 'notifications_active', label: 'Notification Preferences' },
+  { id: 'language', icon: 'language', label: 'Language' },
   { id: 'switch-profile', icon: 'switch_account', label: 'Switch Account', teacherOnly: true },
   { id: 'manage-students', icon: 'group_add', label: 'Manage Students', teacherOnly: true, path: '/teacher/manage-students' },
   { id: 'support', icon: 'help_center', label: 'Help & Support' },

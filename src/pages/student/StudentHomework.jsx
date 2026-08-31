@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 
 export default function StudentHomework({ embed = false }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -30,7 +32,7 @@ export default function StudentHomework({ embed = false }) {
         }
       } catch (err) {
         console.error('Failed to load homework:', err)
-        setError('Failed to load assigned homework assignments.')
+        setError(t('studentHomework.failedToLoad'))
       } finally {
         setLoading(false)
       }
@@ -56,7 +58,7 @@ export default function StudentHomework({ embed = false }) {
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              Homework Hub
+              {t('studentHomework.homeworkHub')}
             </h2>
           </div>
         </section>
@@ -79,7 +81,7 @@ export default function StudentHomework({ embed = false }) {
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            Assigned Tasks ({activeHomeworks.length})
+            {t('studentHomework.assignedTasks', { count: activeHomeworks.length })}
           </button>
           <button 
             onClick={() => setActiveTab('past')}
@@ -89,7 +91,7 @@ export default function StudentHomework({ embed = false }) {
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            Past Deadlines ({pastHomeworks.length})
+            {t('studentHomework.pastDeadlines', { count: pastHomeworks.length })}
           </button>
         </div>
 
@@ -103,7 +105,7 @@ export default function StudentHomework({ embed = false }) {
             {activeTab === 'active' ? (
               activeHomeworks.length === 0 ? (
                 <div className="col-span-2 text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20">
-                  Yay! No active homework assignments assigned.
+                  {t('studentHomework.noActiveHomework')}
                 </div>
               ) : (
                 activeHomeworks.map(hw => (
@@ -118,7 +120,7 @@ export default function StudentHomework({ embed = false }) {
                         </span>
                         <span className="text-[10px] text-error font-bold flex items-center gap-0.5">
                           <Icon name="alarm" className="text-xs" />
-                          Due: {hw.due_date}
+                          {t('studentHomework.due', { date: hw.due_date })}
                         </span>
                       </div>
                       <h4 className="font-title-lg text-sm text-on-surface font-bold mt-1.5">{hw.title}</h4>
@@ -135,16 +137,16 @@ export default function StudentHomework({ embed = false }) {
                             className="w-full flex items-center justify-center gap-1 py-2 bg-primary/15 text-primary text-xs font-bold rounded-xl hover:bg-primary/25 transition-colors"
                           >
                             <Icon name="link" className="text-sm" />
-                            <span>Open Reference Link</span>
+                            <span>{t('studentHomework.openReferenceLink')}</span>
                           </a>
                         </div>
                       )}
-                      
+
                       {hw.attachments && hw.attachments.length > 0 && (
                         <div className="space-y-1.5">
-                          <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Attached files:</p>
+                          <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{t('studentHomework.attachedFiles')}</p>
                           {hw.attachments.map((attStr, aIdx) => {
-                            const [name, url] = attStr.includes('|') ? attStr.split('|') : ['Attachment', attStr]
+                            const [name, url] = attStr.includes('|') ? attStr.split('|') : [t('studentHomework.attachment'), attStr]
                             const downloadUrl = url.startsWith('/') ? `${api.defaults.baseURL.replace('/api', '')}${url}` : url
                             return (
                               <a 
@@ -172,7 +174,7 @@ export default function StudentHomework({ embed = false }) {
             ) : (
               pastHomeworks.length === 0 ? (
                 <div className="col-span-2 text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20">
-                  No expired assignments.
+                  {t('studentHomework.noExpiredAssignments')}
                 </div>
               ) : (
                 pastHomeworks.map(hw => (
@@ -186,7 +188,7 @@ export default function StudentHomework({ embed = false }) {
                           {hw.subject}
                         </span>
                         <span className="text-[10px] text-outline font-bold flex items-center gap-0.5">
-                          Expired: {hw.due_date}
+                          {t('studentHomework.expired', { date: hw.due_date })}
                         </span>
                       </div>
                       <h4 className="font-title-lg text-sm text-on-surface font-bold mt-1.5">{hw.title}</h4>
@@ -203,15 +205,15 @@ export default function StudentHomework({ embed = false }) {
                             className="w-full flex items-center justify-center gap-1 py-2 bg-outline-variant text-on-surface-variant text-xs font-bold rounded-xl hover:bg-opacity-95 transition-colors"
                           >
                             <Icon name="link" className="text-sm" />
-                            <span>Reference Link</span>
+                            <span>{t('studentHomework.referenceLink')}</span>
                           </a>
                         </div>
                       )}
-                      
+
                       {hw.attachments && hw.attachments.length > 0 && (
                         <div className="space-y-1.5">
                           {hw.attachments.map((attStr, aIdx) => {
-                            const [name, url] = attStr.includes('|') ? attStr.split('|') : ['Attachment', attStr]
+                            const [name, url] = attStr.includes('|') ? attStr.split('|') : [t('studentHomework.attachment'), attStr]
                             const downloadUrl = url.startsWith('/') ? `${api.defaults.baseURL.replace('/api', '')}${url}` : url
                             return (
                               <a 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
@@ -7,6 +8,7 @@ import Icon from '../../components/common/Icon'
 import DateInput from '../../components/common/DateInput'
 
 export default function HomeworkAssignment({ embed = false }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -26,6 +28,7 @@ export default function HomeworkAssignment({ embed = false }) {
   const [homeworkList, setHomeworkList] = useState([])
   const [activeTab, setActiveTab] = useState('active') // active | past
   const [editingHomeworkId, setEditingHomeworkId] = useState(null)
+  const [messageIsSuccess, setMessageIsSuccess] = useState(false)
 
   const handleCancelEdit = () => {
     setEditingHomeworkId(null)
@@ -50,11 +53,13 @@ export default function HomeworkAssignment({ embed = false }) {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       setAttachments(prev => [...prev, { name: file.name, url: data.url }])
-      setMessage('File uploaded successfully!')
+      setMessage(t('homeworkAssignment.fileUploadedSuccess'))
+      setMessageIsSuccess(true)
       setTimeout(() => setMessage(''), 3000)
     } catch (err) {
       console.error('File upload failed:', err)
-      setMessage(err.response?.data?.detail || 'File upload failed. Unsupported format or size.')
+      setMessage(err.response?.data?.detail || t('homeworkAssignment.fileUploadFailed'))
+      setMessageIsSuccess(false)
     } finally {
       setUploadingFile(false)
     }
@@ -77,7 +82,8 @@ export default function HomeworkAssignment({ embed = false }) {
       }
     } catch (err) {
       console.error('Failed to load homework assignments:', err)
-      setMessage('Error loading homework assignments.')
+      setMessage(t('homeworkAssignment.errorLoadingHomework'))
+      setMessageIsSuccess(false)
     } finally {
       setLoading(false)
     }
@@ -93,7 +99,8 @@ export default function HomeworkAssignment({ embed = false }) {
     setMessage('')
 
     if (!title || !dueDate) {
-      setMessage('Please enter a title and select a due date.')
+      setMessage(t('homeworkAssignment.enterTitleAndDueDate'))
+      setMessageIsSuccess(false)
       return
     }
 
@@ -112,11 +119,12 @@ export default function HomeworkAssignment({ embed = false }) {
 
       if (editingHomeworkId) {
         await api.put(`/homework/${editingHomeworkId}`, payload)
-        setMessage('Homework updated successfully!')
+        setMessage(t('homeworkAssignment.homeworkUpdatedSuccess'))
       } else {
         await api.post('/homework', payload)
-        setMessage('Homework assigned successfully!')
+        setMessage(t('homeworkAssignment.homeworkAssignedSuccess'))
       }
+      setMessageIsSuccess(true)
 
       // Clear form
       setTitle('')
@@ -132,22 +140,25 @@ export default function HomeworkAssignment({ embed = false }) {
       setTimeout(() => setMessage(''), 4000)
     } catch (err) {
       console.error('Failed to save homework:', err)
-      setMessage(editingHomeworkId ? 'Failed to update homework.' : 'Failed to assign homework.')
+      setMessage(editingHomeworkId ? t('homeworkAssignment.failedToUpdate') : t('homeworkAssignment.failedToAssign'))
+      setMessageIsSuccess(false)
     }
   }
 
   // Delete Homework handler
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this homework assignment?')) return
+    if (!window.confirm(t('homeworkAssignment.confirmDelete'))) return
     setMessage('')
     try {
       await api.delete(`/homework/${id}`)
-      setMessage('Assignment deleted.')
+      setMessage(t('homeworkAssignment.assignmentDeleted'))
+      setMessageIsSuccess(true)
       loadHomework()
       setTimeout(() => setMessage(''), 3000)
     } catch (err) {
       console.error('Failed to delete homework:', err)
-      setMessage('Failed to delete assignment.')
+      setMessage(t('homeworkAssignment.failedToDelete'))
+      setMessageIsSuccess(false)
     }
   }
 
@@ -163,7 +174,8 @@ export default function HomeworkAssignment({ embed = false }) {
       return { name, url }
     }) : [])
     window.scrollTo({ top: 0, behavior: 'smooth' })
-    setMessage('Loaded assignment parameters to form.')
+    setMessage(t('homeworkAssignment.loadedAssignmentParams'))
+    setMessageIsSuccess(true)
     setTimeout(() => setMessage(''), 3000)
   }
 
@@ -187,7 +199,7 @@ export default function HomeworkAssignment({ embed = false }) {
           </button>
           <div>
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">
-              Homework assignments
+              {t('homeworkAssignment.title')}
             </h2>
           </div>
         </section>
@@ -196,8 +208,8 @@ export default function HomeworkAssignment({ embed = false }) {
         {/* Message Banner */}
         {message && (
           <div className={`p-3 rounded-xl text-center text-xs font-bold ${
-            message.includes('successfully') || message.includes('deleted') || message.includes('Loaded')
-              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+            messageIsSuccess
+              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
               : 'bg-primary-container/20 text-primary border border-primary/20'
           }`}>
             {message}
@@ -212,7 +224,7 @@ export default function HomeworkAssignment({ embed = false }) {
             <section className="bg-surface-container-lowest p-stack-md rounded-[28px] shadow-sm border border-outline-variant/30 space-y-4">
               <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
                 <h3 className="font-title-lg text-sm text-on-surface font-bold">
-                  {editingHomeworkId ? 'Edit Homework' : 'Assign Homework'}
+                  {editingHomeworkId ? t('homeworkAssignment.editHomework') : t('homeworkAssignment.assignHomework')}
                 </h3>
                 <Icon name={editingHomeworkId ? 'edit' : 'edit_note'} className="text-primary" />
               </div>
@@ -220,13 +232,13 @@ export default function HomeworkAssignment({ embed = false }) {
               <form onSubmit={handleAssign} className="space-y-4">
                 {/* Subject Selection */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Subject</label>
-                  <select 
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">{t('homeworkAssignment.subject')}</label>
+                  <select
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   >
-                    {subjects.length === 0 && <option value="">No subjects assigned</option>}
+                    {subjects.length === 0 && <option value="">{t('homeworkAssignment.noSubjectsAssigned')}</option>}
                     {subjects.map(subj => (
                       <option key={subj} value={subj}>{subj}</option>
                     ))}
@@ -235,38 +247,38 @@ export default function HomeworkAssignment({ embed = false }) {
 
                 {/* Class Selection */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Assigned Class</label>
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">{t('homeworkAssignment.assignedClass')}</label>
                   <select
                     value={selectedClass}
                     onChange={(e) => setSelectedClass(e.target.value)}
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   >
-                    {assignedClasses.length === 0 && <option value="">No classes assigned</option>}
+                    {assignedClasses.length === 0 && <option value="">{t('homeworkAssignment.noClassesAssigned')}</option>}
                     {assignedClasses.map(cls => (
-                      <option key={cls} value={cls}>Class {cls}</option>
+                      <option key={cls} value={cls}>{t('homeworkAssignment.classLabel', { cls })}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Title */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Homework Title <span className="text-error">*</span></label>
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">{t('homeworkAssignment.homeworkTitle')} <span className="text-error">*</span></label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Calculus Practice Set 4"
+                    placeholder={t('homeworkAssignment.titlePlaceholder')}
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   />
                 </div>
 
                 {/* Description */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Description</label>
-                  <textarea 
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">{t('homeworkAssignment.description')}</label>
+                  <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Provide description of questions or materials to refer..."
+                    placeholder={t('homeworkAssignment.descriptionPlaceholder')}
                     rows="3"
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   />
@@ -274,7 +286,7 @@ export default function HomeworkAssignment({ embed = false }) {
 
                  {/* Due Date */}
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">Due Date <span className="text-error">*</span></label>
+                  <label className="text-[10px] uppercase font-bold text-on-surface-variant">{t('homeworkAssignment.dueDate')} <span className="text-error">*</span></label>
                   <DateInput
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
@@ -286,13 +298,13 @@ export default function HomeworkAssignment({ embed = false }) {
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-on-surface-variant flex items-center gap-1">
                     <Icon name="link" className="text-xs" />
-                    <span>Homework Link / Reference URL</span>
+                    <span>{t('homeworkAssignment.homeworkLink')}</span>
                   </label>
-                  <input 
+                  <input
                     type="url"
                     value={homeworkLink}
                     onChange={(e) => setHomeworkLink(e.target.value)}
-                    placeholder="e.g. https://docs.google.com/document/d/..."
+                    placeholder={t('homeworkAssignment.linkPlaceholder')}
                     className="w-full bg-surface-container-low border-outline-variant/60 rounded-xl py-2 px-3 text-xs font-semibold focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none"
                   />
                 </div>
@@ -301,13 +313,13 @@ export default function HomeworkAssignment({ embed = false }) {
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-on-surface-variant flex items-center gap-1">
                     <Icon name="upload_file" className="text-xs" />
-                    <span>Upload Documents / Worksheets / Images</span>
+                    <span>{t('homeworkAssignment.uploadDocuments')}</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-outline-variant/60 rounded-xl bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
                       <Icon name="cloud_upload" className="text-base text-primary" />
                       <span className="text-[11px] font-semibold text-on-surface-variant">
-                        {uploadingFile ? 'Uploading...' : 'Choose file...'}
+                        {uploadingFile ? t('homeworkAssignment.uploading') : t('homeworkAssignment.chooseFile')}
                       </span>
                       <input 
                         type="file"
@@ -345,15 +357,15 @@ export default function HomeworkAssignment({ embed = false }) {
                      className="flex-1 py-3 bg-primary text-on-primary font-bold text-xs rounded-2xl shadow-md hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
                    >
                      <Icon name={editingHomeworkId ? 'save' : 'send'} className="text-sm" />
-                     <span>{editingHomeworkId ? 'Update Homework' : 'Assign Homework'}</span>
+                     <span>{editingHomeworkId ? t('homeworkAssignment.updateHomework') : t('homeworkAssignment.assignHomework')}</span>
                    </button>
                    {editingHomeworkId && (
-                     <button 
+                     <button
                        type="button"
                        onClick={handleCancelEdit}
                        className="px-4 py-3 border border-outline text-xs text-on-surface-variant font-bold rounded-2xl hover:bg-surface-container transition-all active:scale-95 cursor-pointer bg-transparent"
                      >
-                       Cancel
+                       {t('homeworkAssignment.cancel')}
                      </button>
                    )}
                  </div>
@@ -374,7 +386,7 @@ export default function HomeworkAssignment({ embed = false }) {
                     : 'border-transparent text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                Active Homework ({activeHomeworks.length})
+                {t('homeworkAssignment.activeHomework', { count: activeHomeworks.length })}
               </button>
               <button 
                 onClick={() => setActiveTab('past')}
@@ -384,7 +396,7 @@ export default function HomeworkAssignment({ embed = false }) {
                     : 'border-transparent text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                Past Homework ({pastHomeworks.length})
+                {t('homeworkAssignment.pastHomework', { count: pastHomeworks.length })}
               </button>
             </div>
 
@@ -398,7 +410,7 @@ export default function HomeworkAssignment({ embed = false }) {
                 {activeTab === 'active' ? (
                   activeHomeworks.length === 0 ? (
                     <div className="text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20">
-                      No active homework assigned.
+                      {t('homeworkAssignment.noActiveHomework')}
                     </div>
                   ) : (
                     activeHomeworks.map(hw => (
@@ -409,7 +421,7 @@ export default function HomeworkAssignment({ embed = false }) {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
-                              Grade {hw.grade} • Sec {hw.section}
+                              {t('homeworkAssignment.gradeSection', { grade: hw.grade, section: hw.section })}
                             </span>
                             <h4 className="font-title-lg text-sm text-on-surface font-bold mt-1.5">{hw.title}</h4>
                             <p className="text-xs text-on-surface-variant font-medium mt-1 pr-4">{hw.description}</p>
@@ -422,7 +434,7 @@ export default function HomeworkAssignment({ embed = false }) {
                                   className="inline-flex items-center gap-1 px-3 py-1 bg-primary/15 text-primary text-[11px] font-bold rounded-xl hover:bg-primary/25 transition-colors"
                                 >
                                   <Icon name="link" className="text-xs" />
-                                  <span>Reference Link</span>
+                                  <span>{t('homeworkAssignment.referenceLink')}</span>
                                 </a>
                               </div>
                             )}
@@ -452,7 +464,7 @@ export default function HomeworkAssignment({ embed = false }) {
                         <div className="flex items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-3 gap-4 pt-1">
                           <div className="flex items-center gap-1">
                             <Icon name="event" className="text-xs" />
-                            <span>Due: {hw.due_date}</span>
+                            <span>{t('homeworkAssignment.due', { date: hw.due_date })}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Icon name="book" className="text-xs" />
@@ -478,14 +490,14 @@ export default function HomeworkAssignment({ embed = false }) {
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold border-none cursor-pointer"
                           >
                             <Icon name="edit" className="text-xs" />
-                            <span>Edit</span>
+                            <span>{t('homeworkAssignment.edit')}</span>
                           </button>
                           <button 
                             onClick={() => handleDuplicate(hw)}
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold border-none cursor-pointer"
                           >
                             <Icon name="content_copy" className="text-xs" />
-                            <span>Reuse</span>
+                            <span>{t('homeworkAssignment.reuse')}</span>
                           </button>
                           <button 
                             onClick={() => handleDelete(hw.id)}
@@ -500,7 +512,7 @@ export default function HomeworkAssignment({ embed = false }) {
                 ) : (
                   pastHomeworks.length === 0 ? (
                     <div className="text-center py-12 text-xs font-semibold text-on-surface-variant bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/20">
-                      No expired assignments found.
+                      {t('homeworkAssignment.noExpiredAssignments')}
                     </div>
                   ) : (
                     pastHomeworks.map(hw => (
@@ -510,7 +522,7 @@ export default function HomeworkAssignment({ embed = false }) {
                       >
                         <div className="mb-2">
                           <span className="px-2 py-0.5 rounded-full bg-outline-variant/40 text-on-surface-variant text-[10px] font-bold">
-                            Grade {hw.grade} • Sec {hw.section}
+                            {t('homeworkAssignment.gradeSection', { grade: hw.grade, section: hw.section })}
                           </span>
                           <h4 className="font-title-lg text-sm text-on-surface font-bold mt-1.5">{hw.title}</h4>
                           <p className="text-xs text-on-surface-variant font-medium mt-1 pr-4">{hw.description}</p>
@@ -523,7 +535,7 @@ export default function HomeworkAssignment({ embed = false }) {
                                 className="inline-flex items-center gap-1 px-3 py-1 bg-outline-variant text-on-surface-variant text-[11px] font-bold rounded-xl hover:bg-outline-variant/65 transition-colors"
                               >
                                 <Icon name="link" className="text-xs" />
-                                <span>Reference Link</span>
+                                <span>{t('homeworkAssignment.referenceLink')}</span>
                               </a>
                             </div>
                           )}
@@ -552,7 +564,7 @@ export default function HomeworkAssignment({ embed = false }) {
                         <div className="flex items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-3 gap-4">
                           <div className="flex items-center gap-1 text-error">
                             <Icon name="event_busy" className="text-xs" />
-                            <span>Expired: {hw.due_date}</span>
+                            <span>{t('homeworkAssignment.expired', { date: hw.due_date })}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Icon name="book" className="text-xs" />
@@ -578,14 +590,14 @@ export default function HomeworkAssignment({ embed = false }) {
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold border-none cursor-pointer"
                           >
                             <Icon name="edit" className="text-xs" />
-                            <span>Edit</span>
+                            <span>{t('homeworkAssignment.edit')}</span>
                           </button>
                           <button 
                             onClick={() => handleDuplicate(hw)}
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors text-xs font-bold border-none cursor-pointer"
                           >
                             <Icon name="restore" className="text-xs" />
-                            <span>Reuse</span>
+                            <span>{t('homeworkAssignment.reuse')}</span>
                           </button>
                           <button 
                             onClick={() => handleDelete(hw.id)}
