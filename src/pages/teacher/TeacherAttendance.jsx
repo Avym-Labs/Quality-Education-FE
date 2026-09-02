@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import LanguageToggle from '../../components/common/LanguageToggle'
 
 export default function TeacherAttendance() {
   const { user } = useAuth()
@@ -432,8 +433,9 @@ export default function TeacherAttendance() {
           </div>
           
           <div className="flex items-center gap-3">
+            <LanguageToggle />
             {/* Filter Toggle Button */}
-            <button 
+            <button
               onClick={() => setFilterSheetOpen(true)}
               className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors border-none cursor-pointer active:scale-95 duration-100"
             >

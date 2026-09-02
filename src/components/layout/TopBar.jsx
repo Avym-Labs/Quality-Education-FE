@@ -87,7 +87,7 @@ export default function TopBar({ onNotificationClick }) {
       </div>
       
       <div className="flex items-center gap-1">
-        
+
         {/* Notifications Icon with Unread Badge count */}
         <div className="relative">
           <button

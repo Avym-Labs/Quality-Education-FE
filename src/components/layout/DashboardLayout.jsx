@@ -5,6 +5,7 @@ import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import { useAuth } from '../../context/AuthContext'
 import Icon from '../common/Icon'
+import LanguageToggle from '../common/LanguageToggle'
 import logo from '../../assets/logo.png'
 
 // Shared submenu shown under "Academics" for every role, mirrors the tabs inside AcademicsHub
@@ -197,12 +198,20 @@ export default function DashboardLayout({ children, hideTopBar = false, fixedHei
         </div>
       </aside>
 
+      {/* Global language toggle — desktop only, hidden on pages that have their own */}
+      {!/\/(dashboard|attendance)/.test(location.pathname) && (
+        <div className="hidden md:block fixed top-4 right-6 z-50">
+          <LanguageToggle />
+        </div>
+      )}
+
       {/* Main Page Layout Wrapper */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
-        {/* TopBar hidden on desktop since the sidebar handles profile and branding */}
+        {/* TopBar — mobile only */}
         <div className="md:hidden">
           {!hideTopBar && <TopBar />}
         </div>
+
         
         <main className={
           noPadding

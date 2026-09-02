@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
+import LanguageToggle from '../../components/common/LanguageToggle'
 import AttendanceCountBars from '../../components/charts/AttendanceCountBars'
 import ExplodedPieChart from '../../components/charts/ExplodedPieChart'
 
@@ -307,13 +308,16 @@ export default function TeacherDashboard() {
                 {getGreeting()}, {user?.full_name?.split(' ')[0] || t('teacherDashboard.greetingName')}! 👋
               </h2>
             </div>
-            <button
-              onClick={() => setShowSwitchModal(true)}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 w-fit border-none cursor-pointer self-start sm:self-center"
-            >
-              <Icon name="swap_horiz" className="text-sm" />
-              <span>{t('teacherDashboard.switchProfile')}</span>
-            </button>
+            <div className="flex items-center gap-3 self-start sm:self-center">
+              <LanguageToggle light />
+              <button
+                onClick={() => setShowSwitchModal(true)}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 w-fit border-none cursor-pointer"
+              >
+                <Icon name="swap_horiz" className="text-sm" />
+                <span>{t('teacherDashboard.switchProfile')}</span>
+              </button>
+            </div>
           </div>
         </section>
 
