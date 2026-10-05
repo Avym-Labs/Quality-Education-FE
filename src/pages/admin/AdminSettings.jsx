@@ -391,6 +391,23 @@ export default function AdminSettings() {
               <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
+            {/* Privacy Policy */}
+            <a 
+              href="https://avyamlabs.com/privacy-policy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group no-underline"
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="shield" className="text-primary text-xl" />
+                <div className="text-left">
+                  <h4 className="text-xs font-bold text-on-surface">Privacy Policy</h4>
+                  <p className="text-[10px] text-outline font-semibold">Read our privacy policy and data practices</p>
+                </div>
+              </div>
+              <Icon name="open_in_new" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
+            </a>
+
             {/* Log Out */}
             <div 
               onClick={handleLogout}

@@ -366,6 +366,23 @@ export default function SettingsPage() {
               <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
 
+            {/* Privacy Policy */}
+            <a 
+              href="https://avyamlabs.com/privacy-policy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group no-underline"
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="shield" className="text-primary text-xl" />
+                <div className="text-left">
+                  <h4 className="text-xs font-bold text-on-surface">Privacy Policy</h4>
+                  <p className="text-[10px] text-outline font-semibold">Read our privacy policy and data practices</p>
+                </div>
+              </div>
+              <Icon name="open_in_new" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
+            </a>
+
             {/* Logout Trigger */}
             <div 
               onClick={handleLogout}
@@ -752,6 +769,19 @@ export default function SettingsPage() {
               <div className="p-3 bg-surface-container-low rounded-xl">
                 <h5 className="font-bold text-on-surface">FAQ Support Center</h5>
                 <p className="text-[10px] text-on-surface-variant mt-1">Open direct ticket queries or review documentation online.</p>
+              </div>
+              <div className="p-3 bg-surface-container-low rounded-xl">
+                <h5 className="font-bold text-on-surface">Privacy Policy</h5>
+                <p className="text-[10px] text-on-surface-variant mt-1">Read how we protect and handle your institutional data.</p>
+                <a
+                  href="https://avyamlabs.com/privacy-policy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-primary font-bold text-[11px] hover:underline mt-2"
+                >
+                  <span>https://avyamlabs.com/privacy-policy/</span>
+                  <Icon name="open_in_new" className="text-[12px]" />
+                </a>
               </div>
               <div className="p-3 bg-surface-container-low rounded-xl">
                 <h5 className="font-bold text-on-surface">System Details</h5>

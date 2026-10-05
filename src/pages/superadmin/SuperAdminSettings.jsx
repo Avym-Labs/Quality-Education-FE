@@ -351,8 +351,28 @@ export default function SuperAdminSettings() {
           )}
         </section>
 
+        {/* Privacy Policy Section */}
+        <section className="bg-surface-container-lowest rounded-2xl p-stack-md shadow-sm border border-outline-variant/35 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Icon name="shield" className="text-primary text-xl" />
+            <div>
+              <h4 className="text-xs font-bold text-on-surface">Privacy Policy</h4>
+              <p className="text-[10px] text-outline font-semibold">Read our institutional data practices and privacy terms</p>
+            </div>
+          </div>
+          <a
+            href="https://avyamlabs.com/privacy-policy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors no-underline"
+          >
+            <span>View Policy</span>
+            <Icon name="open_in_new" className="text-xs" />
+          </a>
+        </section>
+
         {/* Logout Section */}
-        <section className="pt-4">
+        <section className="pt-2">
           <button 
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 bg-error text-on-error py-3.5 rounded-2xl shadow-md hover:bg-opacity-90 transition-all active:scale-95 font-bold text-sm"

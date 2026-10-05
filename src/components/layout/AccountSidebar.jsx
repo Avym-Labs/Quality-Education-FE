@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { id: 'switch-profile', icon: 'switch_account', label: 'Switch Account', teacherOnly: true },
   { id: 'manage-students', icon: 'group_add', label: 'Manage Students', teacherOnly: true, path: '/teacher/manage-students' },
   { id: 'support', icon: 'help_center', label: 'Help & Support' },
+  { id: 'privacy-policy', icon: 'shield', label: 'Privacy Policy', externalUrl: 'https://avyamlabs.com/privacy-policy/' },
 ]
 
 /**
@@ -32,6 +33,10 @@ export default function AccountSidebar({ active, onSelect }) {
   const items = NAV_ITEMS.filter((item) => !item.teacherOnly || user?.role === 'teacher')
 
   const handleSelect = (item) => {
+    if (item.externalUrl) {
+      window.open(item.externalUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
     if (item.path) {
       navigate(item.path)
     } else if (onSelect) {
