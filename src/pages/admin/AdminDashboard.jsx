@@ -93,6 +93,17 @@ export default function AdminDashboard() {
   const highPerformers = analyticsData?.high_performers ?? []
   const attendanceWarnings = analyticsData?.attendance_warnings ?? []
 
+  // Hoisted hooks (must not live inside conditional JSX)
+  const histogramScores = useMemo(() => {
+    const out = []
+    const offsets = [-8,-4,0,4,8]
+    ;(analyticsData?.subject_performance ?? []).forEach(subj => {
+      offsets.forEach(o => out.push(Math.max(0, Math.min(100, Number(subj.score) + o))))
+    })
+    return out
+  }, [analyticsData])
+  const heatmapStudents = useMemo(() => (analyticsData?.subject_performance ?? []).map((subj, idx) => ({ name: 'Class ' + (idx + 1), scores: { [subj.name]: subj.score }, initials: 'C' + (idx + 1) })), [analyticsData])
+
   return (
     <DashboardLayout hideTopBar={false}>
       <div className="flex flex-col gap-4 mt-stack-md pb-4">
@@ -388,16 +399,7 @@ export default function AdminDashboard() {
                     </h3>
                     <div className="flex-1 min-h-[200px]">
                       <ScoreDistributionHistogram 
-                        scores={useMemo(() => {
-                          // Reconstruct scores from subject performance
-                          const scores = [];
-                          subjectPerformance.forEach(subj => {
-                            for (let i = 0; i < 5; i++) {
-                              scores.push(Math.max(0, Math.min(100, subj.score + (Math.random() - 0.5) * 20)));
-                            }
-                          });
-                          return scores;
-                        }, [subjectPerformance])}
+                         scores={histogramScores}
                         height={200}
                         binCount={10}
                         showNormalCurve={true}
@@ -423,14 +425,7 @@ export default function AdminDashboard() {
                       </div>
                     ) : (
                       <SubjectHeatmap 
-                        students={useMemo(() => {
-                          // Create mock student data from subject performance
-                          return subjectPerformance.map((subj, idx) => ({
-                            name: `Class ${idx + 1}`,
-                            scores: { [subj.name]: subj.score },
-                            initials: `C${idx + 1}`
-                          }));
-                        }, [subjectPerformance])}
+                        students={heatmapStudents}
                         subjects={subjectPerformance.map(s => s.name)}
                         height={200}
                         cellSize={50}

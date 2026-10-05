@@ -85,6 +85,21 @@ export default function StudentResultReport() {
     (r.test_title || '').toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, testLimit)
 
+  const pieData = useMemo(() => {
+  const bySubject = {};
+  results.forEach(r => {
+  if (!r.subject) return;
+  bySubject[r.subject] = bySubject[r.subject] || { count: 0, scores: [] };
+  bySubject[r.subject].count++;
+  bySubject[r.subject].scores.push(r.percentage);
+  });
+  return Object.entries(bySubject).map(([subject, data]) => ({
+  subject,
+  count: data.count,
+  avgScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length)
+  }));
+  }, [results])
+
   return (
     <DashboardLayout hideTopBar={true}>
       {/* TopAppBar */}
@@ -268,20 +283,7 @@ export default function StudentResultReport() {
           <div className="lg:col-span-2 bg-surface-container-lowest rounded-[24px] p-6 shadow-sm border border-outline-variant">
             <h3 className="font-title-lg text-title-lg font-bold mb-4">{t('studentResultReport.testDistribution')}</h3>
             <TestResultsPieChart 
-              results={useMemo(() => {
-                const bySubject = {};
-                results.forEach(r => {
-                  if (!r.subject) return;
-                  bySubject[r.subject] = bySubject[r.subject] || { count: 0, scores: [] };
-                  bySubject[r.subject].count++;
-                  bySubject[r.subject].scores.push(r.percentage);
-                });
-                return Object.entries(bySubject).map(([subject, data]) => ({
-                  subject,
-                  count: data.count,
-                  avgScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length)
-                }));
-              }, [results])}
+              results={pieData}
               size={280}
               innerRadius={50}
               showLegend={true}
