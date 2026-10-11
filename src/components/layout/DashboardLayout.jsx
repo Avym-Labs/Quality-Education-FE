@@ -50,6 +50,7 @@ const SIDEBAR_ITEMS = {
   ],
   superadmin: [
     { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/superadmin/dashboard' },
+    { icon: 'how_to_reg', labelKey: 'nav.applications', path: '/superadmin/applications' },
     { icon: 'shield', labelKey: 'nav.admins', path: '/superadmin/admins' },
     { icon: 'payments', labelKey: 'nav.payments', path: '/superadmin/payments' },
     { icon: 'person', labelKey: 'nav.account', path: '/superadmin/settings' },

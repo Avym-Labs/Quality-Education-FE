@@ -6,6 +6,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout'
 import AccountSidebar from '../../components/layout/AccountSidebar'
 import Icon from '../../components/common/Icon'
 import LanguageSelector from '../../components/common/LanguageSelector'
+import DeleteAccountSection from '../../components/common/DeleteAccountSection'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -397,6 +398,8 @@ export default function SettingsPage() {
               </div>
               <Icon name="chevron_right" className="text-red-300 group-hover:translate-x-0.5 transition-transform text-lg" />
             </div>
+
+            <DeleteAccountSection />
           </div>
         )}
 

@@ -29,6 +29,7 @@ const NAV_ITEMS = {
   ],
   superadmin: [
     { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/superadmin/dashboard' },
+    { icon: 'how_to_reg', labelKey: 'nav.applications', path: '/superadmin/applications' },
     { icon: 'shield', labelKey: 'nav.admins', path: '/superadmin/admins' },
     { icon: 'payments', labelKey: 'nav.payments', path: '/superadmin/payments' },
     { icon: 'settings', labelKey: 'nav.account', path: '/superadmin/settings' },

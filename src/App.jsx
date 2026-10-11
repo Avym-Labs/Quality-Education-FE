@@ -7,6 +7,7 @@ import LoginPage from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import PausedPage from './pages/auth/PausedPage'
+import SignUpPage from './pages/auth/SignUpPage'
 
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/StudentProfile'
@@ -40,6 +41,7 @@ import AdminSmsLogs from './pages/admin/AdminSmsLogs'
 
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import AdminManagement from './pages/superadmin/AdminManagement'
+import Applications from './pages/superadmin/Applications'
 import PaymentsHistory from './pages/superadmin/PaymentsHistory'
 import SuperAdminSettings from './pages/superadmin/SuperAdminSettings'
 
@@ -57,6 +59,7 @@ function App() {
       <NotificationProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
           <Route path="/paused" element={<PausedPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -128,6 +131,7 @@ function App() {
           <Route path="/superadmin" element={<ProtectedRoute role="superadmin" />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<SuperAdminDashboard />} />
+            <Route path="applications" element={<Applications />} />
             <Route path="admins" element={<AdminManagement />} />
             <Route path="payments" element={<PaymentsHistory />} />
             <Route path="settings" element={<SuperAdminSettings />} />
