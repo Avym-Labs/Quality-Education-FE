@@ -42,6 +42,8 @@ import AdminSmsLogs from './pages/admin/AdminSmsLogs'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import AdminManagement from './pages/superadmin/AdminManagement'
 import Applications from './pages/superadmin/Applications'
+import Organizations from './pages/superadmin/Organizations'
+import Statistics from './pages/admin/Statistics'
 import PaymentsHistory from './pages/superadmin/PaymentsHistory'
 import SuperAdminSettings from './pages/superadmin/SuperAdminSettings'
 
@@ -111,6 +113,7 @@ function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="statistics" element={<Statistics />} />
             <Route path="faculty" element={<Navigate to="/admin/users" replace />} />
             <Route path="students" element={<Navigate to="/admin/users" replace />} />
             <Route path="teachers" element={<Navigate to="/admin/users" replace />} />
@@ -132,6 +135,7 @@ function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<SuperAdminDashboard />} />
             <Route path="applications" element={<Applications />} />
+            <Route path="organizations" element={<Organizations />} />
             <Route path="admins" element={<AdminManagement />} />
             <Route path="payments" element={<PaymentsHistory />} />
             <Route path="settings" element={<SuperAdminSettings />} />

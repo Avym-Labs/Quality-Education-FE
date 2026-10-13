@@ -43,6 +43,7 @@ const SIDEBAR_ITEMS = {
   admin: [
     { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/admin/dashboard' },
     { icon: 'group', labelKey: 'nav.users', path: '/admin/users' },
+    { icon: 'query_stats', labelKey: 'nav.statistics', path: '/admin/statistics' },
     { icon: 'school', labelKey: 'nav.academics', path: '/admin/academics', children: ACADEMICS_SUBITEMS },
     { icon: 'campaign', labelKey: 'nav.announce', path: '/admin/announcements' },
     { icon: 'chat', labelKey: 'nav.chat', path: '/admin/chat' },
@@ -51,6 +52,7 @@ const SIDEBAR_ITEMS = {
   superadmin: [
     { icon: 'dashboard', labelKey: 'nav.dashboard', path: '/superadmin/dashboard' },
     { icon: 'how_to_reg', labelKey: 'nav.applications', path: '/superadmin/applications' },
+    { icon: 'apartment', labelKey: 'nav.organizations', path: '/superadmin/organizations' },
     { icon: 'shield', labelKey: 'nav.admins', path: '/superadmin/admins' },
     { icon: 'payments', labelKey: 'nav.payments', path: '/superadmin/payments' },
     { icon: 'person', labelKey: 'nav.account', path: '/superadmin/settings' },

@@ -56,6 +56,7 @@ export default function UserManagement() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState(null)
+  const [importProgress, setImportProgress] = useState('')
   const [importError, setImportError] = useState(null)
 
   // Combined Form States
@@ -595,22 +596,63 @@ export default function UserManagement() {
     setImporting(true)
     setImportResult(null)
     setImportError(null)
+    setImportProgress('')
 
-    const formDataUpload = new FormData()
-    formDataUpload.append('file', selectedFile)
-    formDataUpload.append('role', importRole)
-
+    // The server imports a few rows per request; keep asking until it reports no more rows.
+    let offset = 0
+    let imported = 0
+    let failed = 0
+    let errors = []
     try {
-      const res = await api.post('/admin/bulk-import', formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      setImportResult(res.data)
+      for (;;) {
+        const formDataUpload = new FormData()
+        formDataUpload.append('file', selectedFile)
+        formDataUpload.append('role', importRole)
+        formDataUpload.append('offset', String(offset))
+        formDataUpload.append('limit', '25')
+        const res = await api.post('/admin/bulk-import', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        imported += res.data.imported_count || 0
+        failed += res.data.failed_count || 0
+        errors = errors.concat(res.data.errors || [])
+        const next = res.data.next_offset
+        setImportProgress(`${next == null ? res.data.total : next} / ${res.data.total}`)
+        if (next == null) break
+        offset = next
+      }
+      setImportResult({ imported_count: imported, failed_count: failed, errors })
       setSelectedFile(null)
       fetchUsers()
     } catch (err) {
+      if (imported > 0 || failed > 0) {
+        setImportResult({ imported_count: imported, failed_count: failed, errors })
+        fetchUsers()
+      }
       setImportError(err.response?.data?.detail || t('userManagement.failedToParseSheet'))
     } finally {
       setImporting(false)
+      setImportProgress('')
+    }
+  }
+
+  // The import file must follow the fixed template; this downloads the right one for the chosen role.
+  const handleDownloadTemplate = async () => {
+    try {
+      const res = await api.get('/admin/bulk-import/template', {
+        params: { role: importRole, format: 'xlsx' },
+        responseType: 'blob',
+      })
+      const url = URL.createObjectURL(res.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = importRole === 'student' ? 'students_import_template.xlsx' : 'teachers_import_template.xlsx'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      setImportError('Could not download the template. Please try again.')
     }
   }
 
@@ -933,13 +975,28 @@ export default function UserManagement() {
                     required
                   />
                   <p className="text-[9px] text-outline mt-1 font-semibold">
-                    {t('userManagement.headersAutoMapped')}
+                    Use the template so the columns match exactly. Files with other columns are rejected.
                   </p>
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className="self-start mt-1 flex items-center gap-1 text-[11px] font-bold text-primary hover:underline cursor-pointer bg-transparent border-none p-0"
+                  >
+                    <Icon name="download" className="text-sm" />
+                    Download {importRole === 'student' ? 'students' : 'teachers'} template
+                  </button>
                 </div>
 
                 {importResult && (
-                  <div className="p-3 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-xl text-[10px] font-bold text-center">
-                    {t('userManagement.importedCount', { detail: importResult.detail, count: importResult.imported_count })}
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-[11px] font-bold space-y-1.5">
+                    <p className="text-center">{importResult.imported_count} imported, {importResult.failed_count} skipped</p>
+                    {importResult.errors?.length > 0 && (
+                      <ul className="max-h-40 overflow-y-auto space-y-1 text-error font-semibold text-[10.5px] list-none p-0 m-0">
+                        {importResult.errors.map((er, i) => (
+                          <li key={i}>Row {er.row} ({er.name}): {er.message}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
 
@@ -965,7 +1022,7 @@ export default function UserManagement() {
                     {importing ? (
                       <>
                         <Icon name="sync" className="animate-spin text-sm" />
-                        <span>{t('userManagement.uploading')}</span>
+                        <span>{importProgress ? `Importing ${importProgress}` : t('userManagement.uploading')}</span>
                       </>
                     ) : (
                       <>

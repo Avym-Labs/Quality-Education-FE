@@ -105,16 +105,16 @@ export default function SuperAdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Action 1 */}
-            <button 
-              onClick={() => navigate('/superadmin/admins')}
+            <button
+              onClick={() => navigate('/superadmin/organizations')}
               className="flex items-center gap-4 p-4 bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/30 rounded-2xl text-left transition-colors cursor-pointer group"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <Icon name="person_add" className="text-lg" />
+                <Icon name="apartment" className="text-lg" />
               </div>
               <div>
-                <p className="text-sm font-bold text-on-surface">{t('superAdminDashboard.manageAdministrators')}</p>
-                <p className="text-[10px] text-on-surface-variant font-semibold">{t('superAdminDashboard.manageAdministratorsDesc')}</p>
+                <p className="text-sm font-bold text-on-surface">{t('superAdminDashboard.manageOrganisations')}</p>
+                <p className="text-[10px] text-on-surface-variant font-semibold">{t('superAdminDashboard.manageOrganisationsDesc')}</p>
               </div>
               <Icon name="chevron_right" className="text-outline ml-auto group-hover:translate-x-1 transition-transform" />
             </button>
