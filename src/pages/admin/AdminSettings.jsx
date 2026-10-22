@@ -553,7 +553,7 @@ export default function AdminSettings() {
                 >
                   <option value="">-- Choose Teacher --</option>
                   {teachers.map(t => (
-                    <option key={t.id} value={t.id}>{t.full_name} ({t.department})</option>
+                    <option key={t.id} value={t.id}>{t.full_name}{t.subjects?.length ? ` (${t.subjects.join(', ')})` : ''}</option>
                   ))}
                 </select>
               </div>

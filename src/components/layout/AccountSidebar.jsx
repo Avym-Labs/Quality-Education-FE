@@ -8,6 +8,7 @@ import Icon from '../common/Icon'
 // when navigating between them.
 const NAV_ITEMS = [
   { id: 'my-academic-profile', icon: 'account_box', label: 'My Profile', teacherOnly: true },
+  { id: 'complaints', icon: 'report_problem', label: 'Teacher Remarks / Complaints', studentOnly: true },
   { id: 'profile-details', icon: 'account_circle', label: 'Account Credentials' },
   { id: 'preferences', icon: 'notifications_active', label: 'Notification Preferences' },
   { id: 'language', icon: 'language', label: 'Language' },
@@ -30,7 +31,10 @@ export default function AccountSidebar({ active, onSelect }) {
   const navigate = useNavigate()
   const settingsPath = `/${user?.role || 'student'}/settings`
 
-  const items = NAV_ITEMS.filter((item) => !item.teacherOnly || user?.role === 'teacher')
+  const items = NAV_ITEMS.filter((item) => 
+    (!item.teacherOnly || user?.role === 'teacher') && 
+    (!item.studentOnly || user?.role === 'student')
+  )
 
   const handleSelect = (item) => {
     if (item.externalUrl) {

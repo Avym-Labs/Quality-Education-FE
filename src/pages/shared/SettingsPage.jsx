@@ -34,11 +34,30 @@ export default function SettingsPage() {
 
   // Academic Profile details (For teachers)
   const qualifications = user?.qualifications || []
-  const department = user?.department || 'Department not set'
   const assignedClasses = user?.assigned_classes || []
   const subjects = user?.subjects || []
 
   const [teacherStats, setTeacherStats] = useState(null)
+  const [complaints, setComplaints] = useState([])
+  const [loadingComplaints, setLoadingComplaints] = useState(false)
+
+  useEffect(() => {
+    if (user?.role === 'student' && (activeView === 'complaints' || effectiveView === 'complaints')) {
+      async function fetchComplaints() {
+        setLoadingComplaints(true)
+        try {
+          const res = await api.get('/attendance/complaints/my')
+          if (res.data) setComplaints(res.data)
+        } catch (err) {
+          console.error('Failed to load complaints:', err)
+        } finally {
+          setLoadingComplaints(false)
+        }
+      }
+      fetchComplaints()
+    }
+  }, [user, activeView, effectiveView])
+
   useEffect(() => {
     if (user?.role !== 'teacher') return
     async function fetchStats() {
@@ -92,7 +111,6 @@ export default function SettingsPage() {
         avatar: user.avatar,
         access_token: localStorage.getItem('access_token'),
         refresh_token: localStorage.getItem('refresh_token'),
-        department: user.department,
         teacher_id: user.teacher_id,
         student_id: user.student_id,
         grade: user.grade,
@@ -113,7 +131,6 @@ export default function SettingsPage() {
         last_name: match.last_name,
         full_name: match.full_name,
         avatar: match.avatar,
-        department: match.department,
         teacher_id: match.teacher_id,
         student_id: match.student_id,
         grade: match.grade,
@@ -142,7 +159,6 @@ export default function SettingsPage() {
         avatar: user.avatar,
         access_token: localStorage.getItem('access_token'),
         refresh_token: localStorage.getItem('refresh_token'),
-        department: user.department,
         teacher_id: user.teacher_id,
         student_id: user.student_id,
         grade: user.grade,
@@ -225,15 +241,17 @@ export default function SettingsPage() {
               {activeView === 'language' && 'Language'}
               {activeView === 'support' && 'Help & FAQ'}
               {activeView === 'switch-profile' && 'Switch Account'}
+              {activeView === 'complaints' && 'Teacher Remarks / Complaints'}
             </h2>
             <p className="text-on-surface-variant text-[10px] uppercase font-bold mt-0.5 tracking-wider">
-              {activeView === 'menu' && (user?.role === 'teacher' ? 'Department Faculty Portal' : 'Student Hub')}
+              {activeView === 'menu' && (user?.role === 'teacher' ? 'Faculty Portal' : 'Student Hub')}
               {activeView === 'my-academic-profile' && 'Faculty credentials & achievements'}
               {activeView === 'profile-details' && 'Modify your metadata & credentials'}
               {activeView === 'preferences' && 'Alert notifications & toggles'}
               {activeView === 'language' && 'Choose your preferred app language'}
               {activeView === 'support' && 'FAQ center & support assistance'}
               {activeView === 'switch-profile' && 'Manage multi-account profile logins'}
+              {activeView === 'complaints' && 'Behavior, homework & conduct remarks'}
             </p>
           </div>
         </section>
@@ -242,7 +260,7 @@ export default function SettingsPage() {
         <div className="hidden md:block mb-6">
           <h1 className="text-xl font-bold text-on-surface">Account Settings</h1>
           <p className="text-on-surface-variant text-[10px] uppercase font-bold mt-1 tracking-wider">
-            {user?.role === 'teacher' ? 'Department Faculty Portal' : 'Student Hub'}
+            {user?.role === 'teacher' ? 'Faculty Portal' : 'Student Hub'}
           </p>
         </div>
 
@@ -267,6 +285,25 @@ export default function SettingsPage() {
                   <div className="text-left">
                     <h4 className="text-xs font-bold text-on-surface">My Profile</h4>
                     <p className="text-[10px] text-outline font-semibold">View qualifications, experience summary, and student stats</p>
+                  </div>
+                </div>
+                <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
+              </div>
+            )}
+
+            {/* Teacher Remarks / Complaints (Exclusively visible for Students) */}
+            {user?.role === 'student' && (
+              <div 
+                onClick={() => setActiveView('complaints')}
+                className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/35 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <Icon name="report_problem" className="text-lg" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="text-xs font-bold text-on-surface">Teacher Remarks / Complaints</h4>
+                    <p className="text-[10px] text-outline font-semibold">View behavior, homework, classwork & discipline remarks</p>
                   </div>
                 </div>
                 <Icon name="chevron_right" className="text-outline group-hover:translate-x-0.5 transition-transform text-lg" />
@@ -440,7 +477,7 @@ export default function SettingsPage() {
                 </h3>
                 <p className="text-on-surface-variant text-xs font-semibold flex items-center justify-center md:justify-start gap-1 mt-1">
                   <Icon name="functions" className="text-primary text-[16px]" />
-                  <span>{department}</span>
+                  <span>{subjects.join(', ') || 'Faculty'}</span>
                 </p>
               </div>
             </section>
@@ -575,6 +612,88 @@ export default function SettingsPage() {
             </section>
 
           </div>
+        )}
+
+        {/* View: Student Complaints / Teacher Remarks */}
+        {effectiveView === 'complaints' && (
+          <section className="bg-surface-container-lowest rounded-[24px] md:rounded-2xl p-6 shadow-sm border border-outline-variant/35 space-y-4 animate-scaleIn text-xs">
+            <div className="flex justify-between items-center pb-3 border-b border-outline-variant/15">
+              <div>
+                <h3 className="text-xs font-black text-on-surface uppercase tracking-wider">Teacher Remarks & Complaints</h3>
+                <p className="text-[10px] text-on-surface-variant mt-0.5">Records and observations filed by teachers during lectures</p>
+              </div>
+              <span className="px-2.5 py-1 bg-amber-50 text-amber-700 font-bold rounded-lg text-[10px]">
+                {complaints.length} Total
+              </span>
+            </div>
+
+            {loadingComplaints ? (
+              <div className="py-12 flex justify-center">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : complaints.length === 0 ? (
+              <div className="text-center py-12 bg-surface-container-low/50 rounded-2xl border border-dashed border-outline-variant/50 p-6">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Icon name="verified" className="text-2xl" />
+                </div>
+                <h4 className="text-xs font-bold text-on-surface">No Remarks or Complaints</h4>
+                <p className="text-[11px] text-on-surface-variant mt-1 max-w-sm mx-auto">
+                  You have a clean record! Keep up the good conduct, consistent attendance, and homework submission.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {complaints.map((item) => (
+                  <div key={item.id} className="bg-surface-container-low/60 rounded-2xl p-4 border border-outline-variant/30 space-y-3 hover:border-amber-200 transition-all">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 font-bold text-[10px] rounded-lg">
+                          {item.subject || 'General'}
+                        </span>
+                        {item.complaint_type && (
+                          <span className="px-2.5 py-1 bg-amber-50 text-amber-800 font-bold text-[10px] rounded-lg border border-amber-200/60">
+                            {item.complaint_type}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-on-surface-variant text-[11px] font-semibold">
+                        <Icon name="calendar_today" className="text-xs" />
+                        <span>{item.date}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-on-surface-variant text-[11px]">
+                      <Icon name="person" className="text-xs text-primary" />
+                      <span>Marked by: <strong className="text-on-surface">{item.teacher_name || 'Teacher'}</strong></span>
+                    </div>
+
+                    <div className="pt-2 border-t border-outline-variant/20 space-y-1.5">
+                      {(item.complaint_text || '').split('\n').filter(Boolean).map((line, idx) => {
+                        const isCustom = line.startsWith('Custom: ')
+                        if (isCustom) {
+                          return (
+                            <div key={idx} className="mt-2 p-3 bg-white rounded-xl border border-outline-variant/30 text-xs">
+                              <span className="font-bold text-amber-800 flex items-center gap-1 mb-1">
+                                <Icon name="edit_note" className="text-sm" />
+                                Custom Teacher Note:
+                              </span>
+                              <p className="text-on-surface font-medium whitespace-pre-wrap">{line.replace('Custom: ', '')}</p>
+                            </div>
+                          )
+                        }
+                        return (
+                          <div key={idx} className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                            <span className="text-on-surface font-medium leading-relaxed">{line}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         )}
 
         {/* View 3: Account Credentials */}

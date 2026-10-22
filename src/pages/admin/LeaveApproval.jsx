@@ -154,7 +154,7 @@ export default function LeaveApproval() {
                 const name = requester.full_name || `${requester.first_name || ''} ${requester.last_name || ''}`.trim() || t('leaveApproval.academicRequester')
                 const roleLabel = requester.role === 'teacher' ? t('leaveApproval.facultyMember') : t('leaveApproval.student')
 
-                const classLabel = request.class_info || (requester.role === 'teacher' ? t('leaveApproval.departmentNotSet') : t('leaveApproval.classNotSet'))
+                const classLabel = request.class_info || (requester.role === 'teacher' ? t('leaveApproval.facultyMember') : t('leaveApproval.classNotSet'))
                 const attendanceRate = request.attendance_rate
                 const daysLabel = calculateDays(request.start_date, request.end_date)
                 

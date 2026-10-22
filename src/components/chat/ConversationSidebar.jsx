@@ -31,9 +31,6 @@ export default function ConversationSidebar({ activeConversationId }) {
   // Drop-down options for broadcast, derived from the logged-in teacher's own
   // assignments (not a guessed list) so teachers only ever target their own classes/subjects
   const classOptions = user?.assigned_classes || []
-  const subjectOptions = user?.subjects || []
-
-  // Real departments in this school, derived from all teachers (admin-only fetch)
   const [allTeachers, setAllTeachers] = useState([])
   useEffect(() => {
     if (user?.role !== 'admin') return
@@ -41,7 +38,8 @@ export default function ConversationSidebar({ activeConversationId }) {
       .then(res => setAllTeachers(res.data || []))
       .catch(() => setAllTeachers([]))
   }, [user?.role])
-  const departmentOptions = [...new Set(allTeachers.map(t => t.department).filter(Boolean))].sort()
+  const adminSubjectOptions = [...new Set(allTeachers.flatMap(t => t.subjects || []))].sort()
+  const subjectOptions = user?.role === 'admin' ? adminSubjectOptions : (user?.subjects || [])
 
   // Broadcast Templates
   const adminTemplates = [
@@ -186,7 +184,7 @@ export default function ConversationSidebar({ activeConversationId }) {
 
   const filteredContacts = contacts.filter((c) =>
     c.full_name.toLowerCase().includes(contactSearch.toLowerCase()) ||
-    (c.department && c.department.toLowerCase().includes(contactSearch.toLowerCase()))
+    (Array.isArray(c.subjects) && c.subjects.some(s => s.toLowerCase().includes(contactSearch.toLowerCase())))
   )
 
   return (
@@ -375,7 +373,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                                 {contact.full_name}
                               </h4>
                               <p className="text-[9px] text-outline font-semibold uppercase mt-0.5">
-                                {contact.role === 'teacher' ? (contact.department || t('chatList.faculty')) : t('chatList.classSection', { grade: contact.grade, section: contact.section })}
+                                {contact.role === 'teacher' ? (contact.subjects?.join(', ') || t('chatList.faculty')) : t('chatList.classSection', { grade: contact.grade, section: contact.section })}
                               </p>
                             </div>
                           </div>
@@ -402,7 +400,7 @@ export default function ConversationSidebar({ activeConversationId }) {
                       {user?.role === 'admin' ? (
                         <>
                           <option value="overall">{t('chatList.allRegisteredTeachers')}</option>
-                          <option value="department">{t('chatList.departmentWise')}</option>
+                          <option value="subject">{t('chatList.subjectWise')}</option>
                         </>
                       ) : (
                         <>
@@ -450,26 +448,6 @@ export default function ConversationSidebar({ activeConversationId }) {
                         )}
                         {subjectOptions.map((sub) => (
                           <option key={sub} value={sub}>{sub}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {broadcastScope === 'department' && (
-                    <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                      <label className="font-bold text-[10px] text-on-surface-variant uppercase">{t('chatList.selectDepartment')} <span className="text-error">*</span></label>
-                      <select
-                        value={broadcastTarget}
-                        onChange={(e) => setBroadcastTarget(e.target.value)}
-                        className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low font-semibold text-xs outline-none focus:border-primary"
-                        required
-                      >
-                        <option value="">{t('chatList.chooseDepartment')}</option>
-                        {departmentOptions.length === 0 && (
-                          <option value="" disabled>{t('chatList.noDepartmentsFound')}</option>
-                        )}
-                        {departmentOptions.map((dept) => (
-                          <option key={dept} value={dept}>{t('chatList.departmentSuffix', { dept })}</option>
                         ))}
                       </select>
                     </div>

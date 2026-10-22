@@ -6,6 +6,7 @@ import api from '../../api/axios'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import Icon from '../../components/common/Icon'
 import LanguageToggle from '../../components/common/LanguageToggle'
+import { COMPLAINT_CATEGORIES, CUSTOM_COMPLAINT_TITLE_EN, CUSTOM_COMPLAINT_TITLE_GU } from '../../constants/complaintData'
 
 export default function TeacherAttendance() {
   const { user } = useAuth()
@@ -110,6 +111,71 @@ export default function TeacherAttendance() {
   const [studentStats, setStudentStats] = useState(null)
   const [studentNotes, setStudentNotes] = useState('')
 
+  // Teacher Remarks & Complaints state
+  const [studentComplaints, setStudentComplaints] = useState({})
+  const [complaintModalStudent, setComplaintModalStudent] = useState(null)
+  const [selectedComplaints, setSelectedComplaints] = useState([])
+  const [customComplaintText, setCustomComplaintText] = useState('')
+
+  const handleOpenComplaintModal = (student) => {
+    const uid = student.user_id || student.id
+    const list = studentComplaints[uid] || []
+    let custom = ''
+    const presets = []
+    list.forEach(c => {
+      if (c.startsWith('Custom: ')) {
+        custom = c.replace('Custom: ', '')
+      } else {
+        presets.push(c)
+      }
+    })
+    setSelectedComplaints(presets)
+    setCustomComplaintText(custom)
+    setComplaintModalStudent(student)
+  }
+
+  const handleToggleComplaint = (fullKey) => {
+    setSelectedComplaints(prev => 
+      prev.includes(fullKey) ? prev.filter(k => k !== fullKey) : [...prev, fullKey]
+    )
+  }
+
+  const handleSaveComplaints = async () => {
+    if (!complaintModalStudent) return
+    const finalComplaints = [...selectedComplaints]
+    if (customComplaintText.trim()) {
+      finalComplaints.push(`Custom: ${customComplaintText.trim()}`)
+    }
+    const uid = complaintModalStudent.user_id || complaintModalStudent.id
+    setStudentComplaints(prev => ({
+      ...prev,
+      [uid]: finalComplaints
+    }))
+
+    // If attendance was already submitted for today, post directly to backend
+    if (attendanceTaken) {
+      try {
+        const [grade, section] = selectedClass.split('-')
+        await api.post('/attendance/complaint', {
+          student_id: uid,
+          date: markingDate,
+          grade,
+          section: section || '',
+          subject: selectedSubject,
+          complaint_type: finalComplaints.length > 0 ? 'Teacher Remark' : '',
+          complaint_text: finalComplaints.join('\n'),
+        })
+        setMarkingMessage(`Remarks saved for ${complaintModalStudent.full_name}`)
+        setMarkingMessageIsSuccess(true)
+        setTimeout(() => setMarkingMessage(''), 3000)
+      } catch (err) {
+        console.error('Failed to post direct complaint:', err)
+      }
+    }
+
+    setComplaintModalStudent(null)
+  }
+
   // Load students and existing attendance when filters change
   useEffect(() => {
     // Guards against a slower, older request (e.g. from a date rapidly
@@ -192,6 +258,14 @@ export default function TeacherAttendance() {
         if (cancelled) return
         setAttendanceStates(initialStates)
         setAttendanceRates(computedRates)
+
+        const complaintsMap = {}
+        attRecords.forEach(r => {
+          if (r.student_id && r.complaint_text) {
+            complaintsMap[r.student_id] = r.complaint_text.split('\n').filter(Boolean)
+          }
+        })
+        setStudentComplaints(complaintsMap)
       } catch (err) {
         if (cancelled) return
         console.error('Failed to load students list:', err)
@@ -275,10 +349,16 @@ export default function TeacherAttendance() {
     setMarkingMessageIsSuccess(false)
     try {
       const [grade, section] = selectedClass.split('-')
-      const entries = Object.keys(attendanceStates).map(userId => ({
-        student_id: userId,
-        status: attendanceStates[userId]
-      }))
+      const entries = Object.keys(attendanceStates).map(userId => {
+        const list = studentComplaints[userId] || []
+        return {
+          student_id: userId,
+          status: attendanceStates[userId],
+          has_complaint: list.length > 0 ? 1 : 0,
+          complaints: list,
+          complaint_text: list.join('\n'),
+        }
+      })
 
       if (entries.length === 0) {
         setMarkingMessage(t('teacherAttendance.noRecordsToMark'))
@@ -767,6 +847,18 @@ export default function TeacherAttendance() {
                                     <div className="flex items-center gap-1.5 shrink-0">
                                       <button
                                         type="button"
+                                        onClick={() => handleOpenComplaintModal(student)}
+                                        title="Teacher Remarks & Complaints"
+                                        className={`w-9 h-9 rounded-lg font-bold text-xs flex items-center justify-center transition-all cursor-pointer ${
+                                          (studentComplaints[student.user_id] || []).length > 0
+                                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                            : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                                        }`}
+                                      >
+                                        <Icon name={(studentComplaints[student.user_id] || []).length > 0 ? "warning" : "rate_review"} className="text-sm" />
+                                      </button>
+                                      <button
+                                        type="button"
                                         onClick={() => !isOnLeave && !attendanceTaken && toggleStatus(student.user_id, 'present')}
                                         disabled={isOnLeave || attendanceTaken}
                                         title={t('teacherAttendance.markPresent')}
@@ -903,6 +995,27 @@ export default function TeacherAttendance() {
                                         A
                                       </button>
                                     </div>
+
+                                    {/* Remarks & Complaints Button */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenComplaintModal(student)}
+                                      className={`w-full mt-2.5 py-1.5 px-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all border cursor-pointer ${
+                                        (studentComplaints[student.user_id] || []).length > 0
+                                          ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                      }`}
+                                    >
+                                      <Icon
+                                        name={(studentComplaints[student.user_id] || []).length > 0 ? "warning" : "rate_review"}
+                                        className="text-[13px]"
+                                      />
+                                      <span>
+                                        {(studentComplaints[student.user_id] || []).length > 0
+                                          ? `Remark (${(studentComplaints[student.user_id] || []).length})`
+                                          : 'Add Remark / Complaint'}
+                                      </span>
+                                    </button>
                                   </div>
                                 )
                               })}
@@ -1475,6 +1588,144 @@ export default function TeacherAttendance() {
                 >
                   {t('teacherAttendance.apply')}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Complaints / Remarks Modal */}
+        {complaintModalStudent && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scaleIn">
+              {/* Header */}
+              <div className="p-5 border-b border-outline-variant/30 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
+                    <Icon name="report_problem" className="text-amber-500" />
+                    Teacher Remarks & Complaints
+                  </h3>
+                  <p className="text-xs text-on-surface-variant font-semibold mt-0.5">
+                    {complaintModalStudent.full_name} · Roll #{complaintModalStudent.roll_number || '-'} · Class {selectedClass}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setComplaintModalStudent(null)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 text-slate-500 border-none cursor-pointer"
+                >
+                  <Icon name="close" className="text-lg" />
+                </button>
+              </div>
+
+              {/* Scrollable Categories List */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {COMPLAINT_CATEGORIES.map((cat) => {
+                  const catSelectedCount = cat.items.filter(item => {
+                    const key = `${item.textEn} (${item.textGu})`
+                    return selectedComplaints.includes(key) || selectedComplaints.includes(item.textEn)
+                  }).length
+
+                  return (
+                    <div
+                      key={cat.id}
+                      className={`rounded-2xl border transition-all ${
+                        catSelectedCount > 0 ? 'border-primary/40 bg-emerald-50/20' : 'border-outline-variant/40 bg-slate-50/50'
+                      }`}
+                    >
+                      {/* Category Header */}
+                      <div className="p-3.5 flex items-center justify-between border-b border-outline-variant/20">
+                        <div>
+                          <h4 className="text-xs font-bold text-on-surface">{cat.titleEn}</h4>
+                          <p className="text-[11px] text-on-surface-variant font-medium">
+                            {cat.titleGu} <span className="text-[10px] text-slate-400 font-normal">({cat.phoneticGu})</span>
+                          </p>
+                        </div>
+                        {catSelectedCount > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">
+                            {catSelectedCount} selected
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Items */}
+                      <div className="p-2 space-y-1">
+                        {cat.items.map((it) => {
+                          const fullKey = `${it.textEn} (${it.textGu})`
+                          const isChecked = selectedComplaints.includes(fullKey) || selectedComplaints.includes(it.textEn)
+
+                          return (
+                            <label
+                              key={it.id}
+                              className={`flex items-start gap-3 p-2.5 rounded-xl cursor-pointer transition-colors ${
+                                isChecked ? 'bg-emerald-100/40 text-emerald-900' : 'hover:bg-slate-100/70 text-on-surface'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleToggleComplaint(fullKey)}
+                                className="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary cursor-pointer"
+                              />
+                              <div className="text-xs">
+                                <div className="font-semibold">{it.textEn}</div>
+                                <div className="text-[11px] text-on-surface-variant">
+                                  {it.textGu} <span className="text-[10px] text-slate-400 font-normal">({it.phoneticGu})</span>
+                                </div>
+                              </div>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* Category 7: Custom */}
+                <div className="rounded-2xl border border-outline-variant/40 bg-slate-50/50 p-3.5 space-y-2">
+                  <div>
+                    <h4 className="text-xs font-bold text-on-surface">{CUSTOM_COMPLAINT_TITLE_EN}</h4>
+                    <p className="text-[11px] text-on-surface-variant font-medium">
+                      {CUSTOM_COMPLAINT_TITLE_GU}
+                    </p>
+                  </div>
+                  <textarea
+                    value={customComplaintText}
+                    onChange={(e) => setCustomComplaintText(e.target.value)}
+                    rows={3}
+                    placeholder="Write any custom remarks, observations, or feedback here / અહીં તમારી ખાસ નોંધ લખો..."
+                    className="w-full text-xs p-3 rounded-xl border border-outline-variant bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-outline-variant/30 bg-slate-50 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedComplaints([])
+                    setCustomComplaintText('')
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border-none bg-transparent cursor-pointer"
+                >
+                  Clear All
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setComplaintModalStudent(null)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 border-none bg-transparent cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveComplaints}
+                    className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary/90 border-none cursor-pointer shadow-sm active:scale-95 transition-all"
+                  >
+                    Save Remarks & Complaints
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -12,7 +12,6 @@ export default function TeacherProfileDashboard() {
   const navigate = useNavigate()
 
   const qualifications = user?.qualifications || []
-  const department = user?.department || t('teacherProfile.departmentNotSet')
   const assignedClasses = user?.assigned_classes || []
   const subjects = user?.subjects || []
 
@@ -89,7 +88,7 @@ export default function TeacherProfileDashboard() {
             </h3>
             <p className="text-on-surface-variant text-xs font-semibold flex items-center justify-center md:justify-start gap-1 mt-1">
               <Icon name="functions" className="text-primary text-[16px]" />
-              <span>{department}</span>
+              <span>{subjects.join(', ') || t('teacherProfile.facultyMember')}</span>
             </p>
           </div>
         </section>

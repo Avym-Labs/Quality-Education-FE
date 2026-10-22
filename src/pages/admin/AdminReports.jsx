@@ -283,7 +283,6 @@ export default function AdminReports() {
                         <thead>
                           <tr className="bg-surface-container-low border-b border-outline-variant/20 font-bold text-on-surface-variant">
                             <th className="p-3">{t('adminReports.teacher')}</th>
-                            <th className="p-3">{t('adminReports.department')}</th>
                             <th className="p-3">{t('adminReports.assignedClasses')}</th>
                             <th className="p-3">{t('adminReports.subjects')}</th>
                           </tr>
@@ -292,7 +291,6 @@ export default function AdminReports() {
                           {teachers.map((tch, idx) => (
                             <tr key={idx} className="hover:bg-surface-container-low/30">
                               <td className="p-3 font-bold text-gray-900">{tch.full_name}</td>
-                              <td className="p-3 uppercase text-[10px] text-outline font-bold">{tch.department || t('adminReports.notAvailable')}</td>
                               <td className="p-3">{tch.assigned_classes?.join(', ') || t('adminReports.none')}</td>
                               <td className="p-3 font-medium text-on-surface-variant">{tch.subjects?.join(', ') || t('adminReports.none')}</td>
                             </tr>

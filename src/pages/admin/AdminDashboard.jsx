@@ -492,7 +492,9 @@ export default function AdminDashboard() {
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-on-surface truncate text-sm">{fac.name}</p>
-                          <p className="text-[11px] text-on-surface-variant font-medium truncate">{fac.department}</p>
+                          <p className="text-[11px] text-on-surface-variant font-medium truncate">
+                            {Array.isArray(fac.subjects) ? fac.subjects.join(', ') : (fac.subjects || '')}
+                          </p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-primary font-bold text-sm">{fac.success}</p>

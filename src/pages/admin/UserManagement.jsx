@@ -29,9 +29,20 @@ export default function UserManagement() {
   const gradeOptions = [...new Set(classesList.map(c => c.grade))].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0))
   const sectionOptions = [...new Set(classesList.map(c => c.section))].sort()
 
-  // Real subjects actually being taught in this school, derived from
-  // teachersList (already fetched below) instead of a hardcoded guess list.
-  const AVAILABLE_SUBJECTS = [...new Set(teachersList.flatMap(t => t.subjects || []))].sort()
+  const DEFAULT_SUBJECTS = [
+    'Mathematics', 'Science', 'English', 'Physics', 'Chemistry', 'Biology',
+    'Social Science', 'History', 'Geography', 'Computer Science', 'Hindi',
+    'Gujarati', 'Economics', 'Accountancy', 'Business Studies', 'Physical Education',
+    'Art', 'Music', 'Environmental Studies', 'Sanskrit'
+  ]
+  const [customSubjects, setCustomSubjects] = useState([])
+
+  // Available subjects: default academic subjects, custom added subjects, and school subjects
+  const AVAILABLE_SUBJECTS = [...new Set([
+    ...DEFAULT_SUBJECTS,
+    ...customSubjects,
+    ...teachersList.flatMap(t => t.subjects || [])
+  ])].sort()
   
   // Student Filters
   const [gradeFilter, setGradeFilter] = useState('')
@@ -215,7 +226,6 @@ export default function UserManagement() {
       mother_name: '',
       subjects: [],
       subject_teachers: {},
-      department: '',
       assigned_classes: [],
       qualifications: [],
       classSubjects: {}
@@ -244,7 +254,6 @@ export default function UserManagement() {
         mother_name: item.mother_name || '',
         subjects: item.subjects || [],
         subject_teachers: item.subject_teachers || {},
-        department: '',
         assigned_classes: [],
         qualifications: [],
         classSubjects: {}
@@ -264,7 +273,6 @@ export default function UserManagement() {
         mother_name: '',
         subjects: item.subjects || [],
         subject_teachers: {},
-        department: item.department || '',
         assigned_classes: item.assigned_classes || [],
         qualifications: item.qualifications || [],
         classSubjects: {}
@@ -467,12 +475,6 @@ export default function UserManagement() {
       }
     }
 
-    if (activeRole === 'teacher' && formData.assigned_classes.length === 0) {
-      setFormError(t('userManagement.assignAtLeastOneClass'))
-      setIsSubmitting(false)
-      return
-    }
-
     try {
       if (activeRole === 'student') {
         const payload = {
@@ -508,7 +510,6 @@ export default function UserManagement() {
           password: formData.password || undefined,
           first_name: formData.first_name,
           last_name: formData.last_name,
-          department: formData.department,
           subjects: formData.subjects,
           assigned_classes: formData.assigned_classes,
           qualifications: formData.qualifications
@@ -827,7 +828,6 @@ export default function UserManagement() {
                       </>
                     ) : (
                       <>
-                        <th className="p-4">{t('userManagement.department')}</th>
                         <th className="p-4">{t('userManagement.subjects')}</th>
                         <th className="p-4">{t('userManagement.assignedClasses')}</th>
                       </>
@@ -876,11 +876,6 @@ export default function UserManagement() {
                         </>
                       ) : (
                         <>
-                          <td className="p-4">
-                            <span className="px-2 py-0.5 rounded bg-tertiary/10 text-tertiary text-[10px] font-bold">
-                              {item.department || t('userManagement.general')}
-                            </span>
-                          </td>
                           <td className="p-4">
                             <p className="truncate max-w-[200px] text-outline text-[10px]">
                               {item.subjects?.join(', ') || t('userManagement.none')}
@@ -1393,24 +1388,30 @@ export default function UserManagement() {
                 {/* 3. Teacher specific inputs */}
                 {activeRole === 'teacher' && (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.facultyDepartment')}</label>
-                        <input
-                          type="text"
-                          placeholder={t('userManagement.departmentPlaceholder')}
-                          disabled={modalMode === 'view'}
-                          value={formData.department}
-                          onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                          className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-semibold focus:outline-none focus:border-primary text-on-surface"
-                        />
-                      </div>
-                    </div>
-
                     {/* Subjects and Assigned classes switchers */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.departmentSubjects')}</label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.subjects')} <span className="text-outline normal-case font-medium">({t('common.optional', 'optional')})</span></label>
+                          {modalMode !== 'view' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSub = window.prompt('Enter new subject name:')
+                                if (newSub && newSub.trim()) {
+                                  const s = newSub.trim()
+                                  setCustomSubjects(prev => [...new Set([...prev, s])])
+                                  if (!formData.subjects.includes(s)) {
+                                    handleToggleSubject(s)
+                                  }
+                                }
+                              }}
+                              className="text-[10px] text-primary font-bold hover:underline cursor-pointer"
+                            >
+                              + Add Subject
+                            </button>
+                          )}
+                        </div>
                         <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-surface-container-low/30 border border-outline-variant/20 max-h-[150px] overflow-y-auto">
                           {AVAILABLE_SUBJECTS.map((sub) => {
                             const isEnrolled = formData.subjects.includes(sub)
@@ -1434,7 +1435,7 @@ export default function UserManagement() {
                       </div>
 
                       <div className="flex flex-col gap-1.5 text-left relative self-start" ref={classDropdownRef}>
-                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.lecturingClasses')} <span className="text-error">*</span></label>
+                        <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.lecturingClasses')} <span className="text-outline normal-case font-medium">({t('common.optional', 'optional')})</span></label>
 
                         <button
                           type="button"

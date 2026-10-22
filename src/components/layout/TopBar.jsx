@@ -79,7 +79,7 @@ export default function TopBar({ onNotificationClick }) {
             {role === 'student' && (user?.grade
               ? `${t('topbar.grade')} ${user.grade}-${user?.section || ''} • ${t('topbar.academicPrecisionSchool')}`
               : t('topbar.academicPrecisionSchool'))}
-            {role === 'teacher' && `${user?.department ? `${user.department} ` : ''}${t('topbar.faculty')}`}
+            {role === 'teacher' && `${user?.subjects?.length ? `${user.subjects.join(', ')} • ` : ''}${t('topbar.faculty')}`}
             {role === 'admin' && t('topbar.systemAdministrator')}
             {role === 'superadmin' && t('topbar.platformSuiteManager')}
           </p>
