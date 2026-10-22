@@ -1,3 +1,4 @@
+import { formatComplaintLine } from '../../constants/complaintData'
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -684,7 +685,7 @@ export default function SettingsPage() {
                         return (
                           <div key={idx} className="flex items-start gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
-                            <span className="text-on-surface font-medium leading-relaxed">{line}</span>
+                            <span className="text-on-surface font-medium leading-relaxed">{formatComplaintLine(line, isGu)}</span>
                           </div>
                         )
                       })}

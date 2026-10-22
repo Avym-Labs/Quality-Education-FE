@@ -10,7 +10,8 @@ import { COMPLAINT_CATEGORIES, CUSTOM_COMPLAINT_TITLE_EN, CUSTOM_COMPLAINT_TITLE
 
 export default function TeacherAttendance() {
   const { user } = useAuth()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isGu = (i18n.language || user?.preferred_language) === 'gu'
   const navigate = useNavigate()
   const role = user?.role || 'teacher'
 
@@ -1635,10 +1636,7 @@ export default function TeacherAttendance() {
                       {/* Category Header */}
                       <div className="p-3.5 flex items-center justify-between border-b border-outline-variant/20">
                         <div>
-                          <h4 className="text-xs font-bold text-on-surface">{cat.titleEn}</h4>
-                          <p className="text-[11px] text-on-surface-variant font-medium">
-                            {cat.titleGu} <span className="text-[10px] text-slate-400 font-normal">({cat.phoneticGu})</span>
-                          </p>
+                          <h4 className="text-xs font-bold text-on-surface">{isGu ? cat.titleGu : cat.titleEn}</h4>
                         </div>
                         {catSelectedCount > 0 && (
                           <span className="px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">
@@ -1666,11 +1664,8 @@ export default function TeacherAttendance() {
                                 onChange={() => handleToggleComplaint(fullKey)}
                                 className="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary cursor-pointer"
                               />
-                              <div className="text-xs">
-                                <div className="font-semibold">{it.textEn}</div>
-                                <div className="text-[11px] text-on-surface-variant">
-                                  {it.textGu} <span className="text-[10px] text-slate-400 font-normal">({it.phoneticGu})</span>
-                                </div>
+                              <div className="text-xs font-semibold">
+                                {isGu ? it.textGu : it.textEn}
                               </div>
                             </label>
                           )
@@ -1683,16 +1678,13 @@ export default function TeacherAttendance() {
                 {/* Category 7: Custom */}
                 <div className="rounded-2xl border border-outline-variant/40 bg-slate-50/50 p-3.5 space-y-2">
                   <div>
-                    <h4 className="text-xs font-bold text-on-surface">{CUSTOM_COMPLAINT_TITLE_EN}</h4>
-                    <p className="text-[11px] text-on-surface-variant font-medium">
-                      {CUSTOM_COMPLAINT_TITLE_GU}
-                    </p>
+                    <h4 className="text-xs font-bold text-on-surface">{isGu ? CUSTOM_COMPLAINT_TITLE_GU : CUSTOM_COMPLAINT_TITLE_EN}</h4>
                   </div>
                   <textarea
                     value={customComplaintText}
                     onChange={(e) => setCustomComplaintText(e.target.value)}
                     rows={3}
-                    placeholder="Write any custom remarks, observations, or feedback here / અહીં તમારી ખાસ નોંધ લખો..."
+                    placeholder={isGu ? "અહીં તમારી ખાસ નોંધ લખો..." : "Write any custom remarks, observations, or feedback here..."}
                     className="w-full text-xs p-3 rounded-xl border border-outline-variant bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   />
                 </div>

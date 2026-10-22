@@ -164,4 +164,17 @@ export const COMPLAINT_CATEGORIES = [
 ]
 
 export const CUSTOM_COMPLAINT_TITLE_EN = '7. Custom'
-export const CUSTOM_COMPLAINT_TITLE_GU = 'તમે લખો (TAME LAKHO)'
+export const CUSTOM_COMPLAINT_TITLE_GU = '૭. અન્ય નોંધ / ફરિયાદ'
+
+export function formatComplaintLine(rawLine, isGu = false) {
+  if (!rawLine) return ''
+  for (const cat of COMPLAINT_CATEGORIES) {
+    for (const it of cat.items) {
+      const fullKey = `${it.textEn} (${it.textGu})`
+      if (rawLine === fullKey || rawLine === it.textEn || rawLine === it.textGu) {
+        return isGu ? it.textGu : it.textEn
+      }
+    }
+  }
+  return rawLine
+}
