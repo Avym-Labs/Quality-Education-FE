@@ -14,13 +14,14 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isGu = (i18n.language || user?.preferred_language) === 'gu'
 
   // activeView: 'menu' | 'my-academic-profile' | 'profile-details' | 'preferences' | 'support' | 'switch-profile'
   // Pages that link into a specific section (e.g. Manage Students' sidebar)
   // pass the target view via router state so it opens directly.
   const [activeView, setActiveView] = useState(location.state?.initialView || 'menu')
+  const effectiveView = activeView === 'menu' ? 'profile-details' : activeView
 
   // Toggle States
   const [pushEnabled, setPushEnabled] = useState(true)
@@ -216,7 +217,6 @@ export default function SettingsPage() {
 
   // Which nav view desktop's persistent sidebar+content pane should display
   // when nothing has been explicitly selected yet (mobile's root menu state).
-  const effectiveView = activeView === 'menu' ? 'profile-details' : activeView
 
   return (
     <DashboardLayout>
