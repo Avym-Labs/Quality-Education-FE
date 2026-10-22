@@ -1,5 +1,6 @@
 import { formatComplaintLine } from '../../constants/complaintData'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
@@ -13,6 +14,8 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
+  const { t, i18n } = useTranslation()
+  const isGu = (i18n.language || user?.preferred_language) === 'gu'
 
   // activeView: 'menu' | 'my-academic-profile' | 'profile-details' | 'preferences' | 'support' | 'switch-profile'
   // Pages that link into a specific section (e.g. Manage Students' sidebar)
