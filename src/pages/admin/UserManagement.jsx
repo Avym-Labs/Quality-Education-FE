@@ -69,6 +69,11 @@ export default function UserManagement() {
   const [importResult, setImportResult] = useState(null)
   const [importProgress, setImportProgress] = useState('')
   const [importError, setImportError] = useState(null)
+  // Bulk Import Class Assignment States (for Student import)
+  const [importClassMode, setImportClassMode] = useState('existing') // 'existing' | 'new'
+  const [importSelectedClass, setImportSelectedClass] = useState('') // 'grade|section'
+  const [importNewGrade, setImportNewGrade] = useState('')
+  const [importNewSection, setImportNewSection] = useState('')
 
   // Combined Form States
   const [formData, setFormData] = useState({
@@ -600,6 +605,27 @@ export default function UserManagement() {
     setImportProgress('')
 
     // The server imports a few rows per request; keep asking until it reports no more rows.
+    let targetGrade = ''
+    let targetSection = ''
+    if (importRole === 'student') {
+      if (importClassMode === 'existing') {
+        if (!importSelectedClass) {
+          setImportError('Please select a target class for the imported students.')
+          return
+        }
+        const [g, s] = importSelectedClass.split('|')
+        targetGrade = (g || '').trim()
+        targetSection = (s || '').trim().toUpperCase()
+      } else {
+        if (!importNewGrade.trim() || !importNewSection.trim()) {
+          setImportError('Please enter both Grade and Section for the new class.')
+          return
+        }
+        targetGrade = importNewGrade.trim()
+        targetSection = importNewSection.trim().toUpperCase()
+      }
+    }
+
     let offset = 0
     let imported = 0
     let failed = 0
@@ -611,6 +637,11 @@ export default function UserManagement() {
         formDataUpload.append('role', importRole)
         formDataUpload.append('offset', String(offset))
         formDataUpload.append('limit', '25')
+        if (targetGrade && targetSection) {
+          formDataUpload.append('target_grade', targetGrade)
+          formDataUpload.append('target_section', targetSection)
+          formDataUpload.append('target_class', `${targetGrade}-${targetSection}`)
+        }
         const res = await api.post('/admin/bulk-import', formDataUpload, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
@@ -625,6 +656,7 @@ export default function UserManagement() {
       setImportResult({ imported_count: imported, failed_count: failed, errors })
       setSelectedFile(null)
       fetchUsers()
+      fetchClasses()
     } catch (err) {
       if (imported > 0 || failed > 0) {
         setImportResult({ imported_count: imported, failed_count: failed, errors })
@@ -676,6 +708,11 @@ export default function UserManagement() {
                   setImportResult(null)
                   setImportError(null)
                   setSelectedFile(null)
+                  setImportClassMode(classesList.length > 0 ? 'existing' : 'new')
+                  setImportSelectedClass(classesList.length > 0 ? `${classesList[0].grade}|${classesList[0].section}` : '')
+                  setImportNewGrade('')
+                  setImportNewSection('')
+                  fetchClasses()
                   setBulkImportModalOpen(true)
                 }}
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-secondary-container text-on-secondary-container hover:bg-opacity-95 rounded-2xl cursor-pointer border-none shadow-sm font-bold text-xs"
@@ -952,13 +989,109 @@ export default function UserManagement() {
                   <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.importTargetRole')}</label>
                   <select
                     value={importRole}
-                    onChange={(e) => setImportRole(e.target.value)}
+                    onChange={(e) => {
+                      const r = e.target.value
+                      setImportRole(r)
+                      if (r === 'student' && !importSelectedClass && classesList.length > 0) {
+                        setImportSelectedClass(`${classesList[0].grade}|${classesList[0].section}`)
+                      }
+                    }}
                     className="px-3.5 py-2.5 rounded-xl border border-outline bg-surface-container-low text-xs font-bold outline-none focus:border-primary"
                   >
                     <option value="student">{t('userManagement.studentsListOption')}</option>
                     <option value="teacher">{t('userManagement.teachersListOption')}</option>
                   </select>
                 </div>
+
+                {/* Target Class Selector for Students */}
+                {importRole === 'student' && (
+                  <div className="p-3.5 bg-surface-container-low rounded-2xl border border-outline-variant/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-on-surface flex items-center gap-1.5">
+                        <Icon name="school" className="text-primary text-sm" />
+                        Target Class for Import <span className="text-error">*</span>
+                      </label>
+                      <div className="flex bg-surface-container border border-outline-variant/40 rounded-xl p-0.5 text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setImportClassMode('existing')}
+                          className={`px-2.5 py-1 rounded-lg border-none cursor-pointer transition-colors ${
+                            importClassMode === 'existing'
+                              ? 'bg-primary text-on-primary shadow-xs'
+                              : 'bg-transparent text-outline hover:text-on-surface'
+                          }`}
+                        >
+                          Select Class
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImportClassMode('new')}
+                          className={`px-2.5 py-1 rounded-lg border-none cursor-pointer transition-colors ${
+                            importClassMode === 'new'
+                              ? 'bg-primary text-on-primary shadow-xs'
+                              : 'bg-transparent text-outline hover:text-on-surface'
+                          }`}
+                        >
+                          + Create New
+                        </button>
+                      </div>
+                    </div>
+
+                    {importClassMode === 'existing' ? (
+                      <div>
+                        {classesList.length > 0 ? (
+                          <select
+                            value={importSelectedClass}
+                            onChange={(e) => setImportSelectedClass(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl border border-outline bg-surface text-xs font-bold outline-none focus:border-primary text-on-surface"
+                            required
+                          >
+                            <option value="">-- Choose Class --</option>
+                            {classesList.map((cls) => (
+                              <option key={cls.id || `${cls.grade}-${cls.section}`} value={`${cls.grade}|${cls.section}`}>
+                                Class {cls.grade} - Section {cls.section} ({cls.student_count || 0} students)
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="text-[11px] text-outline p-2 bg-surface rounded-xl border border-dashed border-outline-variant text-center">
+                            No classes exist yet. Click <span className="font-bold text-primary cursor-pointer" onClick={() => setImportClassMode('new')}>+ Create New</span> above to create one.
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] text-outline font-bold uppercase block mb-1">Grade / Standard *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 10"
+                            value={importNewGrade}
+                            onChange={(e) => setImportNewGrade(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl border border-outline bg-surface text-xs font-bold outline-none focus:border-primary text-on-surface"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-outline font-bold uppercase block mb-1">Section *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. A"
+                            value={importNewSection}
+                            onChange={(e) => setImportNewSection(e.target.value.toUpperCase())}
+                            className="w-full px-3 py-2 rounded-xl border border-outline bg-surface text-xs font-bold outline-none focus:border-primary text-on-surface uppercase"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-[9.5px] text-outline font-medium flex items-center gap-1">
+                      <Icon name="info" className="text-xs text-primary shrink-0" />
+                      All students in the spreadsheet will be added to this class, regardless of what class is written in the file.
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] text-outline font-bold uppercase">{t('userManagement.selectSpreadsheetFile')} <span className="text-error">*</span></label>
