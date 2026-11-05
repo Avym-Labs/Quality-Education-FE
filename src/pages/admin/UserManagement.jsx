@@ -700,7 +700,7 @@ export default function UserManagement() {
               {t('userManagement.title')}
             </h2>
           </div>
-          <div className="flex gap-2.5">
+          <div className="flex items-center gap-2.5 md:mr-28">
             {activeRole !== 'classes' && (
               <button
                 onClick={() => {
