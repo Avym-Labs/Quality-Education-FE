@@ -12,17 +12,36 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [siblingProfiles, setSiblingProfiles] = useState([])
 
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  const handleSelectProfile = async (profile) => {
+    setError('')
+    setLoading(true)
+    try {
+      const user = await login({ identifier, password, user_id: profile.id }, rememberMe)
+      navigate(`/${user.role}/dashboard`, { replace: true })
+    } catch (err) {
+      const detail = err.response?.data?.detail || ''
+      setError(detail || 'Failed to sign in to the selected profile.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const user = await login({ identifier, password }, rememberMe)
-      navigate(`/${user.role}/dashboard`, { replace: true })
+      const res = await login({ identifier, password }, rememberMe)
+      if (res && res.requires_profile_selection) {
+        setSiblingProfiles(res.profiles || [])
+        return
+      }
+      navigate(`/${res.role}/dashboard`, { replace: true })
     } catch (err) {
       const detail = err.response?.data?.detail || ''
       if (err.response?.status === 403 && (detail.includes('paused') || detail.includes('Paused'))) {
@@ -73,12 +92,65 @@ export default function LoginPage() {
             <img src={logo} alt="Quality Education" className="h-20 w-20 object-contain" />
           </div>
 
-          <div className="mb-stack-lg">
-            <h1 className="text-headline-lg font-semibold text-on-surface">Welcome back</h1>
-            <p className="text-body-md text-on-surface-variant">Please enter your details to sign in.</p>
-          </div>
+          {siblingProfiles.length > 0 ? (
+            <div>
+              <div className="mb-stack-lg">
+                <h1 className="text-headline-lg font-semibold text-on-surface">Select Student</h1>
+                <p className="text-body-md text-on-surface-variant">Multiple students are registered under this mobile number. Choose which profile to open:</p>
+              </div>
 
-          <form className="space-y-stack-md" onSubmit={handleSubmit}>
+              {error && (
+                <div className="flex items-center gap-2 p-3 bg-error-container rounded-xl mb-4">
+                  <Icon name="error" className="text-error text-sm" />
+                  <span className="text-label-md text-error">{error}</span>
+                </div>
+              )}
+
+              <div className="space-y-3 mb-6">
+                {siblingProfiles.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSelectProfile(p)}
+                    disabled={loading}
+                    className="w-full text-left p-4 rounded-2xl border border-outline-variant hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-title-md group-hover:scale-105 transition-transform">
+                        {p.first_name?.[0]?.toUpperCase() || 'S'}
+                      </div>
+                      <div>
+                        <h3 className="text-title-md font-semibold text-on-surface group-hover:text-primary transition-colors">
+                          {p.full_name || `${p.first_name} ${p.last_name}`}
+                        </h3>
+                        <p className="text-body-sm text-on-surface-variant">
+                          {p.grade ? `Class ${p.grade}${p.section ? '-' + p.section : ''}` : 'Student'}
+                          {p.roll_number ? ` • Roll ${p.roll_number}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <Icon name="arrow_forward" className="text-outline group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => { setSiblingProfiles([]); setError(''); }}
+                className="text-label-md text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Icon name="arrow_back" className="text-sm" />
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-stack-lg">
+                <h1 className="text-headline-lg font-semibold text-on-surface">Welcome back</h1>
+                <p className="text-body-md text-on-surface-variant">Please enter your details to sign in.</p>
+              </div>
+
+              <form className="space-y-stack-md" onSubmit={handleSubmit}>
 
 
             {/* Email / Mobile */}
@@ -182,6 +254,8 @@ export default function LoginPage() {
               Sign up
             </button>
           </p>
+          </>
+        )}
         </div>
       </main>
     </div>

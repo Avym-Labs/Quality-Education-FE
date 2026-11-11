@@ -1088,7 +1088,7 @@ export default function UserManagement() {
 
                     <p className="text-[9.5px] text-outline font-medium flex items-center gap-1">
                       <Icon name="info" className="text-xs text-primary shrink-0" />
-                      All students in the spreadsheet will be added to this class, regardless of what class is written in the file.
+                      All students in the spreadsheet will be added to this class. Sibling students sharing parent mobile numbers are supported.
                     </p>
                   </div>
                 )}
